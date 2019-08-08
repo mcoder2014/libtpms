@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include <string>
+
 #include <glm/glm.hpp>
 
 #include "implicitsurface.h"
@@ -29,12 +31,14 @@ public:
     float m_mcMaxZ;
 
     // The triangle mesh of the result of marching box algorithm
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::ivec3> faces;      // Index format(in vertices)
+    std::vector<glm::vec3> m_vertices;
+    std::vector<glm::ivec3> m_faces;      // Index format(in vertices)
 
     MarchBox();
 
     void marching_cubes(ImplicitSurface& implicit_surface);
+    void add_face(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2);
+    void writeOBJ(std::string const & fileName);
 
 };
 

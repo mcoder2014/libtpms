@@ -1,5 +1,11 @@
 #include "marchbox.h"
 
+#include <iostream>
+#include <fstream>
+#include <iostream>
+
+#include <QDebug>
+
 // init the edgeTable of marching box algorithm
 int MarchBox::edgeTable[256]={
 0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
@@ -300,6 +306,10 @@ MarchBox::MarchBox()
 
 }
 
+///
+/// \brief MarchBox::marching_cubes
+/// \param implicit_surface
+///
 void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
 {
     // Get the parameters from the class member variable
@@ -322,43 +332,35 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
     std::vector<std::vector<std::vector<int>>> IS_value;
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points;
 
-    // init the record values
+    // init the record values and the sample_points of the marching cubes
     for(int iter_x = 0; iter_x < ncellsX; iter_x++)
     {
         IS_value.push_back(std::vector<std::vector<int>>());
-
-        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
-        {
-            IS_value[iter_x].push_back(std::vector<int>());
-            for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
-            {
-                IS_value[iter_x][iter_y].push_back(0);
-            }
-        }
-    }
-
-    // Calculate the implicit surface function value of the sample points
-    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
-    {
+        sample_points.push_back(std::vector<std::vector<glm::vec3>>());
         double pos_x = mcMinX + step_x * iter_x;
 
         for (int iter_y = 0; iter_y < ncellsY; iter_y++)
         {
+            IS_value[iter_x].push_back(std::vector<int>());
+            sample_points[iter_x].push_back(std::vector<glm::vec3>());
             double pos_y = mcMinY + step_y * iter_y;
 
             for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
             {
-                double pos_z = mcMinZ + step_z * iter_z;
 
-                // here the point is (pos_x, pos_y, pos_z)
+                double pos_z = mcMinZ + step_z * iter_z;
+                sample_points[iter_x][iter_y].push_back(glm::vec3(pos_x, pos_y, pos_z));
+
+                // Record the IS_value
                 double value = implicit_surface.G(pos_x, pos_y, pos_z);
+
                 if(value > 0)
-                    // the point is in the outside of the surface
-                    IS_value[iter_x][iter_y][iter_z] = 1;
-//                else {
-//                    IS_value[iter_x][iter_y][iter_z] = 0;
-//                }
+                    IS_value[iter_x][iter_y].push_back(0);
+                else {
+                    IS_value[iter_x][iter_y].push_back(1);
+                }
             }
         }
     }
@@ -373,9 +375,183 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
                 // Get the eight point of the cube vertex,
                 // to March the condition in 256 probailities
 
+                //                 v4_______e4_____________v5
+                //                  /|                    /|
+                //                 / |                   / |
+                //              e7/  |                e5/  |
+                //               /___|______e6_________/   |
+                //            v7|    |                 |v6 |e9
+                //              |    |                 |   |
+                //              |    |e8               |e10|
+                //           e11|    |                 |   |
+                //              |    |_________________|___|
+                //              |   / v0      e0       |   /v1
+                //              |  /                   |  /
+                //              | /e3                  | /e1
+                //              |/_____________________|/
+                //              v3         e2          v2
 
+                // The Cube with V0(iter_x, iter_y, iter_z)
 
-            }
+                int cube_index = 0;
+                float isolevel = 0;
+                // v0 v1 v2 v3 v4 v5 v6 v7
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] < isolevel) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] < isolevel) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isolevel) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] < isolevel) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] < isolevel) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isolevel) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 128;
+
+                // Get the approximation triangle table
+                int * edgelist = triTable[cube_index];
+
+                // -1 means the end of the triangle.
+                while (*edgelist != -1 )
+                {
+                    // Get the next approximation triangle
+                    int e_index[3];
+                    e_index[0] = *edgelist;
+                    e_index[1] = *(edgelist + 1);
+                    e_index[2] = *(edgelist + 2);
+
+                    edgelist = edgelist+3;      // ptr move 3 pos
+
+                    glm::vec3 vertices_face[3]; // The Real coordinates of the face
+
+                    // Releated vertex of the march box
+                    glm::vec3 v0 = sample_points[iter_x + 1][iter_y    ][iter_z    ];
+                    glm::vec3 v1 = sample_points[iter_x + 1][iter_y    ][iter_z    ];
+                    glm::vec3 v2 = sample_points[iter_x + 1][iter_y    ][iter_z + 1];
+                    glm::vec3 v3 = sample_points[iter_x    ][iter_y    ][iter_z + 1];
+                    glm::vec3 v4 = sample_points[iter_x    ][iter_y + 1][iter_z    ];
+                    glm::vec3 v5 = sample_points[iter_x + 1][iter_y + 1][iter_z    ];
+                    glm::vec3 v6 = sample_points[iter_x + 1][iter_y + 1][iter_z + 1];
+                    glm::vec3 v7 = sample_points[iter_x    ][iter_y + 1][iter_z + 1];
+
+                    // Calculate the 3 points coordinates of the face
+                    for (int e_i=0; e_i < 3; e_i ++)
+                    {
+                        switch(e_index[e_i])
+                        {
+                        case 0:
+                            vertices_face[e_i] = (v0 + v1) / glm::vec3(2);
+                            break;
+                        case 1:
+                            vertices_face[e_i] = (v1 + v2) / glm::vec3(2);
+                            break;
+                        case 2:
+                            vertices_face[e_i] = (v2 + v3) / glm::vec3(2);
+                            break;
+                        case 3:
+                            vertices_face[e_i] = (v0 + v3) / glm::vec3(2);
+                            break;
+                        case 4:
+                            vertices_face[e_i] = (v4 + v5) / glm::vec3(2);
+                            break;
+                        case 5:
+                            vertices_face[e_i] = (v5 + v6) / glm::vec3(2);
+                            break;
+                        case 6:
+                            vertices_face[e_i] = (v6 + v7) / glm::vec3(2);
+                            break;
+                        case 7:
+                            vertices_face[e_i] = (v4 + v7) / glm::vec3(2);
+                            break;
+                        case 8:
+                            vertices_face[e_i] = (v0 + v4) / glm::vec3(2);
+                            break;
+                        case 9:
+                            vertices_face[e_i] = (v1 + v5) / glm::vec3(2);
+                            break;
+                        case 10:
+                            vertices_face[e_i] = (v2 + v6) / glm::vec3(2);
+                            break;
+                        case 11:
+                            vertices_face[e_i] = (v3 + v7) / glm::vec3(2);
+                            break;
+                        }
+                    }   // for (int e_i=0; e_i < 3; e_i ++)
+
+                    // Add the face into vertices list and face list
+                    this->add_face(vertices_face[0], vertices_face[1], vertices_face[2]);
+                }   // while (*edgelist != -1 )
+            }   //  for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+        }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+    }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+}
+
+///
+/// \brief MarchBox::add_face
+/// \param v0
+/// \param v1
+/// \param v2
+///
+void MarchBox::add_face(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2)
+{
+    std::vector<glm::vec3> points;
+    points.push_back(v0);
+    points.push_back(v1);
+    points.push_back(v2);
+
+    glm::ivec3 face;
+
+    for(int i=0; i<3; i++)
+    {
+        // Search if there are same vertice already in vector
+        int index =0;
+        while(index < m_vertices.size()
+              && glm::any(glm::notEqual(m_vertices[index], points[i])))
+        {
+            index ++;
+        }
+
+        if(index < m_vertices.size())
+        {
+            // the points is already in the list
+            face[i] = index;
+        }
+        else
+        {
+            this->m_vertices.push_back(points[i]);
+            face[i] = m_vertices.size()-1;
         }
     }
+
+    this->m_faces.push_back(face);      // add the face into list
 }
+
+void MarchBox::writeOBJ(const std::string &fileName)
+{
+    std::cout << "Writing OBJ file" << std::endl;
+    // check if we actually have an ISO surface
+    if(this->m_vertices.size () == 0 || this->m_faces.size() == 0) {
+        std::cout << "No ISO surface generated. Skipping OBJ generation." << std::endl;
+        return;
+    }
+
+    // open output file
+    std::ofstream file(fileName);
+    if(!file) {
+        std::cout << "Error opening output file" << std::endl;
+        return;
+    }
+
+    std::cout << "Generating OBJ mesh with " << m_vertices.size() << " vertices and "
+      << m_faces.size() << " faces" << std::endl;
+
+    // write vertices
+    for(auto const & v : m_vertices) {
+        file << "v " << v.x << ' ' << v.y << ' ' << v.z << '\n';
+    }
+
+    // write face indices
+    for(auto const & f : m_faces) {
+        file << "f " << (f.x) << ' ' << (f.y) << ' ' << (f.z) << '\n';
+    }
+
+    file.close();
+}
+
