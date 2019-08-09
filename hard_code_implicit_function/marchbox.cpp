@@ -330,9 +330,16 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
     float step_y = (mcMaxY-mcMinY) / (ncellsY-1);
     float step_z = (mcMaxZ-mcMinZ) / (ncellsZ-1);
 
+    qDebug() << "nx: " << ncellsX << "Step_x: " << step_x
+             << " ny: " << ncellsY << " Step_y: " << step_y
+             << " nz: " << ncellsZ << " Step_z: " << step_z;
+
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
     std::vector<std::vector<std::vector<int>>> IS_value;
     std::vector<std::vector<std::vector<glm::vec3>>> sample_points;
+
+    int count_sum_of_1 = 0; // use for debug
+    int count_sum_of_0 = 0; // use for debug
 
     // init the record values and the sample_points of the marching cubes
     for(int iter_x = 0; iter_x < ncellsX; iter_x++)
@@ -354,24 +361,45 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
                 sample_points[iter_x][iter_y].push_back(glm::vec3(pos_x, pos_y, pos_z));
 
                 // Record the IS_value
-                double value = implicit_surface.G(pos_x, pos_y, pos_z);
+//                double value = implicit_surface.G(pos_x, pos_y, pos_z);
+                double value = implicit_surface.f(pos_x, pos_y, pos_z);
 
                 if(value > 0)
-                    IS_value[iter_x][iter_y].push_back(0);
-                else {
+                {
                     IS_value[iter_x][iter_y].push_back(1);
+                    count_sum_of_1 ++;
+                }
+                else
+                {
+                    IS_value[iter_x][iter_y].push_back(0);
+                    count_sum_of_0 ++;
                 }
             }
         }
     }
 
+    std::cout << "Count the num of 1: " << count_sum_of_1
+              << "\nCount hte num of 0: " << count_sum_of_0
+              << std::endl;
+
+    // To avoid the repeat vertice in the result, and to reduce the searching time.
+    // We only search the neighbour box, to check if the points already exist.
+//    std::vector<std::vector<std::vector<std::vector<glm::vec3[3]>>>> face_results;
+    // Cause the upper one will error when using push_back
+    // I change the format into the below one
+    std::vector<std::vector<std::vector<std::vector<std::vector<glm::vec3>>>>> face_results;
+
     // Approximation of the all marching cubes
     for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
     {
+        face_results.push_back(std::vector<std::vector<std::vector<std::vector<glm::vec3>>>>());
+
         for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
         {
+            face_results[iter_x].push_back(std::vector<std::vector<std::vector<glm::vec3>>>());
             for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
             {
+                face_results[iter_x][iter_y].push_back(std::vector<std::vector<glm::vec3>>());
                 // Get the eight point of the cube vertex,
                 // to March the condition in 256 probailities
 
@@ -394,7 +422,7 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
                 // The Cube with V0(iter_x, iter_y, iter_z)
 
                 int cube_index = 0;
-                float isolevel = 0;
+                float isolevel = 0.5;
                 // v0 v1 v2 v3 v4 v5 v6 v7
                 if(IS_value[iter_x    ][iter_y    ][iter_z    ] < isolevel) cube_index |= 1;
                 if(IS_value[iter_x + 1][iter_y    ][iter_z    ] < isolevel) cube_index |= 2;
@@ -404,6 +432,9 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
                 if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isolevel) cube_index |= 32;
                 if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 64;
                 if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 128;
+
+//                if(cube_index != 0)
+//                    std::cout << "cube index:!= 0  : " << cube_index << std::endl;
 
                 // Get the approximation triangle table
                 int * edgelist = triTable[cube_index];
@@ -419,10 +450,12 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
 
                     edgelist = edgelist+3;      // ptr move 3 pos
 
-                    glm::vec3 vertices_face[3]; // The Real coordinates of the face
+//                    glm::vec3 vertices_face[3]; // The Real coordinates of the face
+                    std::vector<glm::vec3> vertices_face(3);
+
 
                     // Releated vertex of the march box
-                    glm::vec3 v0 = sample_points[iter_x + 1][iter_y    ][iter_z    ];
+                    glm::vec3 v0 = sample_points[iter_x    ][iter_y    ][iter_z    ];
                     glm::vec3 v1 = sample_points[iter_x + 1][iter_y    ][iter_z    ];
                     glm::vec3 v2 = sample_points[iter_x + 1][iter_y    ][iter_z + 1];
                     glm::vec3 v3 = sample_points[iter_x    ][iter_y    ][iter_z + 1];
@@ -476,52 +509,195 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
                     }   // for (int e_i=0; e_i < 3; e_i ++)
 
                     // Add the face into vertices list and face list
-                    this->add_face(vertices_face[0], vertices_face[1], vertices_face[2]);
+//                    this->add_face(vertices_face[0], vertices_face[1], vertices_face[2]);
+
+                    face_results[iter_x][iter_y][iter_z].push_back(vertices_face);
+
+
                 }   // while (*edgelist != -1 )
             }   //  for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
         }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
     }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+
+    add_all_face(face_results); // make the result
 }
 
-///
-/// \brief MarchBox::add_face
-/// \param v0
-/// \param v1
-/// \param v2
-///
-void MarchBox::add_face(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2)
+/////
+///// \brief MarchBox::add_face
+///// \param v0
+///// \param v1
+///// \param v2
+/////
+//void MarchBox::add_face(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2)
+//{
+//    std::vector<glm::vec3> points;
+//    points.push_back(v0);
+//    points.push_back(v1);
+//    points.push_back(v2);
+
+////    std::cout << "Add points" ;
+
+//    glm::ivec3 face;
+
+//    for(int i=0; i<3; i++)
+//    {
+//        // Search if there are same vertice already in vector
+////        int index =0;
+////        while(index < m_vertices.size()
+////              && glm::any(glm::notEqual(m_vertices[index], points[i])))
+////        {
+////            index ++;
+////        }
+
+////        if(index < m_vertices.size())
+////        {
+////            // the points is already in the list
+////            face[i] = index;
+////        }
+////        else
+////        {
+////            this->m_vertices.push_back(points[i]);
+////            face[i] = m_vertices.size()-1;
+////        }
+
+//        // Don't check the repeating vertices
+//        this->m_vertices.push_back(points[i]);
+//        face[i] = m_vertices.size()-1;
+//    }
+
+//    this->m_faces.push_back(face);      // add the face into list
+//}
+
+void MarchBox::add_all_face(std::vector<std::vector<std::vector<std::vector<std::vector<glm::vec3> > > > > &face_results)
 {
-    std::vector<glm::vec3> points;
-    points.push_back(v0);
-    points.push_back(v1);
-    points.push_back(v2);
+    // Clear the list
+    this->m_vertices.clear();
+    this->m_faces.clear();
 
-    glm::ivec3 face;
+    int ncellsX = m_ncellsX;
+    int ncellsY = m_ncellsY;
+    int ncellsZ = m_ncellsZ;
 
-    for(int i=0; i<3; i++)
+    // A vector used for reducing the searching range, to cut searhing time
+    std::vector<std::vector<std::vector<std::vector<glm::ivec3>>>> face_results_index;
+
+//     init the index
+    for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
     {
-        // Search if there are same vertice already in vector
-        int index =0;
-        while(index < m_vertices.size()
-              && glm::any(glm::notEqual(m_vertices[index], points[i])))
-        {
-            index ++;
-        }
+        face_results_index.push_back(std::vector<std::vector<std::vector<glm::ivec3>>>());
 
-        if(index < m_vertices.size())
+        for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
         {
-            // the points is already in the list
-            face[i] = index;
-        }
-        else
-        {
-            this->m_vertices.push_back(points[i]);
-            face[i] = m_vertices.size()-1;
-        }
-    }
+            face_results_index[iter_x].push_back(std::vector<std::vector<glm::ivec3>>());
 
-    this->m_faces.push_back(face);      // add the face into list
+            for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+            {
+                face_results_index[iter_x][iter_y].push_back(std::vector<glm::ivec3>());
+
+                std::vector<std::vector<glm::vec3>> & current_box = face_results[iter_x][iter_y][iter_z];
+
+                // Check the neighbour 3 box for that maybe existing the same vertices.
+                std::vector<std::vector<std::vector<glm::vec3>> *> neighbour_boxes;
+                std::vector<std::vector<glm::ivec3> *> neighbour_boxes_index;    // the index of neighbour boxs
+                // Add 3 neighbour vertices into list
+                if(iter_x != 0)
+                {
+                    neighbour_boxes.push_back(
+                        &face_results[iter_x - 1][iter_y][iter_z]);
+                    neighbour_boxes_index.push_back(
+                        &face_results_index[iter_x - 1][iter_y][iter_z]);
+                }
+                if(iter_y != 0)
+                {
+                    neighbour_boxes.push_back(
+                        &face_results[iter_x][iter_y - 1][iter_z]);
+                    neighbour_boxes_index.push_back(
+                        &face_results_index[iter_x][iter_y - 1][iter_z]);
+                }
+                if(iter_z != 0)
+                {
+                    neighbour_boxes.push_back(
+                        &face_results[iter_x][iter_y][iter_z - 1]);
+                    neighbour_boxes_index.push_back(
+                        &face_results_index[iter_x][iter_y][iter_z - 1]);
+                }
+
+                // each box may have more than one triangle
+                for (int iter_current_face = 0; iter_current_face < current_box.size(); iter_current_face ++)
+                {
+                    glm::ivec3 current_face_index;   // The index of 3 vertices of one face
+
+                    // The reference of current face's 3 vertics coordinates
+                    std::vector<glm::vec3> & current_box_triangles = current_box[iter_current_face];
+
+                    // Check if there are same points in neighbour box
+                    for (int iter_current_vertice = 0; iter_current_vertice < 3; iter_current_vertice ++)
+                    {
+                        // For each vertices of the current triangles
+                        bool flag_exist_the_same_point = false;
+
+                        for (int iter_neighbour_box = 0;
+                                 iter_neighbour_box < neighbour_boxes.size()
+                                     && !flag_exist_the_same_point;
+                                 iter_neighbour_box++)
+                        {
+                            // iter_box -> std::vector<glm::vec3[3]>*
+
+                            for (int iter_neighbour_box_triangles =0;
+                                     iter_neighbour_box_triangles < neighbour_boxes[iter_neighbour_box]->size()
+                                         && !flag_exist_the_same_point;
+                                     iter_neighbour_box_triangles++)
+                            {
+                                // iter_triangles -> glm::vec3[3]
+                                // For each vertice in the neighbour box triangle
+                                for (int iter_neighbour_box_triangles_vertice=0;
+                                     iter_neighbour_box_triangles_vertice<3;
+                                     iter_neighbour_box_triangles_vertice ++)
+                                {
+                                    // iter_triangles[iter_neighbour] -> vec3 in neighbour box
+
+                                    if(glm::all(
+                                           glm::equal(
+                                               current_box_triangles[iter_current_vertice],
+                                               (*(neighbour_boxes[iter_neighbour_box]))[iter_neighbour_box_triangles][iter_neighbour_box_triangles_vertice])))
+                                    {
+                                        // Existing the same point
+                                        // Use the Same index like that point
+                                        current_face_index[iter_current_vertice]
+                                            = (*neighbour_boxes_index[iter_neighbour_box])[iter_neighbour_box_triangles][iter_neighbour_box_triangles_vertice];
+                                        flag_exist_the_same_point = true;
+                                    }
+                                    else
+                                    {
+                                        // And ,try to record there is not the
+                                        // same point exists
+                                    }
+                                }
+                            }
+                        }
+
+                        if(!flag_exist_the_same_point)
+                        {
+                            // If there no same points in m_vertices
+                            this->m_vertices.push_back(current_box_triangles[iter_current_vertice]);
+                            current_face_index[iter_current_vertice] = this->m_vertices.size() - 1;
+                        }
+
+                    }   // for (int iter_current_vertice = 0; iter_current_vertice < 3; iter_current_vertice ++)
+
+                    // Add the face into face list
+                    face_results_index[iter_x][iter_y][iter_z].push_back(current_face_index);
+                    this->m_faces.push_back(current_face_index);
+
+                }   // for (int iter_face = 0;
+            }   // for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+        }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+    }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+
+    qDebug() << "Before algorithm, there will be " << this->m_faces.size() * 3 << " vertices" << endl
+             << "After algorithm, there are " << this->m_vertices.size() << " vertices";
 }
+
 
 void MarchBox::writeOBJ(const std::string &fileName)
 {
@@ -549,7 +725,7 @@ void MarchBox::writeOBJ(const std::string &fileName)
 
     // write face indices
     for(auto const & f : m_faces) {
-        file << "f " << (f.x) << ' ' << (f.y) << ' ' << (f.z) << '\n';
+        file << "f " << (f.x + 1) << ' ' << (f.y + 1) << ' ' << (f.z + 1) << '\n';
     }
 
     file.close();
