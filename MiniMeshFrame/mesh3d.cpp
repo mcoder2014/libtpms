@@ -1,6 +1,13 @@
 #include "mesh3d.h"
 
 #include <iostream>
+#include <string>
+#include <cstring>
+#include <fstream>
+#include <limits>
+#include <algorithm>
+#include <cmath>
+
 
 std::vector<HE_vert *> *Mesh3D::pvertices_list()
 {
@@ -229,11 +236,186 @@ bool Mesh3D::LoadFromOBJFile(const char *fins)
     char *tok;
     char temp[128];
 
+    try
+    {
+        ClearData();
+
+        // Read vertex
+        fseek(pfile, 0, SEEK_SET);
+        char pLine[512];
+
+        while(fgets(pLine, 512, pfile))
+        {
+            if(pLine[0] == 'v' &&pLine[1]== ' ')
+            {
+                glm::vec3 nvv;
+
+                tok = strtok(pLine, " ");
+                for (int i = 0; i < 3; i++)
+                {
+                    tok = strtok(nullptr, " ");
+                    strcpy(temp, tok);
+                    temp[strcspn(temp, " ")] = 0;
+                    nvv[i] = static_cast<float>(atof(temp));
+                }
+                InsertVertex(nvv);
+            }
+        }   // Read vertex
+
+        // Read faces
+        fseek(pfile, 0, SEEK_SET);
+        while(fgets(pLine, 512, pfile))
+        {
+            char *pTmp = pLine;
+            if(pTmp[0] == 'f')
+            {
+                std::vector<HE_vert* > s_faceid;
+
+                tok = strtok(pLine, " ");
+                while((tok = strtok(nullptr, " ")) != nullptr)
+                {
+                    strcpy(temp, tok);
+                    temp[strcspn(temp, "/")] = 0;
+                    int id = static_cast<int>(strtol(temp, nullptr, 10) -1);
+                    HE_vert *hv = get_vertex(id);
+                    bool findit = false;
+
+                    for (int i = 0; i < static_cast<int>(s_faceid.size()); i++)
+                    {
+                        if(hv == s_faceid[i])
+                        {
+                            // remove redundant vertex id if it exists
+                            findit = true;
+                            break;
+                        }
+                    }
+
+                    if(findit == false && hv != nullptr)
+                    {
+                        s_faceid.push_back(hv);
+                    }
+                }
+                if(static_cast<int>(s_faceid.size()) >= 3)
+                {
+                    InsertFace(s_faceid);
+                }
+            }
+        }   // Read faces
+
+        // Read texture coords
+        fseek(pfile, 0, SEEK_SET);
+        std::vector<glm::vec3> texCoordsTemp;
+        while(fscanf(pfile, "%s", pLine) != EOF)
+        {
+            if(pLine[0] == 'v' && pLine[1] == 't')
+            {
+                glm::vec3 texTemp(0.0f, 0.0f, 0.0f);
+                fscanf(pfile, "%f %f", &texTemp[0], &texTemp[1]);
+                texCoordsTemp.push_back(texTemp);
+            }
+        }
+
+        // Read texture index
+        if(texCoordsTemp.size() > 0)
+        {
+            fseek(pfile, 0, SEEK_SET);
+
+            int faceIndex = 0;
+            while(fscanf(pfile, "%s", pLine) != EOF)
+            {
+                if(pLine[0] == 'f')
+                {
+                    int v, t;
+                    fscanf(pfile, "%s", pLine);
+                    if(sscanf(pLine, "%d/%d", &v, &t) == 2)
+                    {
+                        std::map<int, int> v2tex;
+                        v2tex[v - 1] = t - 1;
+
+                        fscanf(pfile, "%s", pLine);
+                        sscanf(pLine, "%d/%d", &v, &t);
+                        v2tex[v-1] = t - 1;
+
+                        fscanf(pfile, "%s", pLine);
+                        sscanf(pLine, "%d/%d", &v, &t);
+                        v2tex[v-1] = t - 1;
+
+                        HE_edge* edgeTemp = m_pfaces_list->at(faceIndex)->m_pedge;
+                        edgeTemp->m_texCoord = texCoordsTemp.at(v2tex[edgeTemp->m_pvert->m_id]);
+                        edgeTemp->m_pvert->m_texCoord = edgeTemp->m_texCoord;
+
+                        edgeTemp = edgeTemp->m_pnext;
+                        edgeTemp->m_texCoord = texCoordsTemp.at(v2tex[edgeTemp->m_pvert->m_id]);
+                        edgeTemp->m_pvert->m_texCoord = edgeTemp->m_texCoord;
+
+                        edgeTemp = edgeTemp->m_pnext;
+                        edgeTemp->m_texCoord = texCoordsTemp.at(v2tex[edgeTemp->m_pvert->m_id]);
+                        edgeTemp->m_pvert->m_texCoord = edgeTemp->m_texCoord;
+
+                        faceIndex++;
+                    }
+                }
+            }
+        }   // Read texture index
+
+        UpdateMesh();
+//        Unify(2.0f);
+
+    }
+    catch (...)
+    {
+        ClearData();
+        fclose(pfile);
+        return false;
+    }
+    fclose(pfile);
+    return isValid();
 
 }
 
 void Mesh3D::WriteToOBJFile(const char *fouts)
 {
+
+}
+
+void Mesh3D::UpdateMesh()
+{
+
+}
+
+void Mesh3D::UpdateNormal()
+{
+
+}
+
+///
+/// \brief Mesh3D::ComputeBoundingBox
+///
+void Mesh3D::ComputeBoundingBox()
+{
+    // To few faces
+    if(m_pfaces_list->size() < 3)
+        return;
+
+    // Get the range of foat
+    const float MAX_FLOAT_VALUE = std::numeric_limits<float>::max();
+    const float MIN_FLOAT_VALUE = std::numeric_limits<float>::min();
+
+    m_xmax = m_ymax = m_zmax = MIN_FLOAT_VALUE;
+    m_xmin = m_ymin = m_zmin = MAX_FLOAT_VALUE;
+
+    VERTEX_ITER viter = m_pvertices_list->begin();
+    for(; viter != m_pvertices_list->end(); viter++)
+    {
+        // Get the range of the model
+        m_xmax = std::max<float>(m_xmax, (*viter)->m_position[0]);
+        m_ymax = std::max<float>(m_ymax, (*viter)->m_position[1]);
+        m_zmax = std::max<float>(m_zmax, (*viter)->m_position[2]);
+
+        m_xmin = std::min<float>(m_xmin, (*viter)->m_position[0]);
+        m_ymin = std::min<float>(m_ymin, (*viter)->m_position[1]);
+        m_zmin = std::min<float>(m_zmin, (*viter)->m_position[2]);
+    }
 
 }
 

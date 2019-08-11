@@ -204,6 +204,11 @@ public:
     bool LoadFromOBJFile(const char* fins);
     void WriteToOBJFile(const char* fouts);
 
+    void UpdateMesh();      // update mesh
+    void UpdateNormal();    // update normal
+
+    void ComputeBoundingBox();  // compute the bounding box
+
 public:
     // clear all the data
     void ClearData(void);
