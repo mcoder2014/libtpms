@@ -209,9 +209,34 @@ public:
 
     void ComputeBoundingBox();  // compute the bounding box
 
-public:
+    // Get face from vertex ids
+    HE_face* get_face(int vId0, int vId1, int vId2);
+    HE_face* get_face(const std::vector<unsigned int>& ids);
+
+    int GetFaceId(HE_face *face);
+
+    // Reset all selected flags.
+    void ResetVertexSelectedTags(SelectTag tag = UNSELECTED);
+    void ResetFaceSelectedTags(SelectTag tag = UNSELECTED);
+
+    // Check the vertex v0 and v1 whether are neighbour hoods
+    bool isNeighbours(HE_vert* v0, HE_vert* v1);
+
+    // Get the selected "first" vertex, if no one is selected, return -1;
+    int GetSelectedVrtId();
+
+    // Create a mesh by the vertices positions and triangle topology
+    // the triIdx is defined as tri0_v0, tri0_v1, tri0_v2, tri1_v0, tri1_v1,tri1_v2, ...
+    void CreateMesh(const std::vector<glm::vec3>& verts, const std::vector<int>& triIdx);
+    void CreateMesh(const std::vector<double>& verts, const std::vector<unsigned>& triIdx);
+
+    int GetBoundaryVrtSize();
+
     // clear all the data
     void ClearData(void);
+
+    void LinearTex();
+
 private:
     // clear vertex
     void ClearVertex(void);
@@ -219,6 +244,32 @@ private:
     void ClearEdges(void);
     // clear faces
     void ClearFaces(void);
+
+    // Compute all the normals of faces
+    void ComputeFaceslistNormal(void);
+    // compute the normal of a face
+    void ComputePerFaceNormal(HE_face* hf);
+
+    // Compute all the normals of vertex
+    void ComputeVertexlistNormal();
+    // Compute the normal of a vertex
+    void ComputePerVertexNormal(HE_vert *hv);
+
+    // Compute the number of components
+    void ComputeNumComponents();
+
+    void ComputeAvarageEdgeLength();
+
+    // Set vertex and edge boundary flag
+    void SetBoundaryFlag();
+    void BoundaryCheck();   // for the boundary vertices, make sure the half-edge structure can find all of them
+
+    void Unify(float size); // unify the mesh
+
+    bool isFaceContainVertex(HE_face * face, HE_vert* vert);
+
+    void get_neighbourID(const size_t& vertid, std::vector<size_t>& neighbours);
+    void SetNeighbours();
 };
 
 #endif // MESH3D_H
