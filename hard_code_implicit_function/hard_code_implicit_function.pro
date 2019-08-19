@@ -8,8 +8,15 @@ DESTDIR = ../bin/
 SOURCES += \
         implicitsurface.cpp \
         main.cpp \
-        marchbox.cpp
+        marchbox.cpp \
+        smoothtool.cpp
 
 HEADERS += \
     implicitsurface.h \
-    marchbox.h
+    marchbox.h \
+    smoothtool.h
+
+#INCLUDEPATH += /usr/include
+
+LIBS += \
+    -L/usr/lib -lOpenMeshCore -lOpenMeshTools

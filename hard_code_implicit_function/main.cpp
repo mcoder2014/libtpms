@@ -3,6 +3,7 @@
 
 #include "implicitsurface.h"
 #include "marchbox.h"
+#include "smoothtool.h"
 
 using namespace std;
 
@@ -16,58 +17,68 @@ int main()
     march_box.m_ncellsY = size;
     march_box.m_ncellsZ = size;
 
-    float length = 2;
-    march_box.m_mcMaxX = length;
-    march_box.m_mcMinX = - length;
-    march_box.m_mcMaxY = length;
-    march_box.m_mcMinY = - length;
-    march_box.m_mcMaxZ = length;
-    march_box.m_mcMinZ = - length;
+    float pos_min = 0;
+    float pos_max = 1;
+    march_box.m_mcMaxX = pos_max;
+    march_box.m_mcMinX = pos_min;
+    march_box.m_mcMaxY = pos_max;
+    march_box.m_mcMinY = pos_min;
+    march_box.m_mcMaxZ = pos_max;
+    march_box.m_mcMinZ = pos_min;
+
+    SmoothTool  smoothTool;
 
     // P
     implicit_surface.setType("p");
     march_box.marching_cubes(implicit_surface);
     march_box.writeOBJ("p_type.obj");
 
-    // D
-    implicit_surface.setType("d");
-    march_box.marching_cubes(implicit_surface);
-    march_box.writeOBJ("d_type.obj");
+    smoothTool.createMesh(march_box.m_vertices,
+                          march_box.m_faces);
+    smoothTool.basicSmooth();
+    smoothTool.writeOBJ("openMesh_p_type.obj",
+                        "openMesh_smooth_p_type.obj");
 
-    //G
-    implicit_surface.setType("g");
-    march_box.marching_cubes(implicit_surface);
-    march_box.writeOBJ("g_type.obj");
 
-    //i-wp
-    implicit_surface.setType("i-wp");
-    march_box.marching_cubes(implicit_surface);
-    march_box.writeOBJ("i-wp_type.obj");
+//    // D
+//    implicit_surface.setType("d");
+//    march_box.marching_cubes(implicit_surface);
+//    march_box.writeOBJ("d_type.obj");
 
-    // f-rd
-    implicit_surface.setType("f-rd");
-    march_box.marching_cubes(implicit_surface);
-    march_box.writeOBJ("f-rd_type.obj");
+//    //G
+//    implicit_surface.setType("g");
+//    march_box.marching_cubes(implicit_surface);
+//    march_box.writeOBJ("g_type.obj");
 
-    // l
-    implicit_surface.setType("l");
-    march_box.marching_cubes(implicit_surface);
-    march_box.writeOBJ("l_type.obj");
+//    //i-wp
+//    implicit_surface.setType("i-wp");
+//    march_box.marching_cubes(implicit_surface);
+//    march_box.writeOBJ("i-wp_type.obj");
 
-    // tubular-p
-    implicit_surface.setType("tubular-p");
-    march_box.marching_cubes(implicit_surface);
-    march_box.writeOBJ("turbular-p_type.obj");
+//    // f-rd
+//    implicit_surface.setType("f-rd");
+//    march_box.marching_cubes(implicit_surface);
+//    march_box.writeOBJ("f-rd_type.obj");
 
-    // tubular-g
-    implicit_surface.setType("tubular-g");
-    march_box.marching_cubes(implicit_surface);
-    march_box.writeOBJ("tubular-g_type.obj");
+//    // l
+//    implicit_surface.setType("l");
+//    march_box.marching_cubes(implicit_surface);
+//    march_box.writeOBJ("l_type.obj");
 
-    // i2-y
-    implicit_surface.setType("i2-y");
-    march_box.marching_cubes(implicit_surface);
-    march_box.writeOBJ("i2-y_type.obj");
+//    // tubular-p
+//    implicit_surface.setType("tubular-p");
+//    march_box.marching_cubes(implicit_surface);
+//    march_box.writeOBJ("turbular-p_type.obj");
+
+//    // tubular-g
+//    implicit_surface.setType("tubular-g");
+//    march_box.marching_cubes(implicit_surface);
+//    march_box.writeOBJ("tubular-g_type.obj");
+
+//    // i2-y
+//    implicit_surface.setType("i2-y");
+//    march_box.marching_cubes(implicit_surface);
+//    march_box.writeOBJ("i2-y_type.obj");
 
     return 0;
 }

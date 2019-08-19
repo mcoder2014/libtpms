@@ -236,6 +236,7 @@ public:
     void ClearData(void);
 
     void LinearTex();
+    void SphereTex();
 
 private:
     // clear vertex

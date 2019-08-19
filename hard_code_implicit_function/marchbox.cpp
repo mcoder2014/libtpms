@@ -621,6 +621,13 @@ void MarchBox::add_all_face(std::vector<std::vector<std::vector<std::vector<std:
                     neighbour_boxes_index.push_back(
                         &face_results_index[iter_x][iter_y][iter_z - 1]);
                 }
+                if(iter_x !=0 && iter_y !=0 && iter_z != 0)
+                {
+                    neighbour_boxes.push_back(
+                                &face_results[iter_x-1][iter_y-1][iter_z-1]);
+                    neighbour_boxes_index.push_back(
+                                &face_results_index[iter_x-1][iter_y-1][iter_z-1]);
+                }
 
                 // each box may have more than one triangle
                 for (int iter_current_face = 0; iter_current_face < current_box.size(); iter_current_face ++)
