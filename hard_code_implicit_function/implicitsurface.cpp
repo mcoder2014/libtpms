@@ -88,9 +88,9 @@ double ImplicitSurface::f(double x, double y, double z)
     case 5:
         return L(x,y,z);
     case 6:
-        return Tubular_G(x,y,z);
-    case 7:
         return Tubular_P(x,y,z);
+    case 7:
+        return Tubular_G(x,y,z);
     case 8:
         return I2_Y(x,y,z);
     default:
