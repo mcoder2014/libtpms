@@ -15,6 +15,7 @@ public:
     VertexTraits
     {
 //        OpenMesh::Vec3f cog;    // center of gravity
+        int id;
     };
     FaceTraits
     {
@@ -60,6 +61,12 @@ private:
     // The intersection points of cutting plane and the 3D model
     // Cause there may be more than one circle, so we use 2-d vector
     std::vector<std::vector<OpenMesh::Vec3f>> m_cuttingPoints;
+    std::vector<float> m_cutting_function_vertex;
+
+    // According to the function of cutting plane
+    float functionCuttingPlane(OpenMesh::Vec3f& point);
+    void adddIntersectionPoints(std::vector<OpenMesh::Vec3f>& points);
+    OpenMesh::Vec3f lineCuttingPlane(OpenMesh::Vec3f& v0, OpenMesh::Vec3f& v1);
 
     void printCuttingPlane();   // output the function of cutting plane to the console.
 
