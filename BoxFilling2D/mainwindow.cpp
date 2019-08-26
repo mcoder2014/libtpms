@@ -5,8 +5,6 @@
 #include <QDebug>
 #include <QAction>
 
-
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -14,13 +12,17 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // Open and input insole model file
+    // Dialog Open and input insole model file
     connect(ui->action_open_insole_file, SIGNAL(triggered()),
             this, SLOT(dialog_open_insole_file()));
 
     // Help and about Qt button
     connect(ui->action_about_Qt, SIGNAL(triggered()),
             QApplication::instance(), SLOT(aboutQt()));
+
+    // Dialog
+    connect(ui->action_set_cutting_flat, SIGNAL(triggered()),
+            this, SLOT(dialog_set_cutting_plane()));
 
 }
 
@@ -72,4 +74,15 @@ bool MainWindow::open_insole_file(const QString &filepath)
 {
     qDebug() << "open_insole_file filepath:" << filepath;
     return m_meshcutter.loadMesh(filepath.toStdString());
+}
+
+void MainWindow::dialog_set_cutting_plane()
+{
+    // Open Dialog, getting setting
+
+    // After Dialog executed, apply the setting
+
+    // Test
+    this->m_meshcutter.cutting();
+    this->m_meshcutter.printCuttingResult();
 }

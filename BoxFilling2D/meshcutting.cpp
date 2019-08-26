@@ -3,6 +3,7 @@
 #include <limits>
 
 MeshCutting::MeshCutting()
+    :debug_case(8,0)
 {
     m_model = nullptr;
     m_a0 = m_a1 = m_a2 = m_a3 = 0.0f;
@@ -134,7 +135,7 @@ void MeshCutting::cutting()
         // Calculate f(vi), cause the same point need to be calculate multi-times
         int i =0;
         Mesh::VertexIter v_it, v_end(mesh.vertices_end());
-        for (v_it=mesh.vertices_begin(); v_it != v_end; v_it++, i++)
+        for (v_it=mesh.vertices_begin(); v_it != v_end; ++v_it, ++i)
         {
             mesh.data(*v_it).id = i;
             this->m_cutting_function_vertex.push_back(
@@ -142,27 +143,60 @@ void MeshCutting::cutting()
         }
     }
 
+    // Processing all face to get the intersection result
     Mesh::FaceIter f_it, f_end(mesh.faces_end());
-    for (f_it = mesh.faces_begin(); f_it != f_end; f_it++)
+    for (f_it = mesh.faces_begin(); f_it != f_end; ++f_it)
     {
         if(!mesh.data(*f_it).checked)
         {
             // To prevent the repeated calculation
             // Check the face itself
-            std::vector<OpenMesh::Vec3f> intersection = face_intersection_cutting_plane(f_it);
+            std::vector<OpenMesh::Vec3f> intersection = face_intersection_cutting_plane(*f_it);
 
             if(intersection.size() > 0)
             {
                 // If we find a face intersection with the cutting plane,
                 // check its neighbours.
 
-                // Record the result. Add it into result list
-                // <Prevent the repeated points>
+                // Record the result. Add it into result list <Prevent the repeated points>
+                // Add new vector of points to store the new circle of intersection points
+                this->m_cuttingPoints.push_back(std::vector<OpenMesh::Vec3f>());
+                this->adddIntersectionPoints(intersection); // add intersection points into vector
 
-            }
-        }
+                // Record the current processing face
+                Mesh::FaceHandle intersection_face = *f_it;
 
-    }
+                while(intersection_face.is_valid())
+                {
+                    // check the neighbour faces
+                    // if the neighbour is cutting, exchange the iter to it
+                    Mesh::FaceFaceIter ff_it;
+                    for (ff_it = mesh.ff_begin(intersection_face); ff_it.is_valid(); ++ff_it)
+                    {
+                        if(!mesh.data(*ff_it).checked)
+                        {
+                            std::vector<OpenMesh::Vec3f> neighbour_intersection =
+                                    face_intersection_cutting_plane(*ff_it);
+                            if(neighbour_intersection.size() > 0)
+                            {
+                                this->adddIntersectionPoints(neighbour_intersection);
+                                // Take this face as next circle object
+                                intersection_face = *ff_it;
+                                break;
+                            }
+                        }
+                    }
+
+                    // if no neighbour is cutting, Reset the handle to invalid state
+                    if(!ff_it.is_valid())
+                        intersection_face.reset();
+                }
+            }    // if(intersection.size() > 0)
+        }    // if(!mesh.data(*f_it).checked)
+    }    // for (f_it = mesh.faces_begin(); f_it != f_end; ++f_it)
+
+    // Get the intersections between model and cutting plane
+
 }
 
 ///
@@ -171,18 +205,18 @@ void MeshCutting::cutting()
 /// \return
 /// Get the intersection points from one face and cutting plane
 ///
-std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::FaceIter f_it)
+std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::FaceHandle faceHandle)
 {
     std::vector<OpenMesh::Vec3f> results;
     Mesh &mesh = *m_model;
-    mesh.data(*f_it).checked = true;    // Mark as checked
+    mesh.data(faceHandle).checked = true;    // Mark as checked
 
-//    Mesh::Face face = mesh.face(*f_it);
+    // Processing the three vertexes of the face
     Mesh::FaceVertexIter fv_it;
     std::vector<OpenMesh::Vec3f> triangle;
     std::vector<float> function_value;
 
-    for(fv_it = mesh.fv_iter(*f_it); fv_it.is_valid(); fv_it++)
+    for(fv_it = mesh.fv_iter(faceHandle); fv_it.is_valid(); ++fv_it)
     {
         // Calculate the three vertexes of the face
         OpenMesh::Vec3f &point = mesh.point(*fv_it);
@@ -243,10 +277,15 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
     /// 6. two edges intersected
     ///
 
+    /// Debug
+
+
+
     if(function_value[0] > 0 || function_value[2] < 0)
     {
         // They have the same positive and negtive sigh
         // Not intersection with the cutting face
+        debug_case[0]++;
         return results;
     }
     else if(fabsf(function_value[0]) < 1e-6f
@@ -255,6 +294,7 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         // only one vertex in the face
         // and the vertex is the intersected point
         results.push_back(triangle[0]);
+        debug_case[1]++;
         return results;
     }
     else if(function_value[0] < -1e-6f
@@ -265,7 +305,7 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         // the opposite edge intersects with the cutting face
         results.push_back(triangle[1]);
         results.push_back(lineCuttingPlane(triangle[0], triangle[2]));
-
+        debug_case[2]++;
         return results;
     }
     else if ((fabsf(function_value[0]) < 1e-6f
@@ -275,7 +315,7 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         // Case 4
         results.push_back(triangle[0]);
         results.push_back(triangle[1]);
-
+        debug_case[3]++;
         return results;
     }
     else if(fabsf(function_value[1]) < 1e-6f
@@ -285,7 +325,7 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         // Case 4
         results.push_back(triangle[1]);
         results.push_back(triangle[2]);
-
+        debug_case[3]++;
         return results;
     }
     else if(fabsf(function_value[0]) < 1e-6f
@@ -298,7 +338,7 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         results.push_back(triangle[0]);
         results.push_back(triangle[1]);
         results.push_back(triangle[2]);
-
+        debug_case[4]++;
         return results;
     }
     else if(function_value[0] < 1e-6f
@@ -307,6 +347,7 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         // Case 6
         results.push_back(lineCuttingPlane(triangle[0], triangle[1]));
         results.push_back(lineCuttingPlane(triangle[0], triangle[2]));
+        debug_case[5]++;
         return results;
     }
     else if (function_value[1] < 1e-6f
@@ -315,10 +356,38 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         // Case 6
         results.push_back(lineCuttingPlane(triangle[2], triangle[0]));
         results.push_back(lineCuttingPlane(triangle[2], triangle[1]));
+        debug_case[5]++;
         return results;
     }
 
     return results;
+}
+
+void MeshCutting::printCuttingResult()
+{
+    // Output the basic info
+    std::cout << "Total circle: " << this->m_cuttingPoints.size() << std::endl;
+
+    // Output the detail info
+    for(unsigned long i=0; i < this->m_cuttingPoints.size(); i++)
+    {
+        std::cout << "Circle " << i
+                  << "Points: " << this->m_cuttingPoints[i].size()
+                  << std::endl;
+        for (unsigned long j =0; j<this->m_cuttingPoints[i].size(); j++)
+        {
+            std::cout << "\tPoint " << j << "\t"
+                      << this->m_cuttingPoints[i][j]
+                      << std::endl;
+        }
+    }
+
+    std::cout << "Cases count: \n";
+    for (unsigned long i=0; i<6; i++)
+    {
+        std::cout << "Case " << i
+                  << "\t" << debug_case[i] << "\n";
+    }
 }
 
 ///
@@ -338,7 +407,35 @@ float MeshCutting::functionCuttingPlane(OpenMesh::Vec3f &point)
 ///     Add points into results, prevent repeated points
 void MeshCutting::adddIntersectionPoints(std::vector<OpenMesh::Vec3f> &points)
 {
-    points.size();
+    if(points.size() == 0)
+        return;
+
+    if(this->m_cuttingPoints.size() == 0)
+        this->m_cuttingPoints.push_back(std::vector<OpenMesh::Vec3f>());
+
+    std::vector<OpenMesh::Vec3f> &circle =
+            this->m_cuttingPoints.at(this->m_cuttingPoints.size()-1);
+
+    if(circle.size() == 0) {
+        for(auto point : points)
+            circle.push_back(point);
+        return;
+    }
+
+    // If there were repeated points
+    // Only remove one repeated point
+    OpenMesh::Vec3f last_point = circle[circle.size()-1];
+    for(std::vector<OpenMesh::Vec3f>::iterator iter = points.begin();
+            iter != points.end(); iter++)
+    {
+        if(*iter == last_point)
+        {
+            iter = points.erase(iter);
+        }
+    }
+
+    for(auto point : points)
+        circle.push_back(point);
 }
 
 ///

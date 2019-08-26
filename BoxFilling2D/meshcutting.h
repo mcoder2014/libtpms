@@ -48,7 +48,9 @@ public:
         return &this->m_cuttingPoints;
     }
 
-    std::vector<OpenMesh::Vec3f> face_intersection_cutting_plane(Mesh::FaceIter f_it);
+    std::vector<OpenMesh::Vec3f> face_intersection_cutting_plane(Mesh::FaceHandle faceHandle);
+
+    void printCuttingResult();
 
 private:
     // the param of y = a0x + a1y + a2z + a3;
@@ -69,6 +71,8 @@ private:
     OpenMesh::Vec3f lineCuttingPlane(OpenMesh::Vec3f& v0, OpenMesh::Vec3f& v1);
 
     void printCuttingPlane();   // output the function of cutting plane to the console.
+
+   std::vector<unsigned int> debug_case;
 
 };
 

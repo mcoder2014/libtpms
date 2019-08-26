@@ -22,6 +22,8 @@ public slots:
     void dialog_open_insole_file();
     bool open_insole_file(const QString& filepath);
 
+    void dialog_set_cutting_plane();
+
 private:
     Ui::MainWindow *ui;
     MeshCutting m_meshcutter;
