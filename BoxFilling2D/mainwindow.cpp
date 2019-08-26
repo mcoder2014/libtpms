@@ -85,4 +85,8 @@ void MainWindow::dialog_set_cutting_plane()
     // Test
     this->m_meshcutter.cutting();
     this->m_meshcutter.printCuttingResult();
+
+    // Draw
+    ui->graphicsView->updateCuttingPoints(this->m_meshcutter.getCuttingPoints2d());
+
 }

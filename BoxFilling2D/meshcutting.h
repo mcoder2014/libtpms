@@ -49,7 +49,7 @@ public:
     }
 
     std::vector<OpenMesh::Vec3f> face_intersection_cutting_plane(Mesh::FaceHandle faceHandle);
-
+    std::vector<std::vector<OpenMesh::Vec2f> > *getCuttingPoints2d();
     void printCuttingResult();
 
 private:
@@ -63,6 +63,8 @@ private:
     // The intersection points of cutting plane and the 3D model
     // Cause there may be more than one circle, so we use 2-d vector
     std::vector<std::vector<OpenMesh::Vec3f>> m_cuttingPoints;
+    // The cutting points project on the cutting plane
+    std::vector<std::vector<OpenMesh::Vec2f>> m_cuttingPoints_2d;
     std::vector<float> m_cutting_function_vertex;
 
     // According to the function of cutting plane

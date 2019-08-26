@@ -363,6 +363,22 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
     return results;
 }
 
+std::vector<std::vector<OpenMesh::Vec2f> > *MeshCutting::getCuttingPoints2d()
+{
+    for(auto cutting_points_3d: m_cuttingPoints)
+    {
+        this->m_cuttingPoints_2d.push_back(std::vector<OpenMesh::Vec2f>());
+        std::vector<OpenMesh::Vec2f> & cutting_points_2d = m_cuttingPoints_2d[m_cuttingPoints_2d.size()-1];
+        for(auto cutting_point_3d: cutting_points_3d)
+        {
+            // TODO: project one 3D points into 2d coordinate.
+            cutting_points_2d.push_back(OpenMesh::Vec2f(cutting_point_3d[0], cutting_point_3d[1]));
+        }
+    }
+
+    return &m_cuttingPoints_2d;
+}
+
 void MeshCutting::printCuttingResult()
 {
     // Output the basic info

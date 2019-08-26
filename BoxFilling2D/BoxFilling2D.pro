@@ -25,11 +25,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        graphicsview.cpp \
         main.cpp \
         mainwindow.cpp \
         meshcutting.cpp
 
 HEADERS += \
+        graphicsview.h \
         mainwindow.h \
         meshcutting.h
 
