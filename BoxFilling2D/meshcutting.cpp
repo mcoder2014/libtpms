@@ -130,6 +130,7 @@ void MeshCutting::cutting()
 
     // Rename as a regional variable
     Mesh& mesh = *m_model;
+    this->m_cutting_function_vertex.resize(mesh.n_vertices());
 
     {
         // Calculate f(vi), cause the same point need to be calculate multi-times
@@ -138,8 +139,8 @@ void MeshCutting::cutting()
         for (v_it=mesh.vertices_begin(); v_it != v_end; ++v_it, ++i)
         {
             mesh.data(*v_it).id = i;
-            this->m_cutting_function_vertex.push_back(
-                        functionCuttingPlane(mesh.point(*v_it)));
+            this->m_cutting_function_vertex[static_cast<unsigned long>(i)]
+                    = functionCuttingPlane(mesh.point(*v_it));
         }
     }
 
@@ -147,7 +148,7 @@ void MeshCutting::cutting()
     Mesh::FaceIter f_it, f_end(mesh.faces_end());
     for (f_it = mesh.faces_begin(); f_it != f_end; ++f_it)
     {
-        if(!mesh.data(*f_it).checked)
+        if(mesh.data(*f_it).checked == false)
         {
             // To prevent the repeated calculation
             // Check the face itself
@@ -173,10 +174,11 @@ void MeshCutting::cutting()
                     Mesh::FaceFaceIter ff_it;
                     for (ff_it = mesh.ff_begin(intersection_face); ff_it.is_valid(); ++ff_it)
                     {
-                        if(!mesh.data(*ff_it).checked)
+                        if(mesh.data(*ff_it).checked == false)
                         {
                             std::vector<OpenMesh::Vec3f> neighbour_intersection =
                                     face_intersection_cutting_plane(*ff_it);
+
                             if(neighbour_intersection.size() > 0)
                             {
                                 this->adddIntersectionPoints(neighbour_intersection);
@@ -188,7 +190,7 @@ void MeshCutting::cutting()
                     }
 
                     // if no neighbour is cutting, Reset the handle to invalid state
-                    if(!ff_it.is_valid())
+                    if(ff_it.is_valid() == false)
                         intersection_face.reset();
                 }
             }    // if(intersection.size() > 0)
@@ -208,8 +210,8 @@ void MeshCutting::cutting()
 std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::FaceHandle faceHandle)
 {
     std::vector<OpenMesh::Vec3f> results;
-    Mesh &mesh = *m_model;
-    mesh.data(faceHandle).checked = true;    // Mark as checked
+    Mesh &mesh = *m_model;                   // Rename the mesh model
+    mesh.data(faceHandle).checked = true;    // Mark the model as checked
 
     // Processing the three vertexes of the face
     Mesh::FaceVertexIter fv_it;
@@ -229,14 +231,15 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
     }
 
     ///
-    /// Sort the three points, to reduce the size of possibilities
+    /// Sort the cutting function value of the three points,
+    /// to reduce the size of possibilities
     ///
     {
         float tmp;
         OpenMesh::Vec3f tmpp;
         if(function_value[0] > function_value[1])
         {
-            tmp = function_value[1];
+            tmp = function_value[0];
             function_value[0] = function_value[1];
             function_value[1] = tmp;
 
@@ -256,7 +259,7 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         }
         if(function_value[0] > function_value[1])
         {
-            tmp = function_value[1];
+            tmp = function_value[0];
             function_value[0] = function_value[1];
             function_value[1] = tmp;
 
@@ -269,7 +272,7 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
     ///
     /// To Find the intersection points of the face and the cutting plane
     /// 6 case:
-    /// 1. Not intersection
+    /// 1. Not intersection Min > 0 || Max < 0
     /// 2. one vertex is in the cutting plane
     /// 3. one vertex is in the cutting plane and the opposite edge is intersected
     /// 4. one edge is in the cutting plane
@@ -283,9 +286,29 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
 
     if(function_value[0] > 0 || function_value[2] < 0)
     {
+        // Most common
         // They have the same positive and negtive sigh
         // Not intersection with the cutting face
         debug_case[0]++;
+        return results;
+    }
+    else if(function_value[0] < 1e-6f
+            && function_value[1] > 1e-6f)
+    {
+        // Case 6
+        results.push_back(lineCuttingPlane(triangle[0], triangle[1]));
+        results.push_back(lineCuttingPlane(triangle[0], triangle[2]));
+        debug_case[5]++;
+        return results;
+    }
+    else if (function_value[1] < 1e-6f
+             && function_value[2] > 1e-6f)
+    {
+        // Second common
+        // Case 6
+        results.push_back(lineCuttingPlane(triangle[2], triangle[0]));
+        results.push_back(lineCuttingPlane(triangle[2], triangle[1]));
+        debug_case[5]++;
         return results;
     }
     else if(fabsf(function_value[0]) < 1e-6f
@@ -294,6 +317,13 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         // only one vertex in the face
         // and the vertex is the intersected point
         results.push_back(triangle[0]);
+        debug_case[1]++;
+        return results;
+    }
+    else if(fabsf(function_value[2]) < 1e-6f
+            && function_value[1] < 1e-6f)
+    {
+        results.push_back(triangle[2]);
         debug_case[1]++;
         return results;
     }
@@ -339,24 +369,6 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         results.push_back(triangle[1]);
         results.push_back(triangle[2]);
         debug_case[4]++;
-        return results;
-    }
-    else if(function_value[0] < 1e-6f
-            && function_value[1] > 1e-6f)
-    {
-        // Case 6
-        results.push_back(lineCuttingPlane(triangle[0], triangle[1]));
-        results.push_back(lineCuttingPlane(triangle[0], triangle[2]));
-        debug_case[5]++;
-        return results;
-    }
-    else if (function_value[1] < 1e-6f
-             && function_value[2] > 1e-6f)
-    {
-        // Case 6
-        results.push_back(lineCuttingPlane(triangle[2], triangle[0]));
-        results.push_back(lineCuttingPlane(triangle[2], triangle[1]));
-        debug_case[5]++;
         return results;
     }
 
@@ -437,21 +449,25 @@ void MeshCutting::adddIntersectionPoints(std::vector<OpenMesh::Vec3f> &points)
             circle.push_back(point);
         return;
     }
-
-    // If there were repeated points
-    // Only remove one repeated point
-    OpenMesh::Vec3f last_point = circle[circle.size()-1];
-    for(std::vector<OpenMesh::Vec3f>::iterator iter = points.begin();
-            iter != points.end(); iter++)
+    else
     {
-        if(*iter == last_point)
+        // If there were repeated points
+        // Only remove one repeated point
+        OpenMesh::Vec3f last_point = circle[circle.size()-1];
+        for(std::vector<OpenMesh::Vec3f>::iterator iter = points.begin();
+                iter != points.end(); )
         {
-            iter = points.erase(iter);
+            if(((*iter)-last_point).length() < 1e-5f)
+            {
+                iter = points.erase(iter);
+            }
+            else
+            {
+                circle.push_back(*iter);
+                iter++;
+            }
         }
     }
-
-    for(auto point : points)
-        circle.push_back(point);
 }
 
 ///
@@ -463,10 +479,16 @@ void MeshCutting::adddIntersectionPoints(std::vector<OpenMesh::Vec3f> &points)
 ///
 OpenMesh::Vec3f MeshCutting::lineCuttingPlane(OpenMesh::Vec3f &v0, OpenMesh::Vec3f &v1)
 {
-    float t = -(m_a3 + m_a0 * v0[0] + m_a1 * v0[1] + m_a2 * v0[2])
-                / (m_a0 * v1[0] + m_a1 * v1[1] + m_a2 * v1[2]);
+//    float t = -(m_a3 + m_a0 * v0[0] + m_a1 * v0[1] + m_a2 * v0[2])
+//                / (m_a0 * v1[0] + m_a1 * v1[1] + m_a2 * v1[2]);
 
-    OpenMesh::Vec3f intersectionPoint(v0[0] + v1[0] * t, v0[1] + v1[1] * t, v0[2] + v1[2] * t);
+    OpenMesh::Vec3f v01 = v0-v1;
+    float t = -(m_a0 * v1[0] + m_a1 * v1[1] + m_a2 * v1[2] + m_a3)
+            /(m_a0 * v01[0] + m_a1 * v01[1] + m_a2 * v01[2]);
+
+//    OpenMesh::Vec3f intersectionPoint(v0[0] + v1[0] * t, v0[1] + v1[1] * t, v0[2] + v1[2] * t);
+    OpenMesh::Vec3f intersectionPoint = v1 + t * v01;
+
     return intersectionPoint;
 }
 

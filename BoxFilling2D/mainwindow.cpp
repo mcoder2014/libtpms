@@ -58,9 +58,9 @@ void MainWindow::dialog_open_insole_file()
             std::cout << "Loading Mesh succeed! " << path.toStdString() << std::endl;
 
             // Test setting cutting plane function
-            m_meshcutter.setCuttingPlane(OpenMesh::Vec3f(0,0,10),
-                                         OpenMesh::Vec3f(1,0,10),
-                                         OpenMesh::Vec3f(0,1,10));
+            m_meshcutter.setCuttingPlane(OpenMesh::Vec3f(0,0,4),
+                                         OpenMesh::Vec3f(1,0,4),
+                                         OpenMesh::Vec3f(0,1,4));
         }
     }
 }
