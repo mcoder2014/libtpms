@@ -25,22 +25,30 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        UI/cuttingplanesettingdialog.cpp \
         graphicsview.cpp \
         main.cpp \
         mainwindow.cpp \
         meshcutting.cpp
 
 HEADERS += \
+        UI/cuttingplanesettingdialog.h \
         graphicsview.h \
         mainwindow.h \
         meshcutting.h
 
 FORMS += \
+        UI/cuttingplanesettingdialog.ui \
         mainwindow.ui
 
-LIBS += \
-    -L/usr/lib -lOpenMeshCore -lOpenMeshTools
-
+unix {
+    LIBS += \
+        -L/usr/lib -lOpenMeshCore -lOpenMeshTools
+}
+win32 {
+#    INCLUDEPATH += \
+#    LIBS += \
+}
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

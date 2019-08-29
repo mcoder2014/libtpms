@@ -5,6 +5,8 @@
 #include <QDebug>
 #include <QAction>
 
+#include <UI/cuttingplanesettingdialog.h>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -23,6 +25,10 @@ MainWindow::MainWindow(QWidget *parent) :
     // Dialog
     connect(ui->action_set_cutting_flat, SIGNAL(triggered()),
             this, SLOT(dialog_set_cutting_plane()));
+
+    // Cutting
+    connect(ui->action_cutting_mesh, SIGNAL(triggered()),
+            this, SLOT(cutting_mesh()));
 
 }
 
@@ -57,12 +63,10 @@ void MainWindow::dialog_open_insole_file()
             // Load Mesh success
             std::cout << "Loading Mesh succeed! " << path.toStdString() << std::endl;
 
-            // Test setting cutting plane function
-            m_meshcutter.setCuttingPlane(OpenMesh::Vec3f(0,0,4),
-                                         OpenMesh::Vec3f(1,0,4),
-                                         OpenMesh::Vec3f(0,1,4));
         }
     }
+
+    delete fileDialog;
 }
 
 ///
@@ -80,13 +84,27 @@ void MainWindow::dialog_set_cutting_plane()
 {
     // Open Dialog, getting setting
 
-    // After Dialog executed, apply the setting
+    CuttingPlaneSettingDialog settingDialog(this);
 
+    // Test setting cutting plane function
+    m_meshcutter.setCuttingPlane(OpenMesh::Vec3f(0,0,4),
+                                 OpenMesh::Vec3f(1,0,4),
+                                 OpenMesh::Vec3f(0,1,4));
+
+    // After Dialog executed, apply the setting
+    if(settingDialog.exec())
+    {
+        //
+        std::cout << "Cutting plane setting dialog" << std::endl;
+    }
+}
+
+void MainWindow::cutting_mesh()
+{
     // Test
     this->m_meshcutter.cutting();
     this->m_meshcutter.printCuttingResult();
 
     // Draw
     ui->graphicsView->updateCuttingPoints(this->m_meshcutter.getCuttingPoints2d());
-
 }

@@ -663,10 +663,12 @@ void MarchBox::add_all_face(std::vector<std::vector<std::vector<std::vector<std:
                                 {
                                     // iter_triangles[iter_neighbour] -> vec3 in neighbour box
 
-                                    if(glm::all(
-                                           glm::equal(
-                                               current_box_triangles[iter_current_vertice],
-                                               (*(neighbour_boxes[iter_neighbour_box]))[iter_neighbour_box_triangles][iter_neighbour_box_triangles_vertice])))
+//                                    if(glm::all(
+//                                           glm::equal(
+//                                               current_box_triangles[iter_current_vertice],
+//                                               (*(neighbour_boxes[iter_neighbour_box]))[iter_neighbour_box_triangles][iter_neighbour_box_triangles_vertice])))
+                                    if(equal(current_box_triangles[iter_current_vertice],
+                                             (*(neighbour_boxes[iter_neighbour_box]))[iter_neighbour_box_triangles][iter_neighbour_box_triangles_vertice]))
                                     {
                                         // Existing the same point
                                         // Use the Same index like that point
@@ -736,5 +738,10 @@ void MarchBox::writeOBJ(const std::string &fileName)
     }
 
     file.close();
+}
+
+bool MarchBox::equal(glm::vec3 v0, glm::vec3 v1)
+{
+    return fabsf(v0[0] - v1[0]) < 1e-6f && fabsf(v0[1] - v1[1]) < 1e-6f && fabsf(v0[2] - v1[2]) < 1e-6f;
 }
 

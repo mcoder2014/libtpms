@@ -66,43 +66,59 @@ void SmoothTool::basicSmooth()
     }
 
     Mesh &mesh = (*m_object);   // Get the reference
-    m_result = new Mesh(mesh);  // New a result
+    if(m_result != nullptr)
+        delete m_result;
+    m_result = new Mesh();      // New a result
+    m_result->assign(mesh);     // Deep copy a openmesh model
     Mesh::VertexIter v_it, v_end(mesh.vertices_end());
 
     // To get the value into result object
     Mesh::VertexIter v_result_it(m_result->vertices_begin());
 
     Mesh::VertexVertexIter vv_it;
-//    Mesh::VertexFaceIter vf_it;
+    Mesh::VertexFaceIter vf_it;
     OpenMesh::Vec3f cog;        // To record the gravity of the point
     int valance = 0;            // Record the degree of the point
 
     int round = 0;
 
-    for (v_it = mesh.vertices_begin(); v_it != v_end; v_it++, v_result_it++)
+    for (v_it = mesh.vertices_begin(); v_it != v_end; ++v_it, ++v_result_it)
     {
-        if(!mesh.is_boundary(*v_it))
+//        if(!mesh.is_boundary(*v_it))
         {
             // Don't change the position of boundary vertex
 
             cog = OpenMesh::Vec3f(0.0); // Init it into origin point
             valance = 0;
-            for (vv_it = mesh.vv_iter(*v_it);
-                 vv_it.is_valid();
-                 vv_it++)
+
+            for (vf_it = mesh.vf_begin(*v_it);
+                 vf_it.is_valid();vf_it++)
             {
-                cog += mesh.point(*vv_it);
+                OpenMesh::Vec3f gravity(0.0);
+                Mesh::FaceVertexIter fv_it;
+
+                for (fv_it = mesh.fv_begin(*vf_it);
+                     fv_it.is_valid();fv_it++)
+                {
+                    gravity += mesh.point(*fv_it);
+                }
+                gravity = gravity/3;
+                cog += gravity;
                 valance++;
             }
 
             cog = cog / static_cast<float>(valance);
-//            mesh.data(*v_it).cog = cog;     // Record the cog using kernel traits
+
             // Record the calculated value
             m_result->set_point(*v_result_it, cog);
             round ++;
-        }
+        } // if(!mesh.is_boundary(*v_it))
     }
     std::cout << "Valuable round : " << round << std::endl;
+
+    // Copy m_result to m_object
+    mesh.assign(*m_result);
+
 }
 
 void SmoothTool::writeOBJ(const std::string &file_origin, const std::string &file_result)

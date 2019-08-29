@@ -41,6 +41,9 @@ public:
     void add_all_face(std::vector<std::vector<std::vector<std::vector<std::vector<glm::vec3>>>>> & face_results);
     void writeOBJ(std::string const & fileName);
 
+private:
+    bool equal(glm::vec3 v0, glm::vec3 v1);
+
 };
 
 #endif // MARCHBOX_H

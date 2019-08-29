@@ -5,3 +5,11 @@ CONFIG -= qt
 
 SOURCES += \
         main.cpp
+
+unix {
+
+}
+
+win32 {
+
+}

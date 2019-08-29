@@ -16,7 +16,14 @@ HEADERS += \
     marchbox.h \
     smoothtool.h
 
-#INCLUDEPATH += /usr/include
 
-LIBS += \
-    -L/usr/lib -lOpenMeshCore -lOpenMeshTools
+unix {
+    #INCLUDEPATH += /usr/include
+    message(system())
+    LIBS += \
+        -L/usr/lib -lOpenMeshCore -lOpenMeshTools
+}
+
+win32 {
+
+}
