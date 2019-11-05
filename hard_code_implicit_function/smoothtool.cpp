@@ -6,7 +6,17 @@ SmoothTool::SmoothTool()
 {
     m_object = nullptr;
     m_result = nullptr;
+    m_backup = nullptr;
+}
 
+SmoothTool::~SmoothTool()
+{
+    if(m_object != nullptr)
+        delete m_object;
+    if(m_result != nullptr)
+        delete m_result;
+    if(m_backup != nullptr)
+        delete  m_backup;
 }
 
 bool SmoothTool::createMesh(
@@ -52,7 +62,29 @@ bool SmoothTool::createMesh(
         m_object->add_face(face_vhandles);
     }
 
+    // backup
+    if(m_backup == nullptr)
+        m_backup = new Mesh;
+    m_backup->assign(*m_object);
+
     return true;
+}
+
+bool SmoothTool::createMesh(std::string filepath)
+{
+    if(m_object != nullptr)
+    {
+        delete m_object;
+        m_object = nullptr;
+    }
+
+    m_object = new Mesh();
+    OpenMesh::IO::read_mesh(*m_object, filepath);
+
+    // backup
+    if(m_backup == nullptr)
+        m_backup = new Mesh;
+    m_backup->assign(*m_object);
 }
 
 void SmoothTool::basicSmooth()
@@ -66,10 +98,11 @@ void SmoothTool::basicSmooth()
     }
 
     Mesh &mesh = (*m_object);   // Get the reference
-    if(m_result != nullptr)
-        delete m_result;
-    m_result = new Mesh();      // New a result
+
+    if(m_result == nullptr)
+        m_result = new Mesh;
     m_result->assign(mesh);     // Deep copy a openmesh model
+
     Mesh::VertexIter v_it, v_end(mesh.vertices_end());
 
     // To get the value into result object
@@ -118,7 +151,8 @@ void SmoothTool::basicSmooth()
 
     // Copy m_result to m_object
     mesh.assign(*m_result);
-
+    delete m_result;
+    m_result = nullptr;
 }
 
 void SmoothTool::writeOBJ(const std::string &file_origin, const std::string &file_result)
@@ -127,24 +161,26 @@ void SmoothTool::writeOBJ(const std::string &file_origin, const std::string &fil
     // write mesh to output.obj
     try
     {
-        if(file_origin.length() > 0 && m_object)
+        if(file_origin.length() > 0 && m_backup)
         {
-            if ( !OpenMesh::IO::write_mesh(*m_object, file_origin))
+            if ( !OpenMesh::IO::write_mesh(*m_backup, file_origin))
             {
                 std::cerr << "Cannot write origin mesh to "
                           << file_origin
                           << std::endl;
             }
+            std::cout << "OpenMesh saving origin mesh into file:\t" << file_origin << std::endl;
         }
 
-        if(file_result.length() > 0 && m_result)
+        if(file_result.length() > 0 && m_object)
         {
-            if(!OpenMesh::IO::write_mesh(*m_result, file_result))
+            if(!OpenMesh::IO::write_mesh(*m_object, file_result))
             {
                 std::cerr << "Cannot write result mesh to "
                           << file_result
                           << std::endl;
             }
+            std::cout << "OpenMesh saving smoothed mesh into file:\t" << file_result << std::endl;
         }
 
     }

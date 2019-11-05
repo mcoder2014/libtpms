@@ -3,8 +3,13 @@
 #include <iostream>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
 
 #include <QDebug>
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 // init the edgeTable of marching box algorithm
 int MarchBox::edgeTable[256]={
@@ -335,8 +340,14 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
              << " nz: " << ncellsZ << " Step_z: " << step_z;
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
-    std::vector<std::vector<std::vector<int>>> IS_value;
-    std::vector<std::vector<std::vector<glm::vec3>>> sample_points;
+    std::vector<std::vector<std::vector<int>>> IS_value(
+                ncellsX,std::vector<std::vector<int>>(
+                    ncellsY, std::vector<int>(
+                        ncellsZ, 0)));
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
+            ncellsX, std::vector<std::vector<glm::vec3>>(
+                    ncellsY, std::vector<glm::vec3>(
+                        ncellsZ, glm::vec3(0.0))));
 
     int count_sum_of_1 = 0; // use for debug
     int count_sum_of_0 = 0; // use for debug
@@ -344,21 +355,22 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
     // init the record values and the sample_points of the marching cubes
     for(int iter_x = 0; iter_x < ncellsX; iter_x++)
     {
-        IS_value.push_back(std::vector<std::vector<int>>());
-        sample_points.push_back(std::vector<std::vector<glm::vec3>>());
+//        IS_value.push_back(std::vector<std::vector<int>>());
+//        sample_points.push_back(std::vector<std::vector<glm::vec3>>());
         double pos_x = mcMinX + step_x * iter_x;
 
         for (int iter_y = 0; iter_y < ncellsY; iter_y++)
         {
-            IS_value[iter_x].push_back(std::vector<int>());
-            sample_points[iter_x].push_back(std::vector<glm::vec3>());
+//            IS_value[iter_x].push_back(std::vector<int>());
+//            sample_points[iter_x].push_back(std::vector<glm::vec3>());
             double pos_y = mcMinY + step_y * iter_y;
 
             for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
             {
 
                 double pos_z = mcMinZ + step_z * iter_z;
-                sample_points[iter_x][iter_y].push_back(glm::vec3(pos_x, pos_y, pos_z));
+//                sample_points[iter_x][iter_y].push_back(glm::vec3(pos_x, pos_y, pos_z));
+                sample_points[iter_x][iter_y][iter_z] = glm::vec3(pos_x, pos_y, pos_z);
 
                 // Record the IS_value
 //                double value = implicit_surface.G(pos_x, pos_y, pos_z);
@@ -366,20 +378,22 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
 
                 if(value > 0)
                 {
-                    IS_value[iter_x][iter_y].push_back(1);
+//                    IS_value[iter_x][iter_y].push_back(1);
+                    IS_value[iter_x][iter_y][iter_z] = 1;
                     count_sum_of_1 ++;
                 }
                 else
                 {
-                    IS_value[iter_x][iter_y].push_back(0);
+//                    IS_value[iter_x][iter_y].push_back(0);
+                    IS_value[iter_x][iter_y][iter_z] = 0;
                     count_sum_of_0 ++;
                 }
             }
         }
     }
 
-    std::cout << "Count the num of 1: " << count_sum_of_1
-              << "\nCount hte num of 0: " << count_sum_of_0
+    std::cout << "Count the num of points at the out of Implicit surface : " << count_sum_of_1
+              << "\nCount the num of points at the inner of Implicit surface :" << count_sum_of_0
               << std::endl;
 
     // To avoid the repeat vertice in the result, and to reduce the searching time.
@@ -387,19 +401,22 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
 //    std::vector<std::vector<std::vector<std::vector<glm::vec3[3]>>>> face_results;
     // Cause the upper one will error when using push_back
     // I change the format into the below one
-    std::vector<std::vector<std::vector<std::vector<std::vector<glm::vec3>>>>> face_results;
+    std::vector<std::vector<std::vector<std::vector<std::vector<glm::vec3>>>>> face_results(
+                ncellsX-1, std::vector<std::vector<std::vector<std::vector<glm::vec3>>>>(
+                    ncellsY-1, std::vector<std::vector<std::vector<glm::vec3>>>(
+                        ncellsZ-1, std::vector<std::vector<glm::vec3>>())));
 
     // Approximation of the all marching cubes
     for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
     {
-        face_results.push_back(std::vector<std::vector<std::vector<std::vector<glm::vec3>>>>());
+//        face_results.push_back(std::vector<std::vector<std::vector<std::vector<glm::vec3>>>>());
 
         for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
         {
-            face_results[iter_x].push_back(std::vector<std::vector<std::vector<glm::vec3>>>());
+//            face_results[iter_x].push_back(std::vector<std::vector<std::vector<glm::vec3>>>());
             for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
             {
-                face_results[iter_x][iter_y].push_back(std::vector<std::vector<glm::vec3>>());
+//                face_results[iter_x][iter_y].push_back(std::vector<std::vector<glm::vec3>>());
                 // Get the eight point of the cube vertex,
                 // to March the condition in 256 probailities
 
@@ -512,61 +529,14 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
 //                    this->add_face(vertices_face[0], vertices_face[1], vertices_face[2]);
 
                     face_results[iter_x][iter_y][iter_z].push_back(vertices_face);
-
-
                 }   // while (*edgelist != -1 )
+
             }   //  for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
         }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
     }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
 
     add_all_face(face_results); // make the result
 }
-
-/////
-///// \brief MarchBox::add_face
-///// \param v0
-///// \param v1
-///// \param v2
-/////
-//void MarchBox::add_face(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2)
-//{
-//    std::vector<glm::vec3> points;
-//    points.push_back(v0);
-//    points.push_back(v1);
-//    points.push_back(v2);
-
-////    std::cout << "Add points" ;
-
-//    glm::ivec3 face;
-
-//    for(int i=0; i<3; i++)
-//    {
-//        // Search if there are same vertice already in vector
-////        int index =0;
-////        while(index < m_vertices.size()
-////              && glm::any(glm::notEqual(m_vertices[index], points[i])))
-////        {
-////            index ++;
-////        }
-
-////        if(index < m_vertices.size())
-////        {
-////            // the points is already in the list
-////            face[i] = index;
-////        }
-////        else
-////        {
-////            this->m_vertices.push_back(points[i]);
-////            face[i] = m_vertices.size()-1;
-////        }
-
-//        // Don't check the repeating vertices
-//        this->m_vertices.push_back(points[i]);
-//        face[i] = m_vertices.size()-1;
-//    }
-
-//    this->m_faces.push_back(face);      // add the face into list
-//}
 
 void MarchBox::add_all_face(std::vector<std::vector<std::vector<std::vector<std::vector<glm::vec3> > > > > &face_results)
 {
@@ -742,6 +712,8 @@ void MarchBox::writeOBJ(const std::string &fileName)
 
 bool MarchBox::equal(glm::vec3 v0, glm::vec3 v1)
 {
-    return fabsf(v0[0] - v1[0]) < 1e-6f && fabsf(v0[1] - v1[1]) < 1e-6f && fabsf(v0[2] - v1[2]) < 1e-6f;
+    return fabsf(v0[0] - v1[0]) < 1e-6f
+            && fabsf(v0[1] - v1[1]) < 1e-6f
+            && fabsf(v0[2] - v1[2]) < 1e-6f;
 }
 

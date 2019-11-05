@@ -37,7 +37,6 @@ public:
     MarchBox();
 
     void marching_cubes(ImplicitSurface& implicit_surface);
-//    void add_face(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2);
     void add_all_face(std::vector<std::vector<std::vector<std::vector<std::vector<glm::vec3>>>>> & face_results);
     void writeOBJ(std::string const & fileName);
 
