@@ -2,7 +2,7 @@
 #define MARCHBOX_H
 
 #include <vector>
-
+#include <unordered_map>
 #include <string>
 
 #include <glm/glm.hpp>
@@ -37,12 +37,12 @@ public:
     MarchBox();
 
     void marching_cubes(ImplicitSurface& implicit_surface);
-    void add_all_face(std::vector<std::vector<std::vector<std::vector<std::vector<glm::vec3>>>>> & face_results);
     void writeOBJ(std::string const & fileName);
 
 private:
-    bool equal(glm::vec3 v0, glm::vec3 v1);
-
+    std::unordered_map<int64_t, int> m_index_map;
+    int getVertexIdx(int cx_id, int cy_id, int cz_id, int edge_idx,
+                     std::vector<std::vector<std::vector<glm::vec3>>> &sample_points);
 };
 
 #endif // MARCHBOX_H

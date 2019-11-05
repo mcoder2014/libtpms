@@ -27,7 +27,7 @@ int main()
     march_box.m_mcMinZ = pos_min;
 
     SmoothTool  smoothTool;
-    int smooth_times = 5;
+    int smooth_times = 20;
 
     auto march_box_function = [&](QString type, string savePath)
     {
@@ -54,8 +54,7 @@ int main()
     // P
     march_box_function("P","p_type.obj");
     smooth_tool_function("p_type_openmesh.obj", "p_type_smooth_openmesh.obj");
-//    smooth_tool_from_obj("p_type.obj","p_type_openmesh.obj", "p_type_smooth_openmesh.obj");
-/*
+
     // D
     march_box_function("D", "d_type.obj");
     smooth_tool_function("d_type_openmesh.obj", "d_type_smooth_openmesh.obj");
@@ -93,6 +92,6 @@ int main()
     march_box_function("i2-y", "i2-y_type.obj");
     smooth_tool_function("i2_y_type_openmesh.obj",
                         "i2_y_type_smooth_openmesh.obj");
-*/
+
     return 0;
 }
