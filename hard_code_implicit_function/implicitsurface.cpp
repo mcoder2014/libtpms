@@ -60,6 +60,7 @@ int ImplicitSurface::setType(QString type)
         this->m_type_flag = 8;
         this->m_type = "i2-y";
     }
+    return this->m_type_flag;
 }
 
 ///

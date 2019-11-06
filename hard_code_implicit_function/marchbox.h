@@ -6,6 +6,7 @@
 #include <string>
 
 #include <glm/glm.hpp>
+#include <eigen3/Eigen/Dense>
 
 #include "implicitsurface.h"
 
@@ -29,6 +30,9 @@ public:
     float m_mcMaxY;
     float m_mcMinZ;
     float m_mcMaxZ;
+
+    Eigen::AlignedBox3d m_boundingbox_physical;
+    Eigen::AlignedBox3d m_boundingbox_logical;
 
     // The triangle mesh of the result of marching box algorithm
     std::vector<glm::vec3> m_vertices;

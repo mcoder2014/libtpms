@@ -334,13 +334,18 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
     float mcMaxY = m_mcMaxY;
     float mcMinZ = m_mcMinZ;
     float mcMaxZ = m_mcMaxZ;
+    Eigen::Vector3d logical_min = m_boundingbox_logical.min();
+    Eigen::Vector3d logical_max = m_boundingbox_logical.max();
+    Eigen::Vector3d physical_min = m_boundingbox_physical.min();
+    Eigen::Vector3d physical_max = m_boundingbox_physical.max();
 
     // Calculate the step of each box
     float step_x = (mcMaxX-mcMinX) / (ncellsX-1);
     float step_y = (mcMaxY-mcMinY) / (ncellsY-1);
     float step_z = (mcMaxZ-mcMinZ) / (ncellsZ-1);
 
-    qDebug() << "nx: " << ncellsX << "Step_x: " << step_x
+    qDebug() << "\nImplicit Mesh type :\t" << implicit_surface.m_type
+             << "\nnx: " << ncellsX << "Step_x: " << step_x
              << "\nny: " << ncellsY << " Step_y: " << step_y
              << "\nnz: " << ncellsZ << " Step_z: " << step_z;
 

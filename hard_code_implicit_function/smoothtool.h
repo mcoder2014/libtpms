@@ -41,7 +41,7 @@ public:
 
     // Basic smooth algorithm, store in m_result
     void basicSmooth();
-
+    void basicSmooth(int rounds);
     // Save the smoothed mesh into obj file.
     void writeOBJ(std::string const & file_origin,
                   std::string const & file_result);

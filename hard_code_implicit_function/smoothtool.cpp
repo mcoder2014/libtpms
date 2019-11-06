@@ -155,6 +155,83 @@ void SmoothTool::basicSmooth()
     m_result = nullptr;
 }
 
+void SmoothTool::basicSmooth(int rounds)
+{
+    if(! m_object)
+    {
+        std::cerr << "m_object == nullptr\n"
+                  << "Please check whether the mesh is created"
+                  << std::endl;
+        return;
+    }
+
+    if(m_result == nullptr)
+        m_result = new Mesh;
+    m_result->assign(*m_object);     // Deep copy a openmesh model
+
+    for (int round = 0; round < rounds; round++)
+    {
+        // Every round, exchange the pointer of m_object and m_result
+        // reduce the copy of mesh
+
+        Mesh::VertexIter v_it, v_end(m_object->vertices_end());
+
+        // To get the value into result object
+        Mesh::VertexIter v_result_it(m_result->vertices_begin());
+
+        Mesh::VertexVertexIter vv_it;
+        Mesh::VertexFaceIter vf_it;
+        OpenMesh::Vec3f cog;        // To record the gravity of the point
+        int valance = 0;            // Record the degree of the point
+        int points_count = 0;
+
+        for (v_it = m_object->vertices_begin(); v_it != v_end; ++v_it, ++v_result_it)
+        {
+            if(!m_object->is_boundary(*v_it))
+            {
+                // Don't change the position of boundary vertex
+                cog = OpenMesh::Vec3f(0.0); // Init it into origin point
+                valance = 0;
+
+                for (vf_it = m_object->vf_begin(*v_it);
+                     vf_it.is_valid();vf_it++)
+                {
+                    OpenMesh::Vec3f gravity(0.0);
+                    Mesh::FaceVertexIter fv_it;
+
+                    for (fv_it = m_object->fv_begin(*vf_it);
+                         fv_it.is_valid();fv_it++)
+                    {
+                        gravity += m_object->point(*fv_it);
+                    }
+                    gravity = gravity/3;
+                    cog += gravity;
+                    valance++;
+                }
+                points_count ++;
+                cog = cog / static_cast<float>(valance);
+
+                // Record the calculated value
+                m_result->set_point(*v_result_it, cog);
+
+            } // if(!m_object->is_boundary(*v_it))
+        }
+
+        std::cout << "Valuable round: " << round
+                  <<"\nPoints count: " << points_count << std::endl;
+
+        // Exchange the pointer of m_object and m_result
+        {
+            Mesh *ptr = m_object;
+            m_object = m_result;
+            m_result = ptr;
+        }
+    }
+
+    delete m_result;
+    m_result = nullptr;
+}
+
 void SmoothTool::writeOBJ(const std::string &file_origin, const std::string &file_result)
 {
     // export origin
