@@ -24,15 +24,13 @@ public:
     int m_ncellsZ;
 
     // the range of the marching box
-    float m_mcMinX;
-    float m_mcMaxX;
-    float m_mcMinY;
-    float m_mcMaxY;
-    float m_mcMinZ;
-    float m_mcMaxZ;
-
     Eigen::AlignedBox3d m_boundingbox_physical;
     Eigen::AlignedBox3d m_boundingbox_logical;
+
+    void setRange(Eigen::Vector3d physical_max,
+                  Eigen::Vector3d physical_min,
+                  int sampleSize,
+                  int density);
 
     // The triangle mesh of the result of marching box algorithm
     std::vector<glm::vec3> m_vertices;

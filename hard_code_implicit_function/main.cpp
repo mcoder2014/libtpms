@@ -6,8 +6,8 @@
 #include "marchbox.h"
 #include "smoothtool.h"
 
-//#define Box_test
-#define Cube_test
+#define Box_test
+//#define Cube_test
 
 using namespace std;
 
@@ -17,27 +17,16 @@ int main()
     MarchBox march_box;
 
 #ifdef Cube_test
-    int density = 128;
+    int sample = 128;
+    int density = 5;
 
-    float pos_min = 0;
-    float pos_max = 3;
-
-    march_box.m_mcMaxX = pos_max;
-    march_box.m_mcMinX = pos_min;
-    march_box.m_mcMaxY = pos_max;
-    march_box.m_mcMinY = pos_min;
-    march_box.m_mcMaxZ = pos_max;
-    march_box.m_mcMinZ = pos_min;
-
-
-    march_box.m_ncellsX = density * pos_max;
-    march_box.m_ncellsY = density * pos_max;
-    march_box.m_ncellsZ = density * pos_max;
-
+    march_box.setRange(Eigen::Vector3d(20.0, 20.0, 20.0),
+                       Eigen::Vector3d(0.0, 0.0, 0.0),
+                       sample, density);
 #endif
 
 #ifdef Box_test
-    int density = 16;
+    int sampleSize = 16;
 
     // 鞋垫尺寸
     int insole_width = 110;
@@ -45,21 +34,10 @@ int main()
     int insole_length = 265;
 
     // 多少毫米长度一个周期
-    int period_long = 5;
-
-    float pos_min = 0;
-
-    march_box.m_ncellsX = insole_width / period_long * density;
-    march_box.m_ncellsY = insole_length / period_long * density;
-    march_box.m_ncellsZ = insole_height / period_long * density;
-
-    march_box.m_mcMinX = pos_min;
-    march_box.m_mcMinY = pos_min;
-    march_box.m_mcMinZ = pos_min;
-
-    march_box.m_mcMaxX = 1.0 * insole_width / period_long;
-    march_box.m_mcMaxY = 1.0 * insole_length / period_long;
-    march_box.m_mcMaxZ = 1.0 * insole_height / period_long;
+    int density = 5;
+    march_box.setRange(Eigen::Vector3d(insole_width, insole_length, insole_height),
+                       Eigen::Vector3d(0.0, 0.0, 0.0),
+                       sampleSize, density);
 
 #endif
     SmoothTool  smoothTool;

@@ -306,9 +306,41 @@ int MarchBox::triTable[256][16] =
 {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
 
+///
+/// \brief MarchBox::setRange
+/// \param physical_max
+/// \param physical_min
+/// \param sampleSize   多长的物理单位对应一个逻辑单位
+/// \param density
+///
+void MarchBox::setRange(Eigen::Vector3d physical_max, Eigen::Vector3d physical_min, int sampleSize, int density)
+{
+    this->m_boundingbox_logical.setEmpty();
+    this->m_boundingbox_physical.setEmpty();
+
+    // Set new Range
+    this->m_boundingbox_physical.extend(physical_max);
+    this->m_boundingbox_physical.extend(physical_min);
+
+    Eigen::Vector3d logical_max = physical_max / (1.0 * density);
+    Eigen::Vector3d logical_min = physical_min / (1.0 * density);
+    this->m_boundingbox_logical.extend(logical_max);
+    this->m_boundingbox_logical.extend(logical_min);
+
+    // Update sample size
+    m_ncellsX = static_cast<int>((logical_max[0] - logical_min[0]) * sampleSize);
+    m_ncellsY = static_cast<int>((logical_max[1] - logical_min[1]) * sampleSize);
+    m_ncellsZ = static_cast<int>((logical_max[2] - logical_min[2]) * sampleSize);
+
+}
+
 MarchBox::MarchBox()
 {
-
+    // To avoid bugs, the bounding must larger than 1
+    this->setRange(Eigen::Vector3d(10.0,10.0,10.0),
+                   Eigen::Vector3d(0.0,0.0,0.0),
+                   8,
+                   5);
 }
 
 ///
@@ -328,26 +360,26 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
     int ncellsY = m_ncellsY;
     int ncellsZ = m_ncellsZ;
 
-    float mcMinX = m_mcMinX;
-    float mcMaxX = m_mcMaxX;
-    float mcMinY = m_mcMinY;
-    float mcMaxY = m_mcMaxY;
-    float mcMinZ = m_mcMinZ;
-    float mcMaxZ = m_mcMaxZ;
     Eigen::Vector3d logical_min = m_boundingbox_logical.min();
     Eigen::Vector3d logical_max = m_boundingbox_logical.max();
     Eigen::Vector3d physical_min = m_boundingbox_physical.min();
     Eigen::Vector3d physical_max = m_boundingbox_physical.max();
 
     // Calculate the step of each box
-    float step_x = (mcMaxX-mcMinX) / (ncellsX-1);
-    float step_y = (mcMaxY-mcMinY) / (ncellsY-1);
-    float step_z = (mcMaxZ-mcMinZ) / (ncellsZ-1);
+    Eigen::Vector3d logical_step = logical_max-logical_min;
+    logical_step[0] = logical_step[0] / (ncellsX-1);
+    logical_step[1] = logical_step[1] / (ncellsY-1);
+    logical_step[2] = logical_step[2] / (ncellsZ-1);
 
-    qDebug() << "\nImplicit Mesh type :\t" << implicit_surface.m_type
-             << "\nnx: " << ncellsX << "Step_x: " << step_x
-             << "\nny: " << ncellsY << " Step_y: " << step_y
-             << "\nnz: " << ncellsZ << " Step_z: " << step_z;
+    Eigen::Vector3d physical_step = physical_max - physical_min;
+    physical_step[0] = physical_step[0] / (ncellsX - 1);
+    physical_step[1] = physical_step[1] / (ncellsY - 1);
+    physical_step[2] = physical_step[2] / (ncellsZ - 1);
+
+    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+             << "\nnx: " << ncellsX
+             << "\nny: " << ncellsY
+             << "\nnz: " << ncellsZ;
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
     std::vector<std::vector<std::vector<int>>> IS_value(
@@ -366,16 +398,21 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
     // init the record values and the sample_points of the marching cubes
     for(int iter_x = 0; iter_x < ncellsX; iter_x++)
     {
-        double pos_x = mcMinX + step_x * iter_x;
+        double logical_x = logical_min[0] + logical_step[0] * iter_x;
+        double physical_x = physical_min[0] + physical_step[0] * iter_x;
         for (int iter_y = 0; iter_y < ncellsY; iter_y++)
         {
-            double pos_y = mcMinY + step_y * iter_y;
+            double logical_y = logical_min[1] + logical_step[1] * iter_y;
+            double physical_y = physical_min[1] + physical_step[1] * iter_y;
+
             for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
             {
-                double pos_z = mcMinZ + step_z * iter_z;
-                sample_points[iter_x][iter_y][iter_z] = glm::vec3(pos_x, pos_y, pos_z);
+                double logical_z = logical_min[2] + logical_step[2] * iter_z;
+                double physical_z = physical_min[2] + physical_step[2] * iter_z;
+
+                sample_points[iter_x][iter_y][iter_z] = glm::vec3(physical_x, physical_y, physical_z);
                 // Record the IS_value
-                double value = implicit_surface.f(pos_x, pos_y, pos_z);
+                double value = implicit_surface.f(logical_x, logical_y, logical_z);
                 if(value > 0)
                 {
                     IS_value[iter_x][iter_y][iter_z] = 1;
