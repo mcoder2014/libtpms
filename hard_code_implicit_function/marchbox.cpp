@@ -512,6 +512,166 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
 
 }
 
+void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface)
+{
+    // Get the parameters from the class member variable
+
+    // clear
+    this->m_vertices.clear();
+    this->m_faces.clear();
+    this->m_index_map.clear();
+
+    int ncellsX = m_ncellsX;
+    int ncellsY = m_ncellsY;
+    int ncellsZ = m_ncellsZ;
+
+    // 反向操作
+    int additions = 2;
+
+    Eigen::Vector3d logical_min = m_boundingbox_logical.min();
+    Eigen::Vector3d logical_max = m_boundingbox_logical.max();
+    Eigen::Vector3d physical_min = m_boundingbox_physical.min();
+    Eigen::Vector3d physical_max = m_boundingbox_physical.max();
+
+    // Calculate the step of each box
+    Eigen::Vector3d logical_step = logical_max-logical_min;
+    logical_step[0] = logical_step[0] / (ncellsX-1);
+    logical_step[1] = logical_step[1] / (ncellsY-1);
+    logical_step[2] = logical_step[2] / (ncellsZ-1);
+
+    Eigen::Vector3d physical_step = physical_max - physical_min;
+    physical_step[0] = physical_step[0] / (ncellsX - 1 - additions);
+    physical_step[1] = physical_step[1] / (ncellsY - 1 - additions);
+    physical_step[2] = physical_step[2] / (ncellsZ - 1 - additions);
+
+    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+             << "\nnx: " << ncellsX
+             << "\nny: " << ncellsY
+             << "\nnz: " << ncellsZ;
+
+    // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
+    std::vector<std::vector<std::vector<int>>> IS_value(
+                ncellsX,std::vector<std::vector<int>>(
+                    ncellsY, std::vector<int>(
+                        ncellsZ, 0)));
+
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
+            ncellsX, std::vector<std::vector<glm::vec3>>(
+                    ncellsY, std::vector<glm::vec3>(
+                        ncellsZ, glm::vec3(0.0))));
+    // Logical sample points
+    int half_addition = additions/2;
+
+    // Physical sample points position
+    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
+    {
+        double physical_x = physical_min[0] + physical_step[0] * (iter_x-half_addition);
+        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
+        {
+            double physical_y = physical_min[1] + physical_step[1] * (iter_y-half_addition);
+            for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
+            {
+               double physical_z = physical_min[2] + physical_step[2] * (iter_z-half_addition);
+                    sample_points[iter_x][iter_y][iter_z] = glm::vec3(
+                                physical_x, physical_y, physical_z);
+            }
+        }
+    }
+
+
+    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
+    {
+        double logical_x = logical_min[0] + logical_step[0] * iter_x;
+        double physical_x = physical_min[0] + physical_step[0] * (iter_x-half_addition);
+        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
+        {
+            double logical_y = logical_min[1] + logical_step[1] * iter_y;
+            double physical_y = physical_min[1] + physical_step[1] * (iter_y-half_addition);
+            for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
+            {
+                double physical_z = physical_min[2] + physical_step[2] * (iter_z-half_addition);
+                double logical_z = logical_min[2] + logical_step[2] * iter_z;
+                sample_points[iter_x][iter_y][iter_z] = glm::vec3(physical_x,physical_y,physical_z);
+                if(m_boundingbox_logical.contains(Eigen::Vector3d(physical_x,physical_y,physical_z )))
+                {
+                    // Record the IS_value
+                    double value = implicit_surface.f(logical_x, logical_y, logical_z);
+                    if(value < 0)
+                    {
+                        IS_value[iter_x][iter_y][iter_z] = 1;
+                    }
+                    else
+                    {
+                        IS_value[iter_x][iter_y][iter_z] = 0;
+                    }
+                }
+                else
+                {
+                    IS_value[iter_x][iter_y][iter_z] = 0;
+                }
+            }
+        }
+    }
+
+
+    // Approximation of the all marching cubes
+    for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+    {
+        for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+        {
+            for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+            {
+                int cube_index = 0;
+                float isolevel = 0.5;
+                // v0 v1 v2 v3 v4 v5 v6 v7
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] < isolevel) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] < isolevel) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isolevel) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] < isolevel) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] < isolevel) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isolevel) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 128;
+
+                // Get the approximation triangle table
+                int *edgeIndexList = triTable[cube_index];
+
+                // -1 means the end of the triangle.
+                while (*edgeIndexList != -1 )
+                {
+                    // Get the next approximation triangle
+                    int e_index[3];
+                    e_index[0] = *edgeIndexList;
+                    e_index[1] = *(edgeIndexList + 1);
+                    e_index[2] = *(edgeIndexList + 2);
+                    edgeIndexList = edgeIndexList+3;      // ptr move 3 pos
+
+                    glm::ivec3 face_index;
+                    // Calculate the 3 points coordinates of the face
+                    for (int e_i=0; e_i < 3; e_i ++)
+                    {
+                        int index = getVertexIdx(iter_x, iter_y, iter_z, e_index[e_i], sample_points);
+                        face_index[e_i] = index;
+                    }   // for (int e_i=0; e_i < 3; e_i ++)
+
+                    this->m_faces.push_back(face_index);
+                }   // while (*edgelist != -1 )
+            }   //  for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+        }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+    }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+}
+
+///
+/// \brief MarchBox::marching_cubes
+/// \param implicit_surface
+/// \param depth
+/// 将极小曲面模型生成有厚度的体积
+///
+void MarchBox::marching_cubes(ImplicitSurface &implicit_surface, float depth)
+{
+
+}
+
 #ifdef USING_SURFACEMESH
 void MarchBox::marching_cubes(ImplicitSurface &implicit_surface,
                               SurfaceMesh::SurfaceMeshModel &surface_mesh,

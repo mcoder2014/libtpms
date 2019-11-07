@@ -43,6 +43,8 @@ public:
     std::vector<glm::ivec3> m_faces;      // Index format(in vertices)
 
     void marching_cubes(ImplicitSurface& implicit_surface);
+    void marching_cubes_closed(ImplicitSurface& implicit_surface);
+    void marching_cubes(ImplicitSurface& implicit_surface, float depth);
 
 #ifdef USING_SURFACEMESH
 
