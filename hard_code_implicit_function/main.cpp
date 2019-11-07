@@ -6,8 +6,13 @@
 #include "marchbox.h"
 #include "smoothtool.h"
 
-#define Box_test
+//#define Box_test
 //#define Cube_test
+
+#ifdef USING_SURFACEMESH
+#include "SurfaceMeshModel.h"
+#include "surfacemesh_load.h"
+#endif
 
 using namespace std;
 
@@ -16,30 +21,6 @@ int main()
     ImplicitSurface implicit_surface;
     MarchBox march_box;
 
-#ifdef Cube_test
-    int sample = 128;
-    int density = 5;
-
-    march_box.setRange(Eigen::Vector3d(20.0, 20.0, 20.0),
-                       Eigen::Vector3d(0.0, 0.0, 0.0),
-                       sample, density);
-#endif
-
-#ifdef Box_test
-    int sampleSize = 16;
-
-    // 鞋垫尺寸
-    int insole_width = 110;
-    int insole_height = 25;
-    int insole_length = 265;
-
-    // 多少毫米长度一个周期
-    int density = 5;
-    march_box.setRange(Eigen::Vector3d(insole_width, insole_length, insole_height),
-                       Eigen::Vector3d(0.0, 0.0, 0.0),
-                       sampleSize, density);
-
-#endif
     SmoothTool  smoothTool;
     int smooth_times = 20;
 
@@ -76,6 +57,68 @@ int main()
 //        smoothTool.writeOBJ(openMeshObj, smooth_obj);
         smoothTool.writeOBJ("", smooth_obj);
     };
+
+#ifdef USING_SURFACEMESH
+    auto march_box_mesh_boundary = [&](QString type, SurfaceMesh::SurfaceMeshModel& boundary)
+    {
+        clock_t time_start = clock();
+        QString savePath = type + "_type.obj";
+
+        implicit_surface.setType(type);
+        march_box.marching_cubes(implicit_surface, boundary);
+
+        clock_t time_end = clock();
+        std::cout << "Cost time " << 1.0 * (time_end-time_start)/CLOCKS_PER_SEC << " S\n\n";
+        march_box.writeOBJ(savePath.toStdString());
+
+        // smooth
+        QString smooth_path = type + "_type_smooth_openmesh.obj";
+        smooth_tool_function("", smooth_path.toStdString());
+
+    };
+
+    march_box.setSampleSize(8);
+    march_box.setDensity(5);
+
+    SurfaceMesh::SurfaceMeshModel boundary_model;
+    SurfaceMeshLoader loader;
+    loader.load(boundary_model, "insole_prototype.ply");
+
+    march_box_mesh_boundary("P", boundary_model);
+    march_box_mesh_boundary("D", boundary_model);
+    march_box_mesh_boundary("G", boundary_model);
+    march_box_mesh_boundary("i-wp", boundary_model);
+    march_box_mesh_boundary("f-rd", boundary_model);
+    march_box_mesh_boundary("l", boundary_model);
+    march_box_mesh_boundary("tubular-p", boundary_model);
+    march_box_mesh_boundary("tubular-g", boundary_model);
+    march_box_mesh_boundary("i2-y", boundary_model);
+#endif
+
+
+
+#ifdef Box_test
+    int sampleSize = 16;
+
+    // 鞋垫尺寸
+    int insole_width = 110;
+    int insole_height = 25;
+    int insole_length = 265;
+
+    // 多少毫米长度一个周期
+    int density = 5;
+    march_box.setRange(Eigen::Vector3d(insole_width, insole_length, insole_height),
+                       Eigen::Vector3d(0.0, 0.0, 0.0),
+                       sampleSize, density);
+
+#ifdef Cube_test
+    int sample = 128;
+    int density = 5;
+
+    march_box.setRange(Eigen::Vector3d(20.0, 20.0, 20.0),
+                       Eigen::Vector3d(0.0, 0.0, 0.0),
+                       sample, density);
+#endif
 
     // P
     march_box_function("P","p_type.obj");
@@ -118,6 +161,6 @@ int main()
     march_box_function("i2-y", "i2-y_type.obj");
     smooth_tool_function("i2_y_type_openmesh.obj",
                         "i2_y_type_smooth_openmesh.obj");
-
+#endif
     return 0;
 }
