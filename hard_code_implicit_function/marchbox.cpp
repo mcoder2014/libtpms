@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <iostream>
+#include <limits>
 
 
 #include <QDebug>
@@ -310,53 +310,39 @@ int MarchBox::triTable[256][16] =
 /// \brief MarchBox::setRange
 /// \param physical_max
 /// \param physical_min
-/// \param sampleSize  对一个逻辑单位进行多大的采样率
-/// \param density  多长的物理单位对应一个逻辑单位
+/// \param sampleSize   对一个逻辑单位进行多大的采样率
+/// \param density      多长的物理单位对应一个逻辑单位
+/// \param offset       logical min's position
 ///
-void MarchBox::setRange(Eigen::Vector3d physical_max, Eigen::Vector3d physical_min, int sampleSize, int density)
+void MarchBox::setRange(Eigen::Vector3d physical_max, Eigen::Vector3d physical_min, int sampleSize, int density, Eigen::Vector3d offset)
 {
-    this->m_boundingbox_logical.setEmpty();
     this->m_boundingbox_physical.setEmpty();
 
     // Set new Range
     this->m_boundingbox_physical.extend(physical_max);
     this->m_boundingbox_physical.extend(physical_min);
 
-    if(sampleSize <=0)
-        sampleSize = 4;
-    if(density <=0)
-        density = 4;
+    if(sampleSize > 0)
+        this->m_sampleSize = sampleSize;
+    if(density > 0)
+        this->m_density = density;
 
-
-    Eigen::Vector3d logical_max = physical_max / (1.0 * density);
-    Eigen::Vector3d logical_min = physical_min / (1.0 * density);
-    this->m_boundingbox_logical.extend(logical_max);
-    this->m_boundingbox_logical.extend(logical_min);
-
-    // Update sample size
-    m_ncellsX = static_cast<int>((logical_max[0] - logical_min[0]) * sampleSize);
-    m_ncellsY = static_cast<int>((logical_max[1] - logical_min[1]) * sampleSize);
-    m_ncellsZ = static_cast<int>((logical_max[2] - logical_min[2]) * sampleSize);
-
-    this->m_sampleSize = sampleSize;
-    this->m_density = density;
-
+    updateRange();
 }
 
 MarchBox::MarchBox()
+    :m_sampleSize(8), m_density(5),m_offset(0.0,0.0,0.0)
 {
     // To avoid bugs, the bounding must larger than 1
     this->setRange(Eigen::Vector3d(10.0,10.0,10.0),
-                   Eigen::Vector3d(0.0,0.0,0.0),
-                   8,
-                   5);
+                   Eigen::Vector3d(0.0,0.0,0.0));
 }
 
 ///
 /// \brief MarchBox::marching_cubes
 /// \param implicit_surface
 ///
-void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
+void MarchBox::marching_cubes(ImplicitSurface &implicit_surface, float isoLevel)
 {
     // Get the parameters from the class member variable
 
@@ -391,18 +377,15 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
              << "\nnz: " << ncellsZ;
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
-    std::vector<std::vector<std::vector<int>>> IS_value(
-                ncellsX,std::vector<std::vector<int>>(
-                    ncellsY, std::vector<int>(
-                        ncellsZ, 0)));
+    std::vector<std::vector<std::vector<float>>> IS_value(
+                ncellsX,std::vector<std::vector<float>>(
+                    ncellsY, std::vector<float>(
+                        ncellsZ, std::numeric_limits<float>::max())));
 
     std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
             ncellsX, std::vector<std::vector<glm::vec3>>(
                     ncellsY, std::vector<glm::vec3>(
                         ncellsZ, glm::vec3(0.0))));
-
-    int count_sum_of_1 = 0; // use for debug
-    int count_sum_of_0 = 0; // use for debug
 
     // init the record values and the sample_points of the marching cubes
     for(int iter_x = 0; iter_x < ncellsX; iter_x++)
@@ -422,23 +405,10 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
                 sample_points[iter_x][iter_y][iter_z] = glm::vec3(physical_x, physical_y, physical_z);
                 // Record the IS_value
                 double value = implicit_surface.f(logical_x, logical_y, logical_z);
-                if(value > 0)
-                {
-                    IS_value[iter_x][iter_y][iter_z] = 1;
-                    count_sum_of_1 ++;
-                }
-                else
-                {
-                    IS_value[iter_x][iter_y][iter_z] = 0;
-                    count_sum_of_0 ++;
-                }
+                IS_value[iter_x][iter_y][iter_z] = m_reverse? -value:value;
             }
         }
     }
-
-    std::cout << "Count the num of points at the out of Implicit surface : " << count_sum_of_1
-              << "\nCount the num of points at the inner of Implicit surface :" << count_sum_of_0
-              << std::endl;
 
     // Approximation of the all marching cubes
     for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
@@ -469,16 +439,16 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
                 // The Cube with V0(iter_x, iter_y, iter_z)
 
                 int cube_index = 0;
-                float isolevel = 0.5;
+//                float isolevel = 0.5;
                 // v0 v1 v2 v3 v4 v5 v6 v7
-                if(IS_value[iter_x    ][iter_y    ][iter_z    ] < isolevel) cube_index |= 1;
-                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] < isolevel) cube_index |= 2;
-                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isolevel) cube_index |= 4;
-                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] < isolevel) cube_index |= 8;
-                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] < isolevel) cube_index |= 16;
-                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isolevel) cube_index |= 32;
-                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 64;
-                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 128;
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] < isoLevel) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] < isoLevel) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] < isoLevel) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] < isoLevel) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel) cube_index |= 128;
 
                 // Get the approximation triangle table
                 int *edgeIndexList = triTable[cube_index];
@@ -512,7 +482,7 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface)
 
 }
 
-void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface)
+void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface, float isoLevel)
 {
     // Get the parameters from the class member variable
 
@@ -535,9 +505,9 @@ void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface)
 
     // Calculate the step of each box
     Eigen::Vector3d logical_step = logical_max-logical_min;
-    logical_step[0] = logical_step[0] / (ncellsX-1);
-    logical_step[1] = logical_step[1] / (ncellsY-1);
-    logical_step[2] = logical_step[2] / (ncellsZ-1);
+    logical_step[0] = logical_step[0] / (ncellsX-1-additions);
+    logical_step[1] = logical_step[1] / (ncellsY-1-additions);
+    logical_step[2] = logical_step[2] / (ncellsZ-1-additions);
 
     Eigen::Vector3d physical_step = physical_max - physical_min;
     physical_step[0] = physical_step[0] / (ncellsX - 1 - additions);
@@ -550,10 +520,10 @@ void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface)
              << "\nnz: " << ncellsZ;
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
-    std::vector<std::vector<std::vector<int>>> IS_value(
-                ncellsX,std::vector<std::vector<int>>(
-                    ncellsY, std::vector<int>(
-                        ncellsZ, 0)));
+    std::vector<std::vector<std::vector<float>>> IS_value(
+                ncellsX,std::vector<std::vector<float>>(
+                    ncellsY, std::vector<float>(
+                        ncellsZ, std::numeric_limits<float>::max())));
 
     std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
             ncellsX, std::vector<std::vector<glm::vec3>>(
@@ -562,52 +532,28 @@ void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface)
     // Logical sample points
     int half_addition = additions/2;
 
-    // Physical sample points position
     for(int iter_x = 0; iter_x < ncellsX; iter_x++)
     {
+        double logical_x = logical_min[0] + logical_step[0] * (iter_x-half_addition);
         double physical_x = physical_min[0] + physical_step[0] * (iter_x-half_addition);
         for (int iter_y = 0; iter_y < ncellsY; iter_y++)
         {
-            double physical_y = physical_min[1] + physical_step[1] * (iter_y-half_addition);
-            for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
-            {
-               double physical_z = physical_min[2] + physical_step[2] * (iter_z-half_addition);
-                    sample_points[iter_x][iter_y][iter_z] = glm::vec3(
-                                physical_x, physical_y, physical_z);
-            }
-        }
-    }
-
-
-    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
-    {
-        double logical_x = logical_min[0] + logical_step[0] * iter_x;
-        double physical_x = physical_min[0] + physical_step[0] * (iter_x-half_addition);
-        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
-        {
-            double logical_y = logical_min[1] + logical_step[1] * iter_y;
+            double logical_y = logical_min[1] + logical_step[1] * (iter_y-half_addition);
             double physical_y = physical_min[1] + physical_step[1] * (iter_y-half_addition);
             for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
             {
                 double physical_z = physical_min[2] + physical_step[2] * (iter_z-half_addition);
-                double logical_z = logical_min[2] + logical_step[2] * iter_z;
+                double logical_z = logical_min[2] + logical_step[2] * (iter_z-half_addition);
                 sample_points[iter_x][iter_y][iter_z] = glm::vec3(physical_x,physical_y,physical_z);
-                if(m_boundingbox_logical.contains(Eigen::Vector3d(physical_x,physical_y,physical_z )))
+                if(m_boundingbox_logical.contains(Eigen::Vector3d(logical_x,logical_y,logical_z )))
                 {
                     // Record the IS_value
                     double value = implicit_surface.f(logical_x, logical_y, logical_z);
-                    if(value < 0)
-                    {
-                        IS_value[iter_x][iter_y][iter_z] = 1;
-                    }
-                    else
-                    {
-                        IS_value[iter_x][iter_y][iter_z] = 0;
-                    }
+                    IS_value[iter_x][iter_y][iter_z] = m_reverse?-value:value;
                 }
                 else
                 {
-                    IS_value[iter_x][iter_y][iter_z] = 0;
+                    IS_value[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
                 }
             }
         }
@@ -622,16 +568,15 @@ void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface)
             for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
             {
                 int cube_index = 0;
-                float isolevel = 0.5;
                 // v0 v1 v2 v3 v4 v5 v6 v7
-                if(IS_value[iter_x    ][iter_y    ][iter_z    ] < isolevel) cube_index |= 1;
-                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] < isolevel) cube_index |= 2;
-                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isolevel) cube_index |= 4;
-                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] < isolevel) cube_index |= 8;
-                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] < isolevel) cube_index |= 16;
-                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isolevel) cube_index |= 32;
-                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 64;
-                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 128;
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] < isoLevel) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] < isoLevel) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] < isoLevel) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] < isoLevel) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel) cube_index |= 128;
 
                 // Get the approximation triangle table
                 int *edgeIndexList = triTable[cube_index];
@@ -661,22 +606,16 @@ void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface)
     }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
 }
 
-///
-/// \brief MarchBox::marching_cubes
-/// \param implicit_surface
-/// \param depth
-/// 将极小曲面模型生成有厚度的体积
-///
-void MarchBox::marching_cubes(ImplicitSurface &implicit_surface, float depth)
+void MarchBox::marching_cubes_double_closed(ImplicitSurface &implicit_surface, float isoLevel_1, float isoLevel_2)
 {
 
 }
 
 #ifdef USING_SURFACEMESH
-void MarchBox::marching_cubes(ImplicitSurface &implicit_surface,
+void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface,
                               SurfaceMesh::SurfaceMeshModel &surface_mesh,
                               int sampleSize,
-                              int density)
+                              int density, int isoLevel)
 {
     // Update the two bounding box in the march_box
     surface_mesh.updateBoundingBox();
@@ -729,18 +668,16 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface,
              << "\nnum of Z: " << ncellsZ;
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
-    std::vector<std::vector<std::vector<int>>> IS_value(
-                ncellsX,std::vector<std::vector<int>>(
-                    ncellsY, std::vector<int>(
-                        ncellsZ, 0)));
+    std::vector<std::vector<std::vector<float>>> IS_value(
+                ncellsX,std::vector<std::vector<float>>(
+                    ncellsY, std::vector<float>(
+                        ncellsZ, std::numeric_limits<float>::max())));
 
     std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
             ncellsX, std::vector<std::vector<glm::vec3>>(
                     ncellsY, std::vector<glm::vec3>(
                         ncellsZ, glm::vec3(0.0))));
 
-    int count_sum_of_1 = 0; // use for debug
-    int count_sum_of_0 = 0; // use for debug
     Eigen::Vector3d up_direction(0,0,1);
 
     // init the record values and the sample_points of the marching cubes
@@ -769,41 +706,26 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface,
                 for( int i: intersects)
                 {
                     octree.intersectionTestAccelerated(SurfaceMesh::Model::Face(i), ray, res);
-
                     // find the nearest intersection point
                     if(res.hit)
                         intersect_count++;
                 }
 
                 // 奇数个交点说明顶点在网格内部
+                // 小于 0 在内部，大于0在外部
                 if(intersect_count %2 ==1)
                 {
                     double value = implicit_surface.f(logical_x, logical_y, logical_z);
-                    if(value > 0)
-                    {
-                        IS_value[iter_x][iter_y][iter_z] = 1;
-                        count_sum_of_1 ++;
-                    }
-                    else
-                    {
-                        IS_value[iter_x][iter_y][iter_z] = 0;
-                        count_sum_of_0 ++;
-                    }
+                    IS_value[iter_x][iter_y][iter_z] = m_reverse?-value:value;
                 }
                 else
                 {
-                    // 顶点在网格外边直接为 0
-                    IS_value[iter_x][iter_y][iter_z] = 0;
-                    count_sum_of_0 ++;
+                    IS_value[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
                 }
 
             }
         }
     }
-
-    std::cout << "Count the num of points at the out of Implicit surface : " << count_sum_of_1
-              << "\nCount the num of points at the inner of Implicit surface :" << count_sum_of_0
-              << std::endl;
 
     // Approximation of the all marching cubes
     for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
@@ -816,16 +738,15 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface,
                 // to March the condition in 256 probailities
 
                 int cube_index = 0;
-                float isolevel = 0.5;
                 // v0 v1 v2 v3 v4 v5 v6 v7
-                if(IS_value[iter_x    ][iter_y    ][iter_z    ] < isolevel) cube_index |= 1;
-                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] < isolevel) cube_index |= 2;
-                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isolevel) cube_index |= 4;
-                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] < isolevel) cube_index |= 8;
-                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] < isolevel) cube_index |= 16;
-                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isolevel) cube_index |= 32;
-                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 64;
-                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isolevel) cube_index |= 128;
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] < isoLevel) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] < isoLevel) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] < isoLevel) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] < isoLevel) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel) cube_index |= 128;
 
                 // Get the approximation triangle table
                 int *edgeIndexList = triTable[cube_index];
@@ -858,8 +779,32 @@ void MarchBox::marching_cubes(ImplicitSurface &implicit_surface,
     }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
 
 }
+
 #endif
 
+void MarchBox::updateRange()
+{
+    this->m_boundingbox_logical.setEmpty();
+
+    if(m_sampleSize <=0)
+        m_sampleSize = 4;
+    if(m_density <=0)
+        m_density = 4;
+
+    Eigen::Vector3d physical_range = m_boundingbox_physical.max() - m_boundingbox_physical.min();
+
+    Eigen::Vector3d logical_max = physical_range / (1.0 * m_density) + m_offset;
+    Eigen::Vector3d logical_min = m_offset;
+
+    this->m_boundingbox_logical.extend(logical_max);
+    this->m_boundingbox_logical.extend(logical_min);
+
+    // Update sample size
+    m_ncellsX = static_cast<int>((logical_max[0] - logical_min[0]) * m_sampleSize);
+    m_ncellsY = static_cast<int>((logical_max[1] - logical_min[1]) * m_sampleSize);
+    m_ncellsZ = static_cast<int>((logical_max[2] - logical_min[2]) * m_sampleSize);
+
+}
 
 void MarchBox::writeOBJ(const std::string &fileName)
 {
@@ -878,7 +823,7 @@ void MarchBox::writeOBJ(const std::string &fileName)
     }
 
     std::cout << "Generating OBJ mesh with " << m_vertices.size() << " vertices and "
-      << m_faces.size() << " faces" << std::endl;
+              << m_faces.size() << " faces" << std::endl;
 
     // write vertices
     for(auto const & v : m_vertices) {
