@@ -56,7 +56,28 @@ public:
                         SurfaceMesh::SurfaceMeshModel& surface_mesh,
                         int sampleSize = -1,
                         int density = -1,
-                        int isoLevel = 0);
+                        float isoLevel = 0);
+
+    void marching_cubes_double_closed(ImplicitSurface& implicit_surface,
+                        SurfaceMesh::SurfaceMeshModel& surface_mesh,
+                        int sampleSize = -1,
+                        int density = -1,
+                        float isoLevel_1 = 0.0,
+                        float isoLevel_2 = 0.25);
+
+    void marching_cube_push_closed(ImplicitSurface& implicit_surface,
+                                   SurfaceMesh::SurfaceMeshModel& surface_mesh,
+                                   int sampleSize = -1,
+                                   int density = -1,
+                                   float isoLevel = 0);
+
+    void marching_cube_push_double_closed(ImplicitSurface& implicit_surface,
+                                          SurfaceMesh::SurfaceMeshModel& surface_mesh,
+                                          int sampleSize = -1,
+                                          int density = -1,
+                                          float isoLevel_1 = 0.0,
+                                          float isoLevel_2 = 0.25);
+
 #endif
 
     inline void setSampleSize(int sample){if(sample > 0) this->m_sampleSize = sample; this->updateRange();}

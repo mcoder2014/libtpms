@@ -748,8 +748,7 @@ void MarchBox::marching_cubes_double_closed(ImplicitSurface &implicit_surface, f
 #ifdef USING_SURFACEMESH
 void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface,
                               SurfaceMesh::SurfaceMeshModel &surface_mesh,
-                              int sampleSize,
-                              int density, int isoLevel)
+                              int sampleSize,int density, float isoLevel)
 {
     // Update the two bounding box in the march_box
     surface_mesh.updateBoundingBox();
@@ -914,6 +913,452 @@ void MarchBox::marching_cubes_closed(ImplicitSurface &implicit_surface,
 
 }
 
+void MarchBox::marching_cubes_double_closed(ImplicitSurface &implicit_surface,
+                                            SurfaceMesh::SurfaceMeshModel &surface_mesh,
+                                            int sampleSize, int density,
+                                            float isoLevel_1, float isoLevel_2)
+{
+    // Update the two bounding box in the march_box
+    surface_mesh.updateBoundingBox();
+    Eigen::AlignedBox3d mesh_bbox =  surface_mesh.bbox();
+
+    std::cout << "Mesh boundary:\n"
+              << "MIN: X:\t" << mesh_bbox.min()[0] << "\tMAX: X:\t" << mesh_bbox.max()[0]
+              << "\nMIN: Y:\t" << mesh_bbox.min()[1] << "\tMAX: Y:\t" << mesh_bbox.max()[1]
+              << "\nMIN: Z:\t" << mesh_bbox.min()[2] << "\tMAX: Z:\t" << mesh_bbox.max()[2]
+             << std::endl;
+
+    if(sampleSize <= 0)
+        sampleSize = m_sampleSize;
+    if(density <= 0)
+        density = m_density;
+    this->setRange(mesh_bbox.max(), mesh_bbox.min(), sampleSize, density);
+
+    // Create Octree
+    Octree octree(&surface_mesh);
+
+    // clear
+    this->m_vertices.clear();
+    this->m_faces.clear();
+    this->m_index_map.clear();
+
+    // Get parameters
+    int additions = 2;
+    int half_additions = additions / 2;
+    int ncellsX = m_ncellsX;
+    int ncellsY = m_ncellsY;
+    int ncellsZ = m_ncellsZ;
+
+    Eigen::Vector3d logical_min = m_boundingbox_logical.min();
+    Eigen::Vector3d logical_max = m_boundingbox_logical.max();
+    Eigen::Vector3d physical_min = m_boundingbox_physical.min();
+    Eigen::Vector3d physical_max = m_boundingbox_physical.max();
+
+    // Calculate the step of each box
+    Eigen::Vector3d logical_step = logical_max-logical_min;
+    logical_step[0] = logical_step[0] / (ncellsX-1 - additions);
+    logical_step[1] = logical_step[1] / (ncellsY-1 - additions);
+    logical_step[2] = logical_step[2] / (ncellsZ-1 - additions);
+
+    Eigen::Vector3d physical_step = physical_max - physical_min;
+    physical_step[0] = physical_step[0] / (ncellsX - 1 - additions);
+    physical_step[1] = physical_step[1] / (ncellsY - 1 - additions);
+    physical_step[2] = physical_step[2] / (ncellsZ - 1 - additions);
+
+    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+             << "\nnum of X: " << ncellsX
+             << "\nnum of Y: " << ncellsY
+             << "\nnum of Z: " << ncellsZ;
+
+    // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
+    std::vector<std::vector<std::vector<float>>> IS_value_1(
+                ncellsX,std::vector<std::vector<float>>(
+                    ncellsY, std::vector<float>(
+                        ncellsZ, std::numeric_limits<float>::max())));
+
+    std::vector<std::vector<std::vector<float>>> IS_value_2(
+                ncellsX,std::vector<std::vector<float>>(
+                    ncellsY, std::vector<float>(
+                        ncellsZ, std::numeric_limits<float>::max())));
+
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
+            ncellsX, std::vector<std::vector<glm::vec3>>(
+                    ncellsY, std::vector<glm::vec3>(
+                        ncellsZ, glm::vec3(0.0))));
+
+    Eigen::Vector3d up_direction(0,0,1);
+
+    // init the record values and the sample_points of the marching cubes
+    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
+    {
+        double logical_x = logical_min[0] + logical_step[0] * (iter_x-half_additions);
+        double physical_x = physical_min[0] + physical_step[0] * (iter_x-half_additions);
+        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
+        {
+            double logical_y = logical_min[1] + logical_step[1] * (iter_y-half_additions);
+            double physical_y = physical_min[1] + physical_step[1] * (iter_y-half_additions);
+
+            for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
+            {
+                double logical_z = logical_min[2] + logical_step[2] * (iter_z-half_additions);
+                double physical_z = physical_min[2] + physical_step[2] * (iter_z-half_additions);
+
+                sample_points[iter_x][iter_y][iter_z] = glm::vec3(physical_x, physical_y, physical_z);
+                // Record the IS_value
+                Ray ray(Eigen::Vector3d(physical_x, physical_y, physical_z),
+                        up_direction);
+                QSet<int> intersects = octree.intersectRay(ray, 0.01, false);
+                HitResult res;
+                int intersect_count = 0;
+                // Fast, not robust tests
+                for( int i: intersects)
+                {
+                    octree.intersectionTestAccelerated(SurfaceMesh::Model::Face(i), ray, res);
+                    // find the nearest intersection point
+                    if(res.hit)
+                        intersect_count++;
+                }
+
+                // 奇数个交点说明顶点在网格内部
+                // 小于 0 在内部，大于0在外部
+                if(intersect_count %2 ==1)
+                {
+                    double value = implicit_surface.f(logical_x, logical_y, logical_z);
+                    IS_value_1[iter_x][iter_y][iter_z] = m_reverse?-value:value;
+                    IS_value_1[iter_x][iter_y][iter_z] = m_reverse?value:-value;
+                }
+                else
+                {
+                    IS_value_1[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
+                    IS_value_2[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
+                }
+
+            }
+        }
+    }
+
+    // Approximation of the all marching cubes
+    for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+    {
+        for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+        {
+            for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+            {
+                // Get the eight point of the cube vertex,
+                // to March the condition in 256 probailities
+
+                int cube_index = 0;
+                // v0 v1 v2 v3 v4 v5 v6 v7
+                if(IS_value_1[iter_x    ][iter_y    ][iter_z    ] < isoLevel_1
+                        && IS_value_2[iter_x    ][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 1;
+                if(IS_value_1[iter_x + 1][iter_y    ][iter_z    ] < isoLevel_1
+                        && IS_value_2[iter_x + 1][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 2;
+                if(IS_value_1[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel_1
+                        && IS_value_2[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 4;
+                if(IS_value_1[iter_x    ][iter_y    ][iter_z + 1] < isoLevel_1
+                        && IS_value_2[iter_x    ][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 8;
+                if(IS_value_1[iter_x    ][iter_y + 1][iter_z    ] < isoLevel_1
+                        && IS_value_2[iter_x    ][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 16;
+                if(IS_value_1[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel_1
+                        && IS_value_2[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 32;
+                if(IS_value_1[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel_1
+                        && IS_value_2[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 64;
+                if(IS_value_1[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel_1
+                        && IS_value_2[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 128;
+
+                // Get the approximation triangle table
+                int *edgeIndexList = triTable[cube_index];
+
+                // -1 means the end of the triangle.
+                while (*edgeIndexList != -1 )
+                {
+                    // Get the next approximation triangle
+                    int e_index[3];
+                    e_index[0] = *edgeIndexList;
+                    e_index[1] = *(edgeIndexList + 1);
+                    e_index[2] = *(edgeIndexList + 2);
+
+                    edgeIndexList = edgeIndexList+3;      // ptr move 3 pos
+
+                    glm::ivec3 face_index;
+                    // Calculate the 3 points coordinates of the face
+                    for (int e_i=0; e_i < 3; e_i ++)
+                    {
+                        int index = getVertexIdx(iter_x, iter_y, iter_z, e_index[e_i], sample_points);
+                        face_index[e_i] = index;
+                    }   // for (int e_i=0; e_i < 3; e_i ++)
+
+                    this->m_faces.push_back(face_index);
+
+                }   // while (*edgelist != -1 )
+
+            }   //  for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+        }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+    }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+}
+
+void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
+                                         SurfaceMesh::SurfaceMeshModel &surface_mesh,
+                                         int sampleSize, int density, float isoLevel)
+{
+    // Update the two bounding box in the march_box
+    surface_mesh.updateBoundingBox();
+    Eigen::AlignedBox3d mesh_bbox =  surface_mesh.bbox();
+
+    std::cout << "Mesh boundary:\n"
+              << "MIN: X:\t" << mesh_bbox.min()[0] << "\tMAX: X:\t" << mesh_bbox.max()[0]
+              << "\nMIN: Y:\t" << mesh_bbox.min()[1] << "\tMAX: Y:\t" << mesh_bbox.max()[1]
+              << "\nMIN: Z:\t" << mesh_bbox.min()[2] << "\tMAX: Z:\t" << mesh_bbox.max()[2]
+             << std::endl;
+
+    if(sampleSize <= 0)
+        sampleSize = m_sampleSize;
+    if(density <= 0)
+        density = m_density;
+    this->setRange(mesh_bbox.max(), mesh_bbox.min(), sampleSize, density);
+
+    // Create Octree
+    Octree octree(&surface_mesh);
+
+    // clear
+    this->m_vertices.clear();
+    this->m_faces.clear();
+    this->m_index_map.clear();
+
+    // Get parameters
+    int ncellsX = m_ncellsX;
+    int ncellsY = m_ncellsY;
+    int ncellsZ = m_ncellsZ;
+
+    int additions = 2;
+    int half_additoin = additions/2;
+
+    Eigen::Vector3d logical_min = m_boundingbox_logical.min();
+    Eigen::Vector3d logical_max = m_boundingbox_logical.max();
+    Eigen::Vector3d physical_min = m_boundingbox_physical.min();
+    Eigen::Vector3d physical_max = m_boundingbox_physical.max();
+
+    // Calculate the step of each box
+    Eigen::Vector3d logical_step = logical_max-logical_min;
+    logical_step[0] = logical_step[0] / (ncellsX - 1 - additions);
+    logical_step[1] = logical_step[1] / (ncellsY - 1 - additions);
+    logical_step[2] = logical_step[2] / (ncellsZ - 1 - additions);
+
+    Eigen::Vector3d physical_step = physical_max - physical_min;
+    physical_step[0] = physical_step[0] / (ncellsX - 1 - additions);
+    physical_step[1] = physical_step[1] / (ncellsY - 1 - additions);
+    physical_step[2] = physical_step[2] / (ncellsZ - 1 - additions);
+
+    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+             << "\nnum of X: " << ncellsX
+             << "\nnum of Y: " << ncellsY
+             << "\nnum of Z: " << ncellsZ;
+
+    // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
+    std::vector<std::vector<std::vector<float>>> IS_value(
+                ncellsX,std::vector<std::vector<float>>(
+                    ncellsY, std::vector<float>(
+                        ncellsZ, std::numeric_limits<float>::max())));
+
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
+            ncellsX, std::vector<std::vector<glm::vec3>>(
+                    ncellsY, std::vector<glm::vec3>(
+                        ncellsZ, glm::vec3(0.0))));
+
+
+
+    // init the record values and the sample_points of the marching cubes
+    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
+    {
+        double physical_x = physical_min[0] + physical_step[0] * (iter_x-half_additoin);
+        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
+        {
+            double physical_y = physical_min[1] + physical_step[1] * (iter_y-half_additoin);
+            sample_points[iter_x][iter_y][0] = glm::vec3(physical_x, physical_y, physical_min[2]-physical_step[2]);
+        }
+    }
+
+    // Push the physical points down
+    Eigen::Vector3d up_direction(0.0,0.0,1.0);
+    // init the record values and the sample_points of the marching cubes
+    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
+    {
+        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
+        {
+            glm::vec3 point = sample_points[iter_x][iter_y][0];
+
+            // check the upper point and the lower point.
+            double upper = std::numeric_limits<double>::min();
+            double downer = std::numeric_limits<double>::max();
+
+            Ray ray(Eigen::Vector3d(point[0],point[1],point[2]), up_direction);
+            QSet<int> intersects = octree.intersectRay(ray, 0.001, false);
+            HitResult res;
+            int intersect_count = 0;
+
+            // Fast, not robust tests
+            for( int i: intersects)
+            {
+                octree.intersectionTestAccelerated(SurfaceMesh::Model::Face(i), ray, res);
+                // find the nearest intersection point
+                if(res.hit)
+                {
+                    intersect_count++;
+
+                    // Calculate the intersect point
+                    Eigen::Vector3d intersect_point = ray.origin + (ray.direction * res.distance);
+                    if(intersect_point[2] > upper)
+                        upper = intersect_point[2];
+                    if(intersect_point[2] < downer)
+                        downer = intersect_point[2];
+                }
+            }
+
+            if(intersect_count >=2)
+            {
+                // If there are more than two intersects point,
+                // Push the sample points closer
+                double step_z = (upper - downer) / (ncellsZ-1-additions);
+                for(int iter_z = 0; iter_z < ncellsZ; iter_z++)
+                {
+                    sample_points[iter_x][iter_y][iter_z][0] = sample_points[iter_x][iter_y][0][0];
+                    sample_points[iter_x][iter_y][iter_z][1] = sample_points[iter_x][iter_y][0][1];
+                    sample_points[iter_x][iter_y][iter_z][2] = downer + step_z * (iter_z - half_additoin);
+                }
+            }
+            else
+            {
+                // If the sample points is not closer with the model
+                // keep the sample points as it should be
+                for(int iter_z = 0; iter_z < ncellsZ; iter_z++)
+                {
+                    sample_points[iter_x][iter_y][iter_z][0] = std::numeric_limits<float>::max();
+                    sample_points[iter_x][iter_y][iter_z][1] = std::numeric_limits<float>::max();
+                    sample_points[iter_x][iter_y][iter_z][2] = std::numeric_limits<float>::max();
+                }
+
+            }
+
+        }
+    }
+
+    // init the record values and the sample_points of the marching cubes
+    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
+    {
+        double logical_x = logical_min[0] + logical_step[0] * (iter_x-half_additoin);
+        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
+        {
+            double logical_y = logical_min[1] + logical_step[1] * (iter_y-half_additoin);
+            for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
+            {
+                double logical_z = logical_min[2] + logical_step[2] * (iter_z-half_additoin);
+                glm::vec3 point = sample_points[iter_x][iter_y][iter_z];
+
+                // To make sure the point is included in the model
+                // Record the IS_value
+                Ray up_ray(Eigen::Vector3d(point[0],point[1],point[2]), up_direction);
+                QSet<int> up_intersects = octree.intersectRay(up_ray, 0.001, false);
+
+                Ray down_ray(Eigen::Vector3d(point[0],point[1],point[2]), -up_direction);
+                QSet<int> down_intersects = octree.intersectRay(down_ray, 0.001, false);
+
+                HitResult res;
+                int up_intersect_count = 0;
+                int down_intersect_count = 0;
+
+                // Count the intersection points with
+                for( int i: up_intersects)
+                {
+                    octree.intersectionTestAccelerated(SurfaceMesh::Model::Face(i), up_ray, res);
+                    // find the nearest intersection point
+                    if(res.hit)
+                        up_intersect_count++;
+                }
+                for(int i: down_intersects)
+                {
+                    octree.intersectionTestAccelerated(SurfaceMesh::Model::Face(i), down_ray, res);
+                    // find the nearest intersection point
+                    if(res.hit)
+                        down_intersect_count++;
+                }
+
+                // 小于 0 在内部，大于0在外部
+                if(up_intersect_count %2==0 || down_intersect_count%2 == 0)
+                {
+                    // Outside the boundary
+                    IS_value[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
+                }
+                else
+                {
+                    // Inside the boundary
+                    double value = implicit_surface.f(logical_x, logical_y, logical_z);
+                    IS_value[iter_x][iter_y][iter_z] = m_reverse?-value:value;
+                }
+
+            }
+        }
+    }
+
+    // Approximation of the all marching cubes
+    for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+    {
+        for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+        {
+            for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+            {
+                // Get the eight point of the cube vertex,
+                // to March the condition in 256 probailities
+
+                int cube_index = 0;
+                // v0 v1 v2 v3 v4 v5 v6 v7
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] < isoLevel) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] < isoLevel) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] < isoLevel) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] < isoLevel) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel) cube_index |= 128;
+
+                // Get the approximation triangle table
+                int *edgeIndexList = triTable[cube_index];
+
+                // -1 means the end of the triangle.
+                while (*edgeIndexList != -1 )
+                {
+                    // Get the next approximation triangle
+                    int e_index[3];
+                    e_index[0] = *edgeIndexList;
+                    e_index[1] = *(edgeIndexList + 1);
+                    e_index[2] = *(edgeIndexList + 2);
+
+                    edgeIndexList = edgeIndexList+3;      // ptr move 3 pos
+
+                    glm::ivec3 face_index;
+                    // Calculate the 3 points coordinates of the face
+                    for (int e_i=0; e_i < 3; e_i ++)
+                    {
+                        int index = getVertexIdx(iter_x, iter_y, iter_z, e_index[e_i], sample_points);
+                        face_index[e_i] = index;
+                    }   // for (int e_i=0; e_i < 3; e_i ++)
+
+                    this->m_faces.push_back(face_index);
+
+                }   // while (*edgelist != -1 )
+
+            }   //  for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+        }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+    }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+}
+
+void MarchBox::marching_cube_push_double_closed(ImplicitSurface &implicit_surface,
+                                                SurfaceMesh::SurfaceMeshModel &surface_mesh,
+                                                int sampleSize, int density,
+                                                float isoLevel_1, float isoLevel_2)
+{
+
+}
+
 #endif
 
 void MarchBox::updateRange()
@@ -1020,53 +1465,77 @@ int MarchBox::getVertexIdx(int cx_id, int cy_id, int cz_id, int edge_idx, std::v
     else
     {
         // Calculate vertex
-        glm::vec3 v0 = sample_points[cx_id    ][cy_id    ][cz_id    ];
-        glm::vec3 v1 = sample_points[cx_id + 1][cy_id    ][cz_id    ];
-        glm::vec3 v2 = sample_points[cx_id + 1][cy_id    ][cz_id + 1];
-        glm::vec3 v3 = sample_points[cx_id    ][cy_id    ][cz_id + 1];
-        glm::vec3 v4 = sample_points[cx_id    ][cy_id + 1][cz_id    ];
-        glm::vec3 v5 = sample_points[cx_id + 1][cy_id + 1][cz_id    ];
-        glm::vec3 v6 = sample_points[cx_id + 1][cy_id + 1][cz_id + 1];
-        glm::vec3 v7 = sample_points[cx_id    ][cy_id + 1][cz_id + 1];
+        glm::vec3 v[8];
+        v[0] = sample_points[cx_id    ][cy_id    ][cz_id    ];
+        v[1] = sample_points[cx_id + 1][cy_id    ][cz_id    ];
+        v[2] = sample_points[cx_id + 1][cy_id    ][cz_id + 1];
+        v[3] = sample_points[cx_id    ][cy_id    ][cz_id + 1];
+        v[4] = sample_points[cx_id    ][cy_id + 1][cz_id    ];
+        v[5] = sample_points[cx_id + 1][cy_id + 1][cz_id    ];
+        v[6] = sample_points[cx_id + 1][cy_id + 1][cz_id + 1];
+        v[7] = sample_points[cx_id    ][cy_id + 1][cz_id + 1];
+
+        // Processing, to prevent the outside point causing bad result
+        // Find the first piont inside boundingbox
+        // Replace each point, which is not inside boundingbox
+        glm::vec3 pos_inside;
+        for(int i = 0; i <8; i++)
+        {
+            if(m_boundingbox_physical.contains(
+                        Eigen::Vector3d(v[i][0],v[i][1],v[i][2])))
+            {
+                pos_inside = v[i];
+                break;
+            }
+        }
+
+        for(int i = 0; i<8; i++)
+        {
+            if(!m_boundingbox_physical.contains(
+                        Eigen::Vector3d(v[i][0],v[i][1],v[i][2])))
+            {
+                v[i] = pos_inside;
+            }
+        }
 
         glm::vec3 pos;
         switch(edge_idx)
         {
         case 0:
-            pos = (v0 + v1) / glm::vec3(2);
+            pos = (v[0] + v[1]) / glm::vec3(2);
             break;
         case 1:
-            pos = (v1 + v2) / glm::vec3(2);
+            pos = (v[1] + v[2]) / glm::vec3(2);
             break;
         case 2:
-            pos = (v2 + v3) / glm::vec3(2);
+            pos = (v[2] + v[3]) / glm::vec3(2);
             break;
         case 3:
-            pos = (v0 + v3) / glm::vec3(2);
+            pos = (v[0] + v[3]) / glm::vec3(2);
             break;
         case 4:
-            pos = (v4 + v5) / glm::vec3(2);
+            pos = (v[4] + v[5]) / glm::vec3(2);
             break;
         case 5:
-            pos = (v5 + v6) / glm::vec3(2);
+            pos = (v[5] + v[6]) / glm::vec3(2);
             break;
         case 6:
-            pos = (v6 + v7) / glm::vec3(2);
+            pos = (v[6] + v[7]) / glm::vec3(2);
             break;
         case 7:
-            pos = (v4 + v7) / glm::vec3(2);
+            pos = (v[4] + v[7]) / glm::vec3(2);
             break;
         case 8:
-            pos = (v0 + v4) / glm::vec3(2);
+            pos = (v[0] + v[4]) / glm::vec3(2);
             break;
         case 9:
-            pos = (v1 + v5) / glm::vec3(2);
+            pos = (v[1] + v[5]) / glm::vec3(2);
             break;
         case 10:
-            pos = (v2 + v6) / glm::vec3(2);
+            pos = (v[2] + v[6]) / glm::vec3(2);
             break;
         case 11:
-            pos = (v3 + v7) / glm::vec3(2);
+            pos = (v[3] + v[7]) / glm::vec3(2);
             break;
         }
         // Add into m_vertices
