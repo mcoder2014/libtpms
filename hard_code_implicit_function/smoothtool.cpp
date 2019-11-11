@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <OpenMesh/Tools/Smoother/JacobiLaplaceSmootherT.hh>
+
 SmoothTool::SmoothTool()
 {
     m_object = nullptr;
@@ -19,7 +21,7 @@ SmoothTool::~SmoothTool()
         delete  m_backup;
 }
 
-bool SmoothTool::createMesh(
+Mesh* SmoothTool::createMesh(
         std::vector<glm::vec3> &vertices,
         std::vector<glm::ivec3> &faces)
 {
@@ -30,7 +32,7 @@ bool SmoothTool::createMesh(
     }
 
     if(vertices.size() <= 3 || faces.size() < 1)
-        return false;
+        return nullptr;
 
     m_object = new Mesh;    // Create new Mesh
 
@@ -67,16 +69,18 @@ bool SmoothTool::createMesh(
         m_backup = new Mesh;
     m_backup->assign(*m_object);
 
-    return true;
+    return m_object;
 }
 
-bool SmoothTool::createMesh(std::string filepath)
+Mesh *SmoothTool::createMesh(std::string filepath)
 {
     if(m_object != nullptr)
     {
         delete m_object;
         m_object = nullptr;
     }
+    if(filepath.size() == 0)
+        return nullptr;
 
     m_object = new Mesh();
     OpenMesh::IO::read_mesh(*m_object, filepath);
@@ -85,6 +89,8 @@ bool SmoothTool::createMesh(std::string filepath)
     if(m_backup == nullptr)
         m_backup = new Mesh;
     m_backup->assign(*m_object);
+
+    return nullptr;
 }
 
 void SmoothTool::basicSmooth()
@@ -230,6 +236,19 @@ void SmoothTool::basicSmooth(int rounds)
 
     delete m_result;
     m_result = nullptr;
+}
+
+void SmoothTool::jacobiLaplaceSmooth(int rounds)
+{
+    if(rounds <= 0)
+        return;
+
+    // Initialize smoother with input mesh
+    OpenMesh::Smoother::JacobiLaplaceSmootherT<Mesh> smoother(*m_object);
+    smoother.initialize(  OpenMesh::Smoother::JacobiLaplaceSmootherT<Mesh>::Tangential_and_Normal,   //Smooth direction
+                         OpenMesh::Smoother::JacobiLaplaceSmootherT<Mesh>::C0);                      //Continuity
+    // Execute 3 smooth steps
+    smoother.smooth(3);
 }
 
 void SmoothTool::writeOBJ(const std::string &file_origin, const std::string &file_result)

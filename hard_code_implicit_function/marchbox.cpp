@@ -338,6 +338,11 @@ MarchBox::MarchBox()
                    Eigen::Vector3d(0.0,0.0,0.0));
 }
 
+MarchBox::~MarchBox()
+{
+
+}
+
 ///
 /// \brief MarchBox::marching_cubes
 /// \param implicit_surface

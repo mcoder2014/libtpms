@@ -6,18 +6,19 @@
 #include "implicitsurface.h"
 #include "marchbox.h"
 #include "smoothtool.h"
+#include "simplification.h"
 
 //#define CUBE_TEST             // small cube test
 //#define BOX_INSOLE_SIZE       // big cube at insole size
 //#define CLOSED_SURFACE_1      // closed_surface_approach 1
-//#define CLOSED_SURFACE_2        // closed_surface_approach 2
+#define CLOSED_SURFACE_2        // closed_surface_approach 2
 
 #ifdef USING_SURFACEMESH
 #include "SurfaceMeshModel.h"
 #include "surfacemesh_load.h"
 //#define TEST_SURFACEMESH            // use surfacemesh as boundary
-#define TEST_SURFACEMESH_PUSH
-#define TEST_SURFACEMESH_PUSH_DOUBLE
+//#define TEST_SURFACEMESH_PUSH
+//#define TEST_SURFACEMESH_PUSH_DOUBLE
 #endif
 
 using namespace std;
@@ -213,21 +214,54 @@ int main()
 
 # ifdef CLOSED_SURFACE_2
     {
+//        int pointsCount = 100000;
+        float pointsCount = 0.5;
         auto march_box_mesh_closed = [&](QString dir, QString type, float isoLevel_1, float isoLevel_2)
         {
             clock_t time_start = clock();
             QString savePath = dir + type + "_type.obj";
 
+            // Create implicit surface
             implicit_surface.setType(type);
             march_box.marching_cubes_double_closed(implicit_surface, isoLevel_1,isoLevel_2);
 
             clock_t time_end = clock();
-            std::cout << "Cost time " << 1.0 * (time_end-time_start)/CLOCKS_PER_SEC << " S\n\n";
+            std::cout << "Create mesh Cost time "
+                      << 1.0 * (time_end-time_start)/CLOCKS_PER_SEC << " S\n\n";
             march_box.writeOBJ(savePath.toStdString());
 
             // smooth
             QString smooth_path = dir + type + "_type_smooth_openmesh.obj";
             smooth_tool_function("", smooth_path.toStdString());
+
+            // simplification
+            time_start = clock();
+            QString simplification_path = dir + type + "_type_smooth_simplication_openmesh.obj";
+            Simplification simplification;
+            simplification.createMesh(smoothTool.getMesh());
+            simplification.decimater_to(pointsCount);
+            time_end = clock();
+            std::cout << "Simplication Cost time "
+                      << 1.0 * (time_end-time_start)/CLOCKS_PER_SEC << " S\n\n";
+
+
+            Mesh * mesh = simplification.getMesh();
+            try
+            {
+                if ( !OpenMesh::IO::write_mesh(*mesh, simplification_path.toStdString()))
+                {
+                    std::cerr << "Cannot write simplication mesh to "
+                              << simplification_path.toStdString()
+                              << std::endl;
+                }
+                std::cout << "OpenMesh saving simplication mesh into file:\t"
+                          << simplification_path.toStdString() << std::endl;
+            }
+            catch( std::exception& x )
+            {
+                std::cerr << x.what() << std::endl;
+            }
+
 
         };
         auto cube_test = [&](int sample, int density, float isoLevel_1, float isoLevel_2, Eigen::Vector3d offset, QString outer_dir)
@@ -239,10 +273,11 @@ int main()
                 path.mkdir(outer_dir);
             }
 
-            QString density_sample_path = "sample_" + QString::number(sample)
-                    + "_density_" + QString::number(density)
-                    + "_isoLevel1_" + QString::number(isoLevel_1).remove('.')
-                    + "_isoLevel2_" + QString::number(isoLevel_2).remove('.');
+            QString density_sample_path = "_s" + QString::number(sample)
+                    + "_d" + QString::number(density)
+                    + "_i1_" + QString::number(isoLevel_1)
+                    + "_i2_" + QString::number(isoLevel_2)
+                    + "_pct" + QString::number(pointsCount*100.0,'g', 2);
             path.cd(outer_dir);
             if(!path.exists(density_sample_path))
             {
@@ -251,6 +286,7 @@ int main()
 
             QString prefix = outer_dir + QDir::separator()
                     + density_sample_path + QDir::separator();
+
 
             march_box.setSampleSize(sample);
             march_box.setDensity(density);
@@ -271,20 +307,26 @@ int main()
         march_box.setRange(Eigen::Vector3d(50.0, 50.0, 50.0),
                            Eigen::Vector3d(0.0, 0.0, 0.0));
 
-        int sample = 128;
+        int sample = 256;
         int density = 25;
         QString Cube_test_floder = "Cube_double_closed_test";
         march_box.setReverse(false);
-        cube_test(sample, density,0,0.5, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_floder);
-        cube_test(sample, density,0,0.25, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_floder);
-        cube_test(sample, density,0,0.1, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_floder);
+        pointsCount = 0.5;
+        cube_test(sample, density,0,0.2, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_floder);
 
-        QString Cube_test_reverse = "Cube_double_closed_test_reverse";
-        march_box.setReverse(true);
-        cube_test(sample, density,0,0.5, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_floder);
-        cube_test(sample, density,0,0.25, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_floder);
-        cube_test(sample, density,0,0.1, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_reverse);
+        pointsCount = 0.3;
+        cube_test(sample, density,0,0.2, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_floder);
 
+        pointsCount = 0.2;
+        cube_test(sample, density,0,0.2, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_floder);
+
+        pointsCount = 0.1;
+        cube_test(sample, density,0,0.2, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_floder);
+
+        pointsCount = 0.05;
+        cube_test(sample, density,0,0.2, Eigen::Vector3d(0.0,0.0,0.0), Cube_test_floder);
+
+        // Cause the symmetry, No need to try the reverse
     }
 #endif
 

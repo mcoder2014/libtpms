@@ -20,6 +20,7 @@ class MarchBox
 {
 public:
     MarchBox();
+    ~MarchBox();
 
     static int edgeTable[256];      // edge table
     static int triTable[256][16];   // triangle table

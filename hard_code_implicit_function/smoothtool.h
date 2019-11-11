@@ -35,16 +35,20 @@ public:
 
     // Use the results from Marchbox algorithm to create
     // a openmesh object
-    bool createMesh(std::vector<glm::vec3>& vertices,
+    Mesh* createMesh(std::vector<glm::vec3>& vertices,
                     std::vector<glm::ivec3>& faces);
-    bool createMesh(std::string filepath);
+    Mesh* createMesh(std::string filepath);
 
     // Basic smooth algorithm, store in m_result
     void basicSmooth();
     void basicSmooth(int rounds);
+    void jacobiLaplaceSmooth(int rounds = 1);
+
     // Save the smoothed mesh into obj file.
     void writeOBJ(std::string const & file_origin,
                   std::string const & file_result);
+
+    inline Mesh *getMesh(){return m_object;}
 
 private:
     Mesh *m_object;     // the origin openmesh object
