@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include <OpenMesh/Tools/Decimater/DecimaterT.hh>
-#include <OpenMesh/Tools/Decimater/ModProgMeshT.hh>
 #include <OpenMesh/Tools/Decimater/ModQuadricT.hh>
 
 Simplification::Simplification()
@@ -108,11 +107,11 @@ Mesh *Simplification::decimater(int n_collapses)
 
     // Start
     OpenMesh::Decimater::DecimaterT<Mesh> decimater(*m_object);
-    OpenMesh::Decimater::ModQuadricT<Mesh>::Handle hModProgMesh;
-    decimater.add(hModProgMesh);
+    OpenMesh::Decimater::ModQuadricT<Mesh>::Handle hModQuadric;
+    decimater.add(hModQuadric);
     std::cout << "Decimater module name: "
-              << decimater.module(hModProgMesh).name() << std::endl;
-    decimater.module(hModProgMesh).unset_max_err();
+              << decimater.module(hModQuadric).name() << std::endl;
+//    decimater.module(hModProgMesh).unset_max_err();
     decimater.initialize();
     size_t collapse = decimater.decimate(n_collapses);
     std::cout << "Collapse vertices: " << collapse << std::endl;
@@ -132,24 +131,13 @@ Mesh *Simplification::decimater_to(int n_target)
     if(m_srcVecCount < m_dstVecCount)
         return m_object;
 
-    // That might be already requested
-    m_object->request_vertex_status();
-    // Get an iterator over all halfedges
-    Mesh::HalfedgeIter he_it, he_end=m_object->halfedges_end();
-    // If halfedge is boundary, lock the corresponding vertices
-    for (he_it = m_object->halfedges_begin(); he_it != he_end ; ++he_it)
-      if (m_object->is_boundary(*he_it) ) {
-         m_object->status(m_object->to_vertex_handle(*he_it)).set_locked(true);
-         m_object->status(m_object->from_vertex_handle(*he_it)).set_locked(true);
-      }
-
     // Start
     OpenMesh::Decimater::DecimaterT<Mesh> decimater(*m_object);
-    OpenMesh::Decimater::ModQuadricT<Mesh>::Handle hModProgMesh;
-    decimater.add(hModProgMesh);
+    OpenMesh::Decimater::ModQuadricT<Mesh>::Handle hModQuadric;
+    decimater.add(hModQuadric);
     std::cout << "Decimater module name: "
-              << decimater.module(hModProgMesh).name() << std::endl;
-    decimater.module(hModProgMesh).unset_max_err();
+              << decimater.module(hModQuadric).name() << std::endl;
+//    decimater.module(hModProgMesh).unset_max_err();
     decimater.initialize();
     size_t collapse =  decimater.decimate_to(m_dstVecCount);
     std::cout << "Collapse vertices: " << collapse << std::endl;

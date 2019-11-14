@@ -93,72 +93,25 @@ Mesh *SmoothTool::createMesh(std::string filepath)
     return nullptr;
 }
 
-void SmoothTool::basicSmooth()
+Mesh *SmoothTool::createMesh(Mesh *mesh)
 {
-    if(! m_object)
+    if(m_object != nullptr)
     {
-        std::cerr << "m_object == nullptr\n"
-                  << "Please check whether the mesh is created"
-                  << std::endl;
-        return;
+        delete m_object;
+        m_object = nullptr;
     }
+    if(mesh == nullptr)
+        return nullptr;
 
-    Mesh &mesh = (*m_object);   // Get the reference
+    m_object = new Mesh();
+    m_object->assign(*mesh);
 
-    if(m_result == nullptr)
-        m_result = new Mesh;
-    m_result->assign(mesh);     // Deep copy a openmesh model
+    // backup
+    if(m_backup == nullptr)
+        m_backup = new Mesh;
+    m_backup->assign(*m_object);
 
-    Mesh::VertexIter v_it, v_end(mesh.vertices_end());
-
-    // To get the value into result object
-    Mesh::VertexIter v_result_it(m_result->vertices_begin());
-
-    Mesh::VertexVertexIter vv_it;
-    Mesh::VertexFaceIter vf_it;
-    OpenMesh::Vec3f cog;        // To record the gravity of the point
-    int valance = 0;            // Record the degree of the point
-
-    int round = 0;
-
-    for (v_it = mesh.vertices_begin(); v_it != v_end; ++v_it, ++v_result_it)
-    {
-//        if(!mesh.is_boundary(*v_it))
-        {
-            // Don't change the position of boundary vertex
-
-            cog = OpenMesh::Vec3f(0.0); // Init it into origin point
-            valance = 0;
-
-            for (vf_it = mesh.vf_begin(*v_it);
-                 vf_it.is_valid();vf_it++)
-            {
-                OpenMesh::Vec3f gravity(0.0);
-                Mesh::FaceVertexIter fv_it;
-
-                for (fv_it = mesh.fv_begin(*vf_it);
-                     fv_it.is_valid();fv_it++)
-                {
-                    gravity += mesh.point(*fv_it);
-                }
-                gravity = gravity/3;
-                cog += gravity;
-                valance++;
-            }
-
-            cog = cog / static_cast<float>(valance);
-
-            // Record the calculated value
-            m_result->set_point(*v_result_it, cog);
-            round ++;
-        } // if(!mesh.is_boundary(*v_it))
-    }
-    std::cout << "Valuable round : " << round << std::endl;
-
-    // Copy m_result to m_object
-    mesh.assign(*m_result);
-    delete m_result;
-    m_result = nullptr;
+    return nullptr;
 }
 
 void SmoothTool::basicSmooth(int rounds)
@@ -248,7 +201,7 @@ void SmoothTool::jacobiLaplaceSmooth(int rounds)
     smoother.initialize(  OpenMesh::Smoother::JacobiLaplaceSmootherT<Mesh>::Tangential_and_Normal,   //Smooth direction
                          OpenMesh::Smoother::JacobiLaplaceSmootherT<Mesh>::C0);                      //Continuity
     // Execute 3 smooth steps
-    smoother.smooth(3);
+    smoother.smooth(rounds);
 }
 
 void SmoothTool::writeOBJ(const std::string &file_origin, const std::string &file_result)

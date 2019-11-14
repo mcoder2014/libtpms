@@ -28,7 +28,7 @@ int ImplicitSurface::setType(QString type)
     else if (type.toLower() == "g")
     {
         this->m_type_flag = 2;
-        this->m_type = "p";
+        this->m_type = "g";
     }
     else if (type.toLower() == "i-wp")
     {

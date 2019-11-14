@@ -38,11 +38,11 @@ public:
     Mesh* createMesh(std::vector<glm::vec3>& vertices,
                     std::vector<glm::ivec3>& faces);
     Mesh* createMesh(std::string filepath);
+    Mesh* createMesh(Mesh* mesh);
 
     // Basic smooth algorithm, store in m_result
-    void basicSmooth();
-    void basicSmooth(int rounds);
-    void jacobiLaplaceSmooth(int rounds = 1);
+    void basicSmooth(int rounds=1);
+    void jacobiLaplaceSmooth(int rounds = 1);   // 效果太弱鸡了
 
     // Save the smoothed mesh into obj file.
     void writeOBJ(std::string const & file_origin,
