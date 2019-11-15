@@ -50,9 +50,10 @@ public:
                         float isoLevel = 0);
     void marching_cubes_closed(ImplicitSurface& implicit_surface,
                                float isoLevel = 0);
+    // IsoLevel1 < IsoLevel2
     void marching_cubes_double_closed(ImplicitSurface& implicit_surface,
-                                      float isoLevel_1,
-                                      float isoLevel_2);
+                                      float isoLevel_1 = -0.5,
+                                      float isoLevel_2 = 0.5);
 
 #ifdef USING_SURFACEMESH
     void marching_cubes_closed(ImplicitSurface& implicit_surface,
@@ -65,8 +66,8 @@ public:
                         SurfaceMesh::SurfaceMeshModel& surface_mesh,
                         int sampleSize = -1,
                         int density = -1,
-                        float isoLevel_1 = 0.0,
-                        float isoLevel_2 = 0.25);
+                        float isoLevel_1 = -0.5,
+                        float isoLevel_2 = 0.5);
 
     void marching_cube_push_closed(ImplicitSurface& implicit_surface,
                                    SurfaceMesh::SurfaceMeshModel& surface_mesh,
@@ -76,10 +77,8 @@ public:
 
     void marching_cube_push_double_closed(ImplicitSurface& implicit_surface,
                                           SurfaceMesh::SurfaceMeshModel& surface_mesh,
-                                          int sampleSize = -1,
-                                          int density = -1,
-                                          float isoLevel_1 = 0.0,
-                                          float isoLevel_2 = 0.25);
+                                          float isoLevel_1 = -0.5,
+                                          float isoLevel_2 = 0.5);
 
 #endif
 
@@ -95,13 +94,13 @@ public:
 
     // 采样网格的尺寸（单个极小曲面周期内）
     inline void setSampleSize(int sample){
-        if(sample > 0) {m_sampleSizeXYZ = Eigen::Vector3i(sample); this->updateRange();}}
+        if(sample > 0) {m_sampleSizeXYZ = Eigen::Vector3i(sample,sample,sample); this->updateRange();}}
     inline void setSampleSize(Eigen::Vector3i sample){
         if(sample[0] > 0 && sample [1]>0 && sample[2] > 0){m_sampleSizeXYZ = sample; this->updateRange();}}
 
     // 极小曲面的周期大小与物理大小的映射
     inline void setDensity(int density){
-        if(density > 0) m_densityXYZ = Eigen::Vector3i(density); this->updateRange();}
+        if(density > 0) m_densityXYZ = Eigen::Vector3i(density,density,density); this->updateRange();}
     inline void setDensity(Eigen::Vector3i density){
         if(density[0]>0 && density[1]>0&&density[2] > 0){m_densityXYZ=density;this->updateRange();}}
 

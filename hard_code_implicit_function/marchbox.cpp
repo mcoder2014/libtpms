@@ -325,10 +325,10 @@ void MarchBox::setRange(Eigen::Vector3d physical_max,
 
     if(sampleSize > 0)
         //        this->m_sampleSize = sampleSize;
-        this->m_sampleSizeXYZ = Eigen::Vector3i(sampleSize);
+        this->m_sampleSizeXYZ = Eigen::Vector3i(sampleSize, sampleSize, sampleSize);
     if(density > 0)
         //        this->m_density = density;
-        this->m_densityXYZ = Eigen::Vector3i(density);
+        this->m_densityXYZ = Eigen::Vector3i(density,density,density);
 
     updateRange();
 }
@@ -673,12 +673,7 @@ void MarchBox::marching_cubes_double_closed(ImplicitSurface &implicit_surface, f
              << "\nnz: " << ncellsZ;
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
-    std::vector<std::vector<std::vector<float>>> IS_value_1(
-                ncellsX,std::vector<std::vector<float>>(
-                    ncellsY, std::vector<float>(
-                        ncellsZ, std::numeric_limits<float>::max())));
-
-    std::vector<std::vector<std::vector<float>>> IS_value_2(
+    std::vector<std::vector<std::vector<float>>> IS_value(
                 ncellsX,std::vector<std::vector<float>>(
                     ncellsY, std::vector<float>(
                         ncellsZ, std::numeric_limits<float>::max())));
@@ -707,18 +702,15 @@ void MarchBox::marching_cubes_double_closed(ImplicitSurface &implicit_surface, f
                 {
                     // Record the IS_value
                     double value = implicit_surface.f(logical_x, logical_y, logical_z);
-                    IS_value_1[iter_x][iter_y][iter_z] = m_reverse?-value:value;
-                    IS_value_2[iter_x][iter_y][iter_z] = m_reverse?value:-value;
+                    IS_value[iter_x][iter_y][iter_z] = m_reverse?-value:value;
                 }
                 else
                 {
-                    IS_value_1[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
-                    IS_value_2[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
+                    IS_value[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
                 }
             }
         }
     }
-
 
     // Approximation of the all marching cubes
     for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
@@ -729,22 +721,22 @@ void MarchBox::marching_cubes_double_closed(ImplicitSurface &implicit_surface, f
             {
                 int cube_index = 0;
                 // v0 v1 v2 v3 v4 v5 v6 v7
-                if(IS_value_1[iter_x    ][iter_y    ][iter_z    ] < isoLevel_1
-                        && IS_value_2[iter_x    ][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 1;
-                if(IS_value_1[iter_x + 1][iter_y    ][iter_z    ] < isoLevel_1
-                        && IS_value_2[iter_x + 1][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 2;
-                if(IS_value_1[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel_1
-                        && IS_value_2[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 4;
-                if(IS_value_1[iter_x    ][iter_y    ][iter_z + 1] < isoLevel_1
-                        && IS_value_2[iter_x    ][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 8;
-                if(IS_value_1[iter_x    ][iter_y + 1][iter_z    ] < isoLevel_1
-                        && IS_value_2[iter_x    ][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 16;
-                if(IS_value_1[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel_1
-                        && IS_value_2[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 32;
-                if(IS_value_1[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel_1
-                        && IS_value_2[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 64;
-                if(IS_value_1[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel_1
-                        && IS_value_2[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 128;
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 128;
 
                 // Get the approximation triangle table
                 int *edgeIndexList = triTable[cube_index];
@@ -994,12 +986,7 @@ void MarchBox::marching_cubes_double_closed(ImplicitSurface &implicit_surface,
              << "\nnum of Z: " << ncellsZ;
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
-    std::vector<std::vector<std::vector<float>>> IS_value_1(
-                ncellsX,std::vector<std::vector<float>>(
-                    ncellsY, std::vector<float>(
-                        ncellsZ, std::numeric_limits<float>::max())));
-
-    std::vector<std::vector<std::vector<float>>> IS_value_2(
+    std::vector<std::vector<std::vector<float>>> IS_value(
                 ncellsX,std::vector<std::vector<float>>(
                     ncellsY, std::vector<float>(
                         ncellsZ, std::numeric_limits<float>::max())));
@@ -1047,13 +1034,11 @@ void MarchBox::marching_cubes_double_closed(ImplicitSurface &implicit_surface,
                 if(intersect_count %2 ==1)
                 {
                     double value = implicit_surface.f(logical_x, logical_y, logical_z);
-                    IS_value_1[iter_x][iter_y][iter_z] = m_reverse?-value:value;
-                    IS_value_1[iter_x][iter_y][iter_z] = m_reverse?value:-value;
+                    IS_value[iter_x][iter_y][iter_z] = m_reverse?-value:value;
                 }
                 else
                 {
-                    IS_value_1[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
-                    IS_value_2[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
+                    IS_value[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
                 }
 
             }
@@ -1072,22 +1057,22 @@ void MarchBox::marching_cubes_double_closed(ImplicitSurface &implicit_surface,
 
                 int cube_index = 0;
                 // v0 v1 v2 v3 v4 v5 v6 v7
-                if(IS_value_1[iter_x    ][iter_y    ][iter_z    ] < isoLevel_1
-                        && IS_value_2[iter_x    ][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 1;
-                if(IS_value_1[iter_x + 1][iter_y    ][iter_z    ] < isoLevel_1
-                        && IS_value_2[iter_x + 1][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 2;
-                if(IS_value_1[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel_1
-                        && IS_value_2[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 4;
-                if(IS_value_1[iter_x    ][iter_y    ][iter_z + 1] < isoLevel_1
-                        && IS_value_2[iter_x    ][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 8;
-                if(IS_value_1[iter_x    ][iter_y + 1][iter_z    ] < isoLevel_1
-                        && IS_value_2[iter_x    ][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 16;
-                if(IS_value_1[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel_1
-                        && IS_value_2[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 32;
-                if(IS_value_1[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel_1
-                        && IS_value_2[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 64;
-                if(IS_value_1[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel_1
-                        && IS_value_2[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 128;
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 128;
 
                 // Get the approximation triangle table
                 int *edgeIndexList = triTable[cube_index];
@@ -1241,25 +1226,10 @@ void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
             {
                 // If there are more than two intersects point,
                 // Push the sample points closer
+                double step_z = (upper - downer) / (ncellsZ - additions);
+                double current_z_value = downer + ( 0.5)*step_z;
 
-                // 为了边缘也是镂空的，所以只只压缩模型下表面以上的采样点
-                int iter_z = 0;
-                double current_z_value = physical_min[2] - (half_addition+1)*physical_step[2];
-                //                for(; iter_z < ncellsZ; iter_z++)
-                //                {
-                //                    current_z_value += physical_step[2];
-                //                    if(current_z_value > downer)
-                //                        break;
-
-                //                    sample_points[iter_x][iter_y][iter_z][0] = sample_points[iter_x][iter_y][iter_z][0];
-                //                    sample_points[iter_x][iter_y][iter_z][1] = sample_points[iter_x][iter_y][iter_z][1];
-                //                    sample_points[iter_x][iter_y][iter_z][2] = current_z_value;
-                //                }
-
-                double step_z = (upper - downer) / (ncellsZ - iter_z - half_addition - 1);
-                current_z_value = downer - ((half_addition/2) + 0.5)*step_z;
-
-                for(; iter_z < ncellsZ; iter_z++)
+                for(int iter_z = half_addition; iter_z < ncellsZ-half_addition; iter_z++)
                 {
                     sample_points[iter_x][iter_y][iter_z][0] = sample_points[iter_x][iter_y][0][0];
                     sample_points[iter_x][iter_y][iter_z][1] = sample_points[iter_x][iter_y][0][1];
@@ -1267,6 +1237,25 @@ void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
                     current_z_value += step_z;
                 }
 
+                current_z_value = downer - (half_addition - 1) *step_z;
+                // below down
+                for (int iter_z = 0; iter_z < half_addition; iter_z++)
+                {
+                    sample_points[iter_x][iter_y][iter_z][0] = sample_points[iter_x][iter_y][0][0];
+                    sample_points[iter_x][iter_y][iter_z][1] = sample_points[iter_x][iter_y][0][1];
+                    sample_points[iter_x][iter_y][iter_z][2] = current_z_value;
+                    current_z_value +=step_z;
+                }
+
+                current_z_value = upper+step_z;
+                // upset upper
+                for(int iter_z = ncellsZ-half_addition-1;iter_z<ncellsZ-half_addition; iter_z++)
+                {
+                    sample_points[iter_x][iter_y][ncellsZ-1][0] = sample_points[iter_x][iter_y][0][0];
+                    sample_points[iter_x][iter_y][ncellsZ-1][1] = sample_points[iter_x][iter_y][0][1];
+                    sample_points[iter_x][iter_y][ncellsZ-1][2] = current_z_value;
+                    current_z_value += step_z;
+                }
             }
             else
             {
@@ -1404,10 +1393,295 @@ void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
 
 void MarchBox::marching_cube_push_double_closed(ImplicitSurface &implicit_surface,
                                                 SurfaceMesh::SurfaceMeshModel &surface_mesh,
-                                                int sampleSize, int density,
                                                 float isoLevel_1, float isoLevel_2)
 {
+    // Update the two bounding box in the march_box
+    surface_mesh.updateBoundingBox();
+    Eigen::AlignedBox3d mesh_bbox =  surface_mesh.bbox();
 
+    std::cout << "Mesh boundary:\n"
+              << "MIN: X:\t" << mesh_bbox.min()[0] << "\tMAX: X:\t" << mesh_bbox.max()[0]
+              << "\nMIN: Y:\t" << mesh_bbox.min()[1] << "\tMAX: Y:\t" << mesh_bbox.max()[1]
+              << "\nMIN: Z:\t" << mesh_bbox.min()[2] << "\tMAX: Z:\t" << mesh_bbox.max()[2]
+              << std::endl;
+
+    this->setRange(mesh_bbox.max(), mesh_bbox.min());
+
+    // Create Octree
+    Octree octree(&surface_mesh);
+
+    // clear
+    this->m_vertices.clear();
+    this->m_faces.clear();
+    this->m_index_map.clear();
+
+    // Get parameters
+    int ncellsX = m_ncellsX;
+    int ncellsY = m_ncellsY;
+    int ncellsZ = m_ncellsZ;
+
+    int additions = 4;
+    int half_addition = additions/2;
+
+    Eigen::Vector3d logical_min = m_boundingbox_logical.min();
+    Eigen::Vector3d logical_max = m_boundingbox_logical.max();
+    Eigen::Vector3d physical_min = m_boundingbox_physical.min();
+    Eigen::Vector3d physical_max = m_boundingbox_physical.max();
+
+    // Calculate the step of each box
+    Eigen::Vector3d logical_step = logical_max-logical_min;
+    logical_step[0] = logical_step[0] / (ncellsX - 1 - additions);
+    logical_step[1] = logical_step[1] / (ncellsY - 1 - additions);
+    logical_step[2] = logical_step[2] / (ncellsZ - 1 - additions);
+
+    Eigen::Vector3d physical_step = physical_max - physical_min;
+    physical_step[0] = physical_step[0] / (ncellsX - 1 - additions);
+    physical_step[1] = physical_step[1] / (ncellsY - 1 - additions);
+    physical_step[2] = physical_step[2] / (ncellsZ - 1 - additions);
+
+    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+             << "\nnum of X: " << ncellsX
+             << "\nnum of Y: " << ncellsY
+             << "\nnum of Z: " << ncellsZ << endl;
+
+    // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
+    std::vector<std::vector<std::vector<float>>> IS_value(
+                ncellsX,std::vector<std::vector<float>>(
+                    ncellsY, std::vector<float>(
+                        ncellsZ, std::numeric_limits<float>::max())));
+
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
+                ncellsX, std::vector<std::vector<glm::vec3>>(
+                    ncellsY, std::vector<glm::vec3>(
+                        ncellsZ, glm::vec3(0.0))));
+
+    // init the record values and the sample_points of the marching cubes
+    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
+    {
+        double physical_x = physical_min[0] + physical_step[0] * (iter_x-half_addition);
+        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
+        {
+            double physical_y = physical_min[1] + physical_step[1] * (iter_y-half_addition);
+            sample_points[iter_x][iter_y][0] = glm::vec3(physical_x, physical_y, physical_min[2]-100);
+//            for(int iter_z = 0; iter_z < ncellsZ; iter_z++)
+//            {
+//                double physical_z = physical_min[2] + physical_step[2] * (iter_z-half_addition);
+//                sample_points[iter_x][iter_y][iter_z] = glm::vec3(physical_x,physical_y,physical_z);
+//            }
+        }
+    }
+
+    // Push the physical points down
+    Eigen::Vector3d up_direction(0.0,0.0,1.0);
+    // init the record values and the sample_points of the marching cubes
+    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
+    {
+        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
+        {
+            glm::vec3 point = sample_points[iter_x][iter_y][0];
+
+            // check the upper point and the lower point.
+            double upper = std::numeric_limits<double>::min();
+            double downer = std::numeric_limits<double>::max();
+
+            Ray ray(Eigen::Vector3d(point[0],point[1],point[2]), up_direction);
+            QSet<int> intersects = octree.intersectRay(ray, 0.000001, false);
+            HitResult res;
+            int intersect_count = 0;
+
+            // Fast, not robust tests
+            for( int i: intersects)
+            {
+                octree.rayTriangleIntersectionTest(SurfaceMesh::Model::Face(i), ray, res, false);
+                // find the nearest intersection point
+                if(res.hit)
+                {
+                    intersect_count++;
+
+                    // Calculate the intersect point
+                    Eigen::Vector3d intersect_point = ray.origin + (ray.direction * res.distance);
+                    if(intersect_point[2] > upper)
+                        upper = intersect_point[2];
+                    if(intersect_point[2] < downer)
+                        downer = intersect_point[2];
+                }
+            }
+
+            if(intersect_count >=2)
+            {
+                // If there are more than two intersects point,
+                // Push the sample points closer
+                double step_z = (upper - downer) / (ncellsZ - additions);
+                double current_z_value = downer + ( 0.5)*step_z;
+
+                for(int iter_z = half_addition; iter_z < ncellsZ-half_addition; iter_z++)
+                {
+                    sample_points[iter_x][iter_y][iter_z][0] = sample_points[iter_x][iter_y][0][0];
+                    sample_points[iter_x][iter_y][iter_z][1] = sample_points[iter_x][iter_y][0][1];
+                    sample_points[iter_x][iter_y][iter_z][2] = current_z_value;
+                    current_z_value += step_z;
+                }
+
+                current_z_value = downer - (half_addition - 1) *step_z;
+                // below down
+                for (int iter_z = 0; iter_z < half_addition; iter_z++)
+                {
+                    sample_points[iter_x][iter_y][iter_z][0] = sample_points[iter_x][iter_y][0][0];
+                    sample_points[iter_x][iter_y][iter_z][1] = sample_points[iter_x][iter_y][0][1];
+                    sample_points[iter_x][iter_y][iter_z][2] = current_z_value;
+                    current_z_value +=step_z;
+                }
+
+                current_z_value = upper+step_z;
+                // upset upper
+                for(int iter_z = ncellsZ-half_addition-1;iter_z<ncellsZ-half_addition; iter_z++)
+                {
+                    sample_points[iter_x][iter_y][ncellsZ-1][0] = sample_points[iter_x][iter_y][0][0];
+                    sample_points[iter_x][iter_y][ncellsZ-1][1] = sample_points[iter_x][iter_y][0][1];
+                    sample_points[iter_x][iter_y][ncellsZ-1][2] = current_z_value;
+                    current_z_value += step_z;
+                }
+            }
+            else
+            {
+                // If the sample points is not closer with the model
+                // keep the sample points as it should be
+                for(int iter_z = 0; iter_z < ncellsZ; iter_z++)
+                {
+                    sample_points[iter_x][iter_y][iter_z][0] = std::numeric_limits<float>::max();
+                    sample_points[iter_x][iter_y][iter_z][1] = std::numeric_limits<float>::max();
+                    sample_points[iter_x][iter_y][iter_z][2] = std::numeric_limits<float>::max();
+                }
+
+            }
+
+        }
+    }
+
+    std::cout << "Create sample points finished!\n";
+
+#ifdef DEBUG_INFO
+    writeOBJ(sample_points, "push_boundary.obj");
+#endif
+
+    // init the record values and the sample_points of the marching cubes
+    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
+    {
+        double logical_x = logical_min[0] + logical_step[0] * (iter_x-half_addition);
+        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
+        {
+            double logical_y = logical_min[1] + logical_step[1] * (iter_y-half_addition);
+            for (int iter_z = 0; iter_z < ncellsZ; iter_z++)
+            {
+                double logical_z = logical_min[2] + logical_step[2] * (iter_z-half_addition);
+                glm::vec3 point = sample_points[iter_x][iter_y][iter_z];
+
+                // To make sure the point is included in the model
+                // Record the IS_value
+                Ray up_ray(Eigen::Vector3d(point[0],point[1],point[2]), up_direction);
+                QSet<int> up_intersects = octree.intersectRay(up_ray, 0.000001, false);
+
+                Ray down_ray(Eigen::Vector3d(point[0],point[1],point[2]), -up_direction);
+                QSet<int> down_intersects = octree.intersectRay(down_ray, 0.000001, false);
+
+                HitResult res;
+                int up_intersect_count = 0;
+                int down_intersect_count = 0;
+
+                // Count the intersection points with
+                for( int i: up_intersects)
+                {
+                    //                    octree.intersectionTestAccelerated(SurfaceMesh::Model::Face(i), up_ray, res);
+                    octree.rayTriangleIntersectionTest(SurfaceMesh::Model::Face(i), up_ray, res, false);
+                    // find the nearest intersection point
+                    if(res.hit)
+                        up_intersect_count++;
+                }
+                for(int i: down_intersects)
+                {
+                    //                    octree.intersectionTestAccelerated(SurfaceMesh::Model::Face(i), down_ray, res);
+                    octree.rayTriangleIntersectionTest(SurfaceMesh::Model::Face(i), down_ray, res, false);
+                    // find the nearest intersection point
+                    if(res.hit)
+                        down_intersect_count++;
+                }
+
+                // 小于 0 在内部，大于0在外部
+                if(up_intersect_count %2==0 || down_intersect_count%2 == 0)
+                {
+                    // 在约束边界的外部
+                    IS_value[iter_x][iter_y][iter_z] = std::numeric_limits<float>::max();
+                }
+                else
+                {
+                    // 在约束边界的内部0
+                    double value = implicit_surface.f(logical_x, logical_y, logical_z);
+                    IS_value[iter_x][iter_y][iter_z] = m_reverse?-value:value;
+                }
+            }
+        }
+    }
+
+    std::cout << "Caculating sample points' value finished!\n";
+
+    // Approximation of the all marching cubes
+    for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+    {
+        for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+        {
+            for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+            {
+                // Get the eight point of the cube vertex,
+                // to March the condition in 256 probailities
+
+                int cube_index = 0;
+                // v0 v1 v2 v3 v4 v5 v6 v7
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y    ][iter_z    ] < isoLevel_2) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y    ][iter_z + 1] < isoLevel_2) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel_2) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] > isoLevel_1
+                        && IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel_2) cube_index |= 128;
+
+                // Get the approximation triangle table
+                int *edgeIndexList = triTable[cube_index];
+
+                // -1 means the end of the triangle.
+                while (*edgeIndexList != -1 )
+                {
+                    // Get the next approximation triangle
+                    int e_index[3];
+                    e_index[0] = *edgeIndexList;
+                    e_index[1] = *(edgeIndexList + 1);
+                    e_index[2] = *(edgeIndexList + 2);
+
+                    edgeIndexList = edgeIndexList+3;      // ptr move 3 pos
+
+                    glm::ivec3 face_index;
+                    // Calculate the 3 points coordinates of the face
+                    for (int e_i=0; e_i < 3; e_i ++)
+                    {
+                        int index = getVertexIdx(iter_x, iter_y, iter_z, e_index[e_i], sample_points);
+                        face_index[e_i] = index;
+                    }   // for (int e_i=0; e_i < 3; e_i ++)
+
+                    this->m_faces.push_back(face_index);
+
+                }   // while (*edgelist != -1 )
+
+            }   //  for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+        }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+    }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
 }
 
 #endif
