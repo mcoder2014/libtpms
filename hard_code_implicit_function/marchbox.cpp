@@ -1135,7 +1135,7 @@ void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
     int ncellsY = m_ncellsY;
     int ncellsZ = m_ncellsZ;
 
-    int additions = 4;
+    int additions = 8;
     int half_addition = additions/2;
 
     Eigen::Vector3d logical_min = m_boundingbox_logical.min();
@@ -1177,12 +1177,15 @@ void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
         for (int iter_y = 0; iter_y < ncellsY; iter_y++)
         {
             double physical_y = physical_min[1] + physical_step[1] * (iter_y-half_addition);
+#ifndef DEBUG_INFO
             sample_points[iter_x][iter_y][0] = glm::vec3(physical_x, physical_y, physical_min[2]-100);
-//            for(int iter_z = 0; iter_z < ncellsZ; iter_z++)
-//            {
-//                double physical_z = physical_min[2] + physical_step[2] * (iter_z-half_addition);
-//                sample_points[iter_x][iter_y][iter_z] = glm::vec3(physical_x,physical_y,physical_z);
-//            }
+#else
+            for(int iter_z = 0; iter_z < ncellsZ; iter_z++)
+            {
+                double physical_z = physical_min[2] + physical_step[2] * (iter_z-half_addition);
+                sample_points[iter_x][iter_y][iter_z] = glm::vec3(physical_x,physical_y,physical_z);
+            }
+#endif
         }
     }
 
@@ -1249,14 +1252,15 @@ void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
 
                 current_z_value = upper+step_z;
                 // upset upper
-                for(int iter_z = ncellsZ-half_addition-1;iter_z<ncellsZ-half_addition; iter_z++)
+                for(int iter_z = ncellsZ-half_addition;iter_z<ncellsZ; iter_z++)
                 {
-                    sample_points[iter_x][iter_y][ncellsZ-1][0] = sample_points[iter_x][iter_y][0][0];
-                    sample_points[iter_x][iter_y][ncellsZ-1][1] = sample_points[iter_x][iter_y][0][1];
-                    sample_points[iter_x][iter_y][ncellsZ-1][2] = current_z_value;
+                    sample_points[iter_x][iter_y][iter_z][0] = sample_points[iter_x][iter_y][0][0];
+                    sample_points[iter_x][iter_y][iter_z][1] = sample_points[iter_x][iter_y][0][1];
+                    sample_points[iter_x][iter_y][iter_z][2] = current_z_value;
                     current_z_value += step_z;
                 }
             }
+#ifndef DEBUG_INFO
             else
             {
                 // If the sample points is not closer with the model
@@ -1269,7 +1273,7 @@ void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
                 }
 
             }
-
+#endif
         }
     }
 
@@ -1294,10 +1298,10 @@ void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
                 // To make sure the point is included in the model
                 // Record the IS_value
                 Ray up_ray(Eigen::Vector3d(point[0],point[1],point[2]), up_direction);
-                QSet<int> up_intersects = octree.intersectRay(up_ray, 0.000001, false);
+                QSet<int> up_intersects = octree.intersectRay(up_ray, 0.0001, false);
 
                 Ray down_ray(Eigen::Vector3d(point[0],point[1],point[2]), -up_direction);
-                QSet<int> down_intersects = octree.intersectRay(down_ray, 0.000001, false);
+                QSet<int> down_intersects = octree.intersectRay(down_ray, 0.0001, false);
 
                 HitResult res;
                 int up_intersect_count = 0;
@@ -1306,7 +1310,6 @@ void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
                 // Count the intersection points with
                 for( int i: up_intersects)
                 {
-                    //                    octree.intersectionTestAccelerated(SurfaceMesh::Model::Face(i), up_ray, res);
                     octree.rayTriangleIntersectionTest(SurfaceMesh::Model::Face(i), up_ray, res, false);
                     // find the nearest intersection point
                     if(res.hit)
@@ -1314,7 +1317,6 @@ void MarchBox::marching_cube_push_closed(ImplicitSurface &implicit_surface,
                 }
                 for(int i: down_intersects)
                 {
-                    //                    octree.intersectionTestAccelerated(SurfaceMesh::Model::Face(i), down_ray, res);
                     octree.rayTriangleIntersectionTest(SurfaceMesh::Model::Face(i), down_ray, res, false);
                     // find the nearest intersection point
                     if(res.hit)
@@ -1420,7 +1422,7 @@ void MarchBox::marching_cube_push_double_closed(ImplicitSurface &implicit_surfac
     int ncellsY = m_ncellsY;
     int ncellsZ = m_ncellsZ;
 
-    int additions = 4;
+    int additions = 8;
     int half_addition = additions/2;
 
     Eigen::Vector3d logical_min = m_boundingbox_logical.min();
@@ -1534,11 +1536,11 @@ void MarchBox::marching_cube_push_double_closed(ImplicitSurface &implicit_surfac
 
                 current_z_value = upper+step_z;
                 // upset upper
-                for(int iter_z = ncellsZ-half_addition-1;iter_z<ncellsZ-half_addition; iter_z++)
+                for(int iter_z = ncellsZ-half_addition;iter_z<ncellsZ; iter_z++)
                 {
-                    sample_points[iter_x][iter_y][ncellsZ-1][0] = sample_points[iter_x][iter_y][0][0];
-                    sample_points[iter_x][iter_y][ncellsZ-1][1] = sample_points[iter_x][iter_y][0][1];
-                    sample_points[iter_x][iter_y][ncellsZ-1][2] = current_z_value;
+                    sample_points[iter_x][iter_y][iter_x][0] = sample_points[iter_x][iter_y][0][0];
+                    sample_points[iter_x][iter_y][iter_y][1] = sample_points[iter_x][iter_y][0][1];
+                    sample_points[iter_x][iter_y][iter_z][2] = current_z_value;
                     current_z_value += step_z;
                 }
             }
@@ -1706,6 +1708,45 @@ void MarchBox::updateRange()
     m_ncellsX = static_cast<int>((logical_max[0] - logical_min[0]) * m_sampleSizeXYZ[0]);
     m_ncellsY = static_cast<int>((logical_max[1] - logical_min[1]) * m_sampleSizeXYZ[1]);
     m_ncellsZ = static_cast<int>((logical_max[2] - logical_min[2]) * m_sampleSizeXYZ[2]);
+
+#ifdef DEBUG_INFO
+    // OutPut debug info
+    std::cout << "--- March Boundary Info ---\n";
+
+    // Physical
+    std::cout << "Physical Box:\n";
+    std::cout << "Max: "
+              << m_boundingbox_physical.max()[0] << "  "
+              << m_boundingbox_physical.max()[1] << "  "
+              << m_boundingbox_physical.max()[2]
+              << "\n";
+    std::cout << "Min: "
+              << m_boundingbox_physical.min()[0] << "  "
+              << m_boundingbox_physical.min()[0] << "  "
+              << m_boundingbox_physical.min()[0]
+              << "\n";
+    // Logical
+    std::cout << "\nLogical Box:\n";
+    std::cout << "Max: "
+              << m_boundingbox_logical.max()[0] << "  "
+              << m_boundingbox_logical.max()[1] << "  "
+              << m_boundingbox_logical.max()[2] << "\n";
+    std::cout << "Min: "
+              << m_boundingbox_logical.min()[0] << "  "
+              << m_boundingbox_logical.min()[1] << "  "
+              << m_boundingbox_logical.min()[2] << "  "
+              << "\n";
+
+    // Sample size
+    std::cout << "\nSample size:\n"
+              << "X: " <<m_ncellsX
+              << "\tY: " << m_ncellsY
+              << "\tZ: " << m_ncellsZ
+              << "\n";
+
+    std::cout << "--- March Boundary Info ---\n";
+#endif
+
 }
 
 void MarchBox::writeOBJ(const std::string &fileName)
