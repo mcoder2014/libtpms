@@ -49,6 +49,7 @@ public:
                   std::string const & file_result);
 
     inline Mesh *getMesh(){return m_object;}
+    inline Mesh *getMeshDeep();
 
 private:
     Mesh *m_object;     // the origin openmesh object

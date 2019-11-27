@@ -52,8 +52,8 @@ public:
                                float isoLevel = 0);
     // IsoLevel1 < IsoLevel2
     void marching_cubes_double_closed(ImplicitSurface& implicit_surface,
-                                      float isoLevel_1 = -0.5,
-                                      float isoLevel_2 = 0.5);
+                                      float isoLevel_low = -0.5,
+                                      float isoLevel_high = 0.5);
 
 #ifdef USING_SURFACEMESH
     void marching_cubes_closed(ImplicitSurface& implicit_surface,
@@ -66,8 +66,8 @@ public:
                         SurfaceMesh::SurfaceMeshModel& surface_mesh,
                         int sampleSize = -1,
                         int density = -1,
-                        float isoLevel_1 = -0.5,
-                        float isoLevel_2 = 0.5);
+                        float isoLevel_low = -0.5,
+                        float isoLevel_high = 0.5);
 
     void marching_cube_push_closed(ImplicitSurface& implicit_surface,
                                    SurfaceMesh::SurfaceMeshModel& surface_mesh,
@@ -77,8 +77,8 @@ public:
 
     void marching_cube_push_double_closed(ImplicitSurface& implicit_surface,
                                           SurfaceMesh::SurfaceMeshModel& surface_mesh,
-                                          float isoLevel_1 = -0.5,
-                                          float isoLevel_2 = 0.5);
+                                          float isoLevel_low = -0.5,
+                                          float isoLevel_high = 0.5);
 
 #endif
 
@@ -114,6 +114,24 @@ public:
     void writeOBJ(std::vector<std::vector<std::vector<glm::vec3>>>& samplePoints,
                   std::string const & fileName);
 #endif
+
+private:
+    // Create sample Points
+    void initSampleMatrix(std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+                          int additions = 4);
+
+    // Calculate IS_value
+    void calculateIS_value(std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+                           std::vector<std::vector<std::vector<float>>>& IS_value, int additions);
+
+    // 由 IS_value 和 sample_points 创建网格模型
+    void createMesh(std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+                    std::vector<std::vector<std::vector<float>>>& IS_value,
+                    float isoLevel);
+
+    void createMesh(std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+                    std::vector<std::vector<std::vector<float>>>& IS_value,
+                    float isoLevel_low, float isoLevel_high);
 
 private:
     std::unordered_map<int64_t, int> m_index_map;

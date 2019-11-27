@@ -9,6 +9,7 @@ SOURCES += \
         implicitsurface.cpp \
         main.cpp \
         marchbox.cpp \
+    qualityinspection.cpp \
     simplification.cpp \
         smoothtool.cpp \
 
@@ -16,6 +17,7 @@ SOURCES += \
 HEADERS += \
     implicitsurface.h \
     marchbox.h \
+    qualityinspection.h \
     simplification.h \
     smoothtool.h \
 

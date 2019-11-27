@@ -7,6 +7,7 @@
 #include "marchbox.h"
 #include "smoothtool.h"
 #include "simplification.h"
+#include "qualityinspection.h"
 
 //#define CUBE_TEST             // small cube test
 //#define BOX_INSOLE_SIZE       // big cube at insole size
@@ -17,7 +18,7 @@
 #include "SurfaceMeshModel.h"
 #include "surfacemesh_load.h"
 //#define TEST_SURFACEMESH            // use surfacemesh as boundary
-#define TEST_SURFACEMESH_PUSH
+//#define TEST_SURFACEMESH_PUSH
 #define TEST_SURFACEMESH_PUSH_DOUBLE
 #endif
 
@@ -42,6 +43,10 @@ int main()
         clock_t time_end = clock();
         std::cout << "Cost time " << 1.0 * (time_end-time_start)/CLOCKS_PER_SEC << " S\n\n";
         smoothTool.writeOBJ("", smooth_obj);
+
+        // Check
+        QualityInspection qualityInspection;
+        qualityInspection.check(smoothTool.getMesh());
     };
 
     auto march_box_mesh_base = [&](QString dir, QString type, float isoLevel)
@@ -469,6 +474,7 @@ int main()
         auto march_box_mesh_boundary = [&](QString dir, QString type,
                 float isoLevel1, float isoLevel2, SurfaceMesh::SurfaceMeshModel& boundary)
         {
+            std::cout << "-----------------------------------------------------\n";
             clock_t time_start = clock();
             QString savePath = dir + type + "_type.obj";
 
@@ -482,7 +488,7 @@ int main()
             // smooth
             QString smooth_path = dir + type + "_type_smooth_openmesh.obj";
             smooth_tool_function("", smooth_path.toStdString());
-
+            std::cout << "====================================================\n";
         };
 
         auto surfacemesh_test = [&](Eigen::Vector3i sample,
@@ -524,9 +530,10 @@ int main()
         SurfaceMesh::SurfaceMeshModel boundary_model;
         SurfaceMeshLoader loader;
         loader.load(boundary_model, "origin.obj");
+//        loader.load(boundary_model,"insole_prototype.ply");
 
-        Eigen::Vector3i sample(64,64,64);
-        Eigen::Vector3i density(24, 24, 12);
+        Eigen::Vector3i sample(48,48,64);
+        Eigen::Vector3i density(50, 50, 25);
         smooth_times = 20;
         QString test_floder = "surfacemesh_push_closed_double_test";
         march_box.setReverse(false);

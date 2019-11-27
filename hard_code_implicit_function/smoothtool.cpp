@@ -240,3 +240,10 @@ void SmoothTool::writeOBJ(const std::string &file_origin, const std::string &fil
 
     // export result
 }
+
+Mesh *SmoothTool::getMeshDeep()
+{
+    Mesh *mesh = new Mesh;
+    mesh->assign(*m_object);
+    return mesh;
+}
