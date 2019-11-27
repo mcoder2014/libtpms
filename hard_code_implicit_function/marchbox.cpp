@@ -395,7 +395,7 @@ void MarchBox::marching_cubes(
     std::vector<std::vector<std::vector<float>>> IS_value(
                 m_ncellsX,std::vector<std::vector<float>>(
                     m_ncellsY, std::vector<float>(
-                        m_ncellsZ, std::numeric_limits<float>::infinity())));
+                        m_ncellsZ, std::numeric_limits<float>::max())));
 
     std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
                 m_ncellsX, std::vector<std::vector<glm::vec3>>(
@@ -616,15 +616,15 @@ void MarchBox::marching_cube_push_double_closed(
     std::vector<std::vector<std::vector<float>>> IS_value(
                 m_ncellsX,std::vector<std::vector<float>>(
                     m_ncellsY, std::vector<float>(
-                        m_ncellsZ, std::numeric_limits<float>::infinity())));
+                        m_ncellsZ, std::numeric_limits<float>::max())));
 
     std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
                 m_ncellsX, std::vector<std::vector<glm::vec3>>(
                     m_ncellsY, std::vector<glm::vec3>(
                         m_ncellsZ, glm::vec3(0.0))));
 
-    initSampleMatrix_compress_z(octree, sample_points, additions);
-//    initSampleMatrix_compress_z_without_lower(octree, sample_points, additions);
+//    initSampleMatrix_compress_z(octree, sample_points, additions);
+    initSampleMatrix_compress_z_without_lower(octree, sample_points, additions);
     calculateIS_value(implicit_surface,octree, sample_points,IS_value,additions);
 //    initSampleMatrix_compress_z_and_cal_IS_value(
 //                octree, implicit_surface, sample_points,
@@ -991,7 +991,7 @@ void MarchBox::initSampleMatrix_compress_z_without_lower(
             double upper = std::numeric_limits<double>::lowest();
             double downer = std::numeric_limits<double>::max();
 
-            Ray ray(Eigen::Vector3d(point[0],point[1],point[2]), up_direction);
+            Ray ray(Eigen::Vector3d(point[0],point[1],point[2]-100), up_direction);
             QSet<int> intersects = octree.intersectRay(ray, 0.000001, false);
             HitResult res;
             int intersect_count = 0;
@@ -1022,9 +1022,9 @@ void MarchBox::initSampleMatrix_compress_z_without_lower(
                 while(downer - sample_points[iter_x][iter_y][idx_z][2] > 0.5 * step_z)
                 {
 #ifndef DEBUG_INFO
-                    sample_points[iter_x][iter_y][idx_z][0] = std::numeric_limits<float>::infinity();
-                    sample_points[iter_x][iter_y][idx_z][1] = std::numeric_limits<float>::infinity();
-                    sample_points[iter_x][iter_y][idx_z][2] = std::numeric_limits<float>::infinity();
+                    sample_points[iter_x][iter_y][idx_z][0] = std::numeric_limits<float>::max();
+                    sample_points[iter_x][iter_y][idx_z][1] = std::numeric_limits<float>::max();
+                    sample_points[iter_x][iter_y][idx_z][2] = std::numeric_limits<float>::max();
 #endif
                     idx_z++;
                 }
@@ -1053,9 +1053,9 @@ void MarchBox::initSampleMatrix_compress_z_without_lower(
                 // keep the sample points as it should be
                 for(int iter_z = 0; iter_z < ncellsZ; iter_z++)
                 {
-                    sample_points[iter_x][iter_y][iter_z][0] = std::numeric_limits<float>::infinity();
-                    sample_points[iter_x][iter_y][iter_z][1] = std::numeric_limits<float>::infinity();
-                    sample_points[iter_x][iter_y][iter_z][2] = std::numeric_limits<float>::infinity();
+                    sample_points[iter_x][iter_y][iter_z][0] = std::numeric_limits<float>::max();
+                    sample_points[iter_x][iter_y][iter_z][1] = std::numeric_limits<float>::max();
+                    sample_points[iter_x][iter_y][iter_z][2] = std::numeric_limits<float>::max();
                 }
             }
 #endif
@@ -1065,7 +1065,6 @@ void MarchBox::initSampleMatrix_compress_z_without_lower(
     std::cout << "Create sample points finished!\n";
 }
 
-
 void MarchBox::calculateIS_value(
         ImplicitSurface &implicit_surface,
         Octree &octree,
@@ -1074,6 +1073,7 @@ void MarchBox::calculateIS_value(
         int additions)
 {
 
+    std::cout << "Caculating sample points!\n";
     int ncellsX = m_ncellsX;
     int ncellsY = m_ncellsY;
     int ncellsZ = m_ncellsZ;
@@ -1115,7 +1115,7 @@ void MarchBox::calculateIS_value(
             // 此处可通过找到上下表面两个交点，将在其区间内的 iter_z 全部执行
             // To make sure the point is included in the model
             float upper = std::numeric_limits<float>::lowest();
-            float downer = std::numeric_limits<float>::infinity();
+            float downer = std::numeric_limits<float>::max();
 
             Ray down_ray(Eigen::Vector3d(point[0],point[1],point[2]), -up_direction);
             QSet<int> down_intersects = octree.intersectRay(down_ray, 0.000001, false);

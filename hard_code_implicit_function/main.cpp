@@ -393,7 +393,7 @@ int main()
             QString savePath = dir + type + "_type.obj";
 
             implicit_surface.setType(type);
-            march_box.marching_cube_push_closed(implicit_surface, boundary, -1, -1, isoLevel);
+            march_box.marching_cube_push_closed(implicit_surface, boundary, isoLevel);
 
             clock_t time_end = clock();
             std::cout << "Cost time " << 1.0 * (time_end-time_start)/CLOCKS_PER_SEC << " S\n\n";
