@@ -533,7 +533,7 @@ int main()
 //        loader.load(boundary_model,"insole_prototype.ply");
 
         Eigen::Vector3i sample(48,48,64);
-        Eigen::Vector3i density(50, 50, 25);
+        Eigen::Vector3i density(20, 20, 25);
         smooth_times = 20;
         QString test_floder = "surfacemesh_push_closed_double_test";
         march_box.setReverse(false);

@@ -22,75 +22,102 @@ public:
     MarchBox();
     ~MarchBox();
 
-    static int edgeTable[256];      // edge table
-    static int triTable[256][16];   // triangle table
-
-    // dimension of the marching box
-    int m_ncellsX;
-    int m_ncellsY;
-    int m_ncellsZ;
-
-    // the range of the marching box
-    Eigen::AlignedBox3d m_boundingbox_physical;
-    Eigen::AlignedBox3d m_boundingbox_logical;
-
     // 清空元素，释放内存空间
-    inline void clear(){this->m_vertices.clear();
-                        std::vector<glm::vec3> tmp_v;
-                        this->m_vertices.swap(tmp_v);
-                        this->m_faces.clear();
-                        std::vector<glm::ivec3> tmp_f;
-                        this->m_faces.swap(tmp_f);}
+    inline void clear(){
+        this->m_vertices.clear();
+        std::vector<glm::vec3> tmp_v;
+        this->m_vertices.swap(tmp_v);
+        this->m_faces.clear();
+        std::vector<glm::ivec3> tmp_f;
+        this->m_faces.swap(tmp_f);
+    }
 
-    // The triangle mesh of the result of marching box algorithm
-    std::vector<glm::vec3> m_vertices;
-    std::vector<glm::ivec3> m_faces;      // Index format(in vertices)
+    // 方形、只采样一层曲面
+    void marching_cubes(
+            ImplicitSurface& implicit_surface,
+            float isoLevel = 0);
 
-    void marching_cubes(ImplicitSurface& implicit_surface,
-                        float isoLevel = 0);
-    void marching_cubes_closed(ImplicitSurface& implicit_surface,
-                               float isoLevel = 0);
-    // IsoLevel1 < IsoLevel2
-    void marching_cubes_double_closed(ImplicitSurface& implicit_surface,
-                                      float isoLevel_low = -0.5,
-                                      float isoLevel_high = 0.5);
+    // 方形、封闭孔洞的采样方法
+    void marching_cubes_closed(
+            ImplicitSurface& implicit_surface,
+            float isoLevel = 0);
 
+    // 方形、有厚度曲面的封闭方式 IsoLevel1 < IsoLevel2
+    void marching_cubes_double_closed(
+            ImplicitSurface& implicit_surface,
+            float isoLevel_low = -0.5,
+            float isoLevel_high = 0.5);
+
+    /// 当使用 Surfacemesh 作为生成八叉树的数据结构时有效
 #ifdef USING_SURFACEMESH
-    void marching_cubes_closed(ImplicitSurface& implicit_surface,
-                        SurfaceMesh::SurfaceMeshModel& surface_mesh,
-                        int sampleSize = -1,
-                        int density = -1,
-                        float isoLevel = 0);
+    // 不做压缩、直接截取鞋垫形状、封闭孔洞的方式
+    void marching_cubes_closed(
+            ImplicitSurface& implicit_surface,
+            SurfaceMesh::SurfaceMeshModel& surface_mesh,
+            float isoLevel = 0);
 
-    void marching_cubes_double_closed(ImplicitSurface& implicit_surface,
-                        SurfaceMesh::SurfaceMeshModel& surface_mesh,
-                        int sampleSize = -1,
-                        int density = -1,
-                        float isoLevel_low = -0.5,
-                        float isoLevel_high = 0.5);
+    // 不做压缩、直接截取鞋垫形状、有厚度曲面的方式
+    void marching_cubes_double_closed(
+            ImplicitSurface& implicit_surface,
+            SurfaceMesh::SurfaceMeshModel& surface_mesh,
+            float isoLevel_low = -0.5,
+            float isoLevel_high = 0.5);
 
-    void marching_cube_push_closed(ImplicitSurface& implicit_surface,
-                                   SurfaceMesh::SurfaceMeshModel& surface_mesh,
-                                   int sampleSize = -1,
-                                   int density = -1,
-                                   float isoLevel = 0);
+    // 对鞋垫区域做Z轴方向压缩、封闭孔洞方式
+    void marching_cube_push_closed(
+            ImplicitSurface& implicit_surface,
+            SurfaceMesh::SurfaceMeshModel& surface_mesh,
+            float isoLevel = 0);
 
-    void marching_cube_push_double_closed(ImplicitSurface& implicit_surface,
-                                          SurfaceMesh::SurfaceMeshModel& surface_mesh,
-                                          float isoLevel_low = -0.5,
-                                          float isoLevel_high = 0.5);
+    // 对鞋垫区域做Z轴方向压缩、有厚度曲面的方式
+    void marching_cube_push_double_closed(
+            ImplicitSurface& implicit_surface,
+            SurfaceMesh::SurfaceMeshModel& surface_mesh,
+            float isoLevel_low = -0.5,
+            float isoLevel_high = 0.5);
 
+    // 利用 surfacemesh 模型设置物理模型范围
+    void setRange(SurfaceMesh::SurfaceMeshModel& surface_mesh);
+
+private:
+    // 初始化采样矩阵，对鞋垫范围做Z轴方向压缩
+    void initSampleMatrix_compress_z(
+            Octree& octree,
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            int additions = 4);
+    void initSampleMatrix_compress_z_and_cal_IS_value(
+            Octree& octree,
+            ImplicitSurface& implicit_surface,
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            std::vector<std::vector<std::vector<float>>>& IS_value,
+            int additions = 4);
+    // 初始化采样矩阵，对鞋垫下表面以上的点做Z轴方向压缩
+    void initSampleMatrix_compress_z_without_lower(
+            Octree& octree,
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            int additions = 4);
+
+    // Calculate IS_value
+    void calculateIS_value(
+            ImplicitSurface& implicit_surface,
+            Octree& octree,
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            std::vector<std::vector<std::vector<float>>>& IS_value,
+            int additions);
+public:
 #endif
 
-    void setRange(Eigen::Vector3d physical_max,
-                  Eigen::Vector3d physical_min,
-                  int sampleSize = -1,
-                  int density = -1);
+    void setRange(
+            Eigen::Vector3d physical_max,
+            Eigen::Vector3d physical_min,
+            int sampleSize = -1,
+            int density = -1);
 
-    void setRange(Eigen::Vector3d physical_max,
-                  Eigen::Vector3d physical_min,
-                  Eigen::Vector3i sampleSize,
-                  Eigen::Vector3i density);
+    void setRange(
+            Eigen::Vector3d physical_max,
+            Eigen::Vector3d physical_min,
+            Eigen::Vector3i sampleSize,
+            Eigen::Vector3i density);
 
     // 采样网格的尺寸（单个极小曲面周期内）
     inline void setSampleSize(int sample){
@@ -117,30 +144,57 @@ public:
 
 private:
     // Create sample Points
-    void initSampleMatrix(std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
-                          int additions = 4);
+    void initSampleMatrix(
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            int additions = 4);
 
     // Calculate IS_value
-    void calculateIS_value(std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
-                           std::vector<std::vector<std::vector<float>>>& IS_value, int additions);
+    void calculateIS_value(
+            ImplicitSurface& implicit_surface,
+            std::vector<std::vector<std::vector<float>>>& IS_value,
+            int additions);
 
     // 由 IS_value 和 sample_points 创建网格模型
-    void createMesh(std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
-                    std::vector<std::vector<std::vector<float>>>& IS_value,
-                    float isoLevel);
+    void createMesh(
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            std::vector<std::vector<std::vector<float>>>& IS_value,
+            float isoLevel);
 
-    void createMesh(std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
-                    std::vector<std::vector<std::vector<float>>>& IS_value,
-                    float isoLevel_low, float isoLevel_high);
+    void createMesh(
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            std::vector<std::vector<std::vector<float>>>& IS_value,
+            float isoLevel_low, float isoLevel_high);
+
+    // 获得指定采样方格边的中点的 index
+    int getVertexIdx(
+            int cx_id, int cy_id, int cz_id, int edge_idx,
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points);
 
 private:
-    std::unordered_map<int64_t, int> m_index_map;
-    int getVertexIdx(int cx_id, int cy_id, int cz_id, int edge_idx,
-                     std::vector<std::vector<std::vector<glm::vec3>>> &sample_points);
+    // 数据区域
+    static int edgeTable[256];      // edge table
+    static int triTable[256][16];   // triangle table
+
+    // dimension of the marching box
+    int m_ncellsX;
+    int m_ncellsY;
+    int m_ncellsZ;
+
+    // the range of the marching box
+    Eigen::AlignedBox3d m_boundingbox_physical;
+    Eigen::AlignedBox3d m_boundingbox_logical;
+
+    std::unordered_map<int64_t, int> m_index_map;   // 用来避免重复添加同一个顶点
+
     Eigen::Vector3i m_densityXYZ;       // 在 XYZ 三个方向上的逻辑密度
     Eigen::Vector3i m_sampleSizeXYZ;    // 在 XYZ 三个方向上的采样大小
     Eigen::Vector3d m_offset;   // logical min point's position
     bool m_reverse;             // Select the opposite space to be the entity
+
+public:
+    // The triangle mesh of the result of marching box algorithm
+    std::vector<glm::vec3> m_vertices;
+    std::vector<glm::ivec3> m_faces;      // Index format(in vertices)
 };
 
 #endif // MARCHBOX_H
