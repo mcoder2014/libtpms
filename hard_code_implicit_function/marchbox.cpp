@@ -118,7 +118,7 @@ int MarchBox::triTable[256][16] =
  {1, 8, 3, 1, 9, 8, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1},
  {1, 6, 5, 2, 6, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
  {1, 6, 5, 1, 2, 6, 3, 0, 8, -1, -1, -1, -1, -1, -1, -1},
- {9, 6, 5, 9, 0, 6, 0, 2, 6, -1, -1, -1, -1, -1, -1, -1},
+ {9, 6, 5, 9, 0, 6, 0, 2, 6, -1, -1, -1, -1,4 -1, -1, -1},
  {5, 9, 8, 5, 8, 2, 5, 2, 6, 3, 2, 8, -1, -1, -1, -1},
  {2, 3, 11, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
  {11, 0, 8, 11, 2, 0, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1},
@@ -623,13 +623,114 @@ void MarchBox::marching_cube_push_double_closed(
                     m_ncellsY, std::vector<glm::vec3>(
                         m_ncellsZ, glm::vec3(0.0))));
 
-//    initSampleMatrix_compress_z(octree, sample_points, additions);
-    initSampleMatrix_compress_z_without_lower(octree, sample_points, additions);
+    initSampleMatrix_compress_z(octree, sample_points, additions);
+//    initSampleMatrix_compress_z_without_lower(octree, sample_points, additions);
     calculateIS_value(implicit_surface,octree, sample_points,IS_value,additions);
 //    initSampleMatrix_compress_z_and_cal_IS_value(
 //                octree, implicit_surface, sample_points,
 //                IS_value, additions);
     createMesh(sample_points,IS_value,isoLevel_low,isoLevel_high);
+}
+
+void MarchBox::mb_pc_diff_test(
+        ImplicitSurface &implicit_surface,
+        SurfaceMesh::SurfaceMeshModel &surface_mesh,
+        float isoLevel_from,
+        float isoLevel_to)
+{
+    // Update the two bounding box in the march_box
+    setRange(surface_mesh);
+    // Create Octree
+    Octree octree(&surface_mesh);
+    int additions = 8;
+
+    // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
+    std::vector<std::vector<std::vector<float>>> IS_value(
+                m_ncellsX,std::vector<std::vector<float>>(
+                    m_ncellsY, std::vector<float>(
+                        m_ncellsZ, std::numeric_limits<float>::max())));
+
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
+                m_ncellsX, std::vector<std::vector<glm::vec3>>(
+                    m_ncellsY, std::vector<glm::vec3>(
+                        m_ncellsZ, glm::vec3(0.0))));
+
+    // Test IsoLevel [x][y]
+    std::vector<std::vector<float>> isoLevels(
+                m_ncellsX, std::vector<float>(
+                    m_ncellsY, 0));
+
+    // init y 方向上变换
+    float delta_y = (isoLevel_to-isoLevel_from)/m_ncellsY;
+    for (int iter_y = 0; iter_y < m_ncellsY; iter_y++)
+    {
+        float isoLevel = isoLevel_to - iter_y * delta_y;
+        for(int iter_x = 0; iter_x < m_ncellsX; iter_x++)
+        {
+            isoLevels[iter_x][iter_y] = isoLevel;
+        }
+    }
+
+    initSampleMatrix_compress_z(octree,sample_points,additions);
+    calculateIS_value(implicit_surface,octree,sample_points,IS_value,additions);
+    // Approximation of the all marching cubes
+    this->createMesh(sample_points, IS_value, isoLevels);
+}
+
+void MarchBox::mb_pd_diff_test(
+        ImplicitSurface &implicit_surface,
+        SurfaceMesh::SurfaceMeshModel &surface_mesh,
+        glm::vec2 isoLevel_low, glm::vec2 isoLevel_high)
+{
+    // Update the two bounding box in the march_box
+    setRange(surface_mesh);
+
+    // Create Octree
+    Octree octree(&surface_mesh);
+
+    int additions = 8;
+
+    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+             << "\nnum of X: " << m_ncellsX
+             << "\nnum of Y: " << m_ncellsY
+             << "\nnum of Z: " << m_ncellsZ << endl;
+
+    // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
+    std::vector<std::vector<std::vector<float>>> IS_value(
+                m_ncellsX,std::vector<std::vector<float>>(
+                    m_ncellsY, std::vector<float>(
+                        m_ncellsZ, std::numeric_limits<float>::max())));
+
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
+                m_ncellsX, std::vector<std::vector<glm::vec3>>(
+                    m_ncellsY, std::vector<glm::vec3>(
+                        m_ncellsZ, glm::vec3(0.0))));
+    // isoLevel mat
+    std::vector<std::vector<glm::vec2>> isoLevels(
+                m_ncellsX, std::vector<glm::vec2>(
+                    m_ncellsY, glm::vec2(0.0)));
+
+    // init
+    // [0] big->small
+    // [1] small->big
+    glm::vec2 delta;
+    delta = (isoLevel_high-isoLevel_low);
+    delta[0] = delta[0]/m_ncellsY;
+    delta[1] = delta[1]/m_ncellsY;
+    for(int iter_y = 0; iter_y < m_ncellsY; iter_y++)
+    {
+        glm::vec2 isoLevel;
+        isoLevel[0] = isoLevel_low[0] + delta[0] * iter_y;
+        isoLevel[1] = isoLevel_low[1] + delta[1] * iter_y;
+        for(int iter_x = 0; iter_x < m_ncellsX; iter_x++)
+        {
+            isoLevels[iter_x][iter_y] = isoLevel;
+        }
+    }
+
+    initSampleMatrix_compress_z(octree, sample_points, additions);
+    calculateIS_value(implicit_surface,octree, sample_points,IS_value,additions);
+    createMesh(sample_points,IS_value,isoLevels);
 }
 
 void MarchBox::setRange(SurfaceMesh::SurfaceMeshModel &surface_mesh)
@@ -1158,6 +1259,165 @@ void MarchBox::calculateIS_value(
     std::cout << "Caculating sample points' value finished!\n";
 }
 
+/// 封闭孔洞方式的依据足底压力结构粗细
+void MarchBox::createMesh(
+        std::vector<std::vector<std::vector<glm::vec3> > > &sample_points,
+        std::vector<std::vector<std::vector<float> > > &IS_value,
+        std::vector<std::vector<float> > &isoLevel)
+{
+    // clear
+    this->m_vertices.clear();
+    this->m_faces.clear();
+    this->m_index_map.clear();
+
+    std::cout << "Create Mesh from IS_value and sample_points Start." << std::endl;
+
+    int ncellsX = sample_points.size();
+    int ncellsY = sample_points[0].size();
+    int ncellsZ = sample_points[0][0].size();
+
+    for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+    {
+        for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+        {
+            for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+            {
+                // Get the eight point of the cube vertex,
+                // to March the condition in 256 probailities
+
+                int cube_index = 0;
+                // v0 v1 v2 v3 v4 v5 v6 v7
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ]
+                        < isoLevel[iter_x    ][iter_y    ]) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ]
+                        < isoLevel[iter_x + 1][iter_y    ]) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1]
+                        < isoLevel[iter_x + 1][iter_y    ]) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1]
+                        < isoLevel[iter_x    ][iter_y    ]) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ]
+                        < isoLevel[iter_x    ][iter_y + 1]) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ]
+                        < isoLevel[iter_x + 1][iter_y + 1]) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1]
+                        < isoLevel[iter_x + 1][iter_y + 1]) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1]
+                        < isoLevel[iter_x    ][iter_y + 1]) cube_index |= 128;
+
+                // Get the approximation triangle table
+                int *edgeIndexList = triTable[cube_index];
+
+                // -1 means the end of the triangle.
+                while (*edgeIndexList != -1 )
+                {
+                    // Get the next approximation triangle
+                    int e_index[3];
+                    e_index[0] = *edgeIndexList;
+                    e_index[1] = *(edgeIndexList + 1);
+                    e_index[2] = *(edgeIndexList + 2);
+
+                    edgeIndexList = edgeIndexList+3;      // ptr move 3 pos
+
+                    glm::ivec3 face_index;
+                    // Calculate the 3 points coordinates of the face
+                    for (int e_i=0; e_i < 3; e_i ++)
+                    {
+                        int index = getVertexIdx(iter_x, iter_y, iter_z, e_index[e_i], sample_points);
+                        face_index[e_i] = index;
+                    }   // for (int e_i=0; e_i < 3; e_i ++)
+
+                    this->m_faces.push_back(face_index);
+
+                }   // while (*edgelist != -1 )
+
+            }   //  for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+        }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+    }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+
+    std::cout << "Create Mesh from IS_value and sample_points End." << std::endl;
+
+}
+
+/// 有厚度曲面方式的依据足底压力调整壁厚
+void MarchBox::createMesh(
+        std::vector<std::vector<std::vector<glm::vec3> > > &sample_points,
+        std::vector<std::vector<std::vector<float> > > &IS_value,
+        std::vector<std::vector<glm::vec2> > &isoLevel)
+{
+    // clear
+    this->m_vertices.clear();
+    this->m_faces.clear();
+    this->m_index_map.clear();
+
+    std::cout << "Create Mesh from IS_value and sample_points Start." << std::endl;
+
+    int ncellsX = sample_points.size();
+    int ncellsY = sample_points[0].size();
+    int ncellsZ = sample_points[0][0].size();
+
+    // Approximation of the all marching cubes
+    for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+    {
+        for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+        {
+            for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+            {
+                // Get the eight point of the cube vertex,
+                // to March the condition in 256 probailities
+
+                int cube_index = 0;
+                // v0 v1 v2 v3 v4 v5 v6 v7
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] > isoLevel[iter_x    ][iter_y    ][0]
+                        && IS_value[iter_x    ][iter_y    ][iter_z    ] < isoLevel[iter_x    ][iter_y    ][1]) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] > isoLevel[iter_x + 1][iter_y    ][0]
+                        && IS_value[iter_x + 1][iter_y    ][iter_z    ] < isoLevel[iter_x + 1][iter_y    ][1]) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] > isoLevel[iter_x + 1][iter_y    ][0]
+                        && IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel[iter_x + 1][iter_y    ][1]) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] > isoLevel[iter_x    ][iter_y    ][0]
+                        && IS_value[iter_x    ][iter_y    ][iter_z + 1] < isoLevel[iter_x    ][iter_y    ][1]) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] > isoLevel[iter_x    ][iter_y + 1][0]
+                        && IS_value[iter_x    ][iter_y + 1][iter_z    ] < isoLevel[iter_x    ][iter_y + 1][1]) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] > isoLevel[iter_x + 1][iter_y + 1][0]
+                        && IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel[iter_x + 1][iter_y + 1][1]) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] > isoLevel[iter_x + 1][iter_y + 1][0]
+                        && IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel[iter_x + 1][iter_y + 1][1]) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] > isoLevel[iter_x    ][iter_y + 1][0]
+                        && IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel[iter_x    ][iter_y + 1][1]) cube_index |= 128;
+
+                // Get the approximation triangle table
+                int *edgeIndexList = triTable[cube_index];
+
+                // -1 means the end of the triangle.
+                while (*edgeIndexList != -1 )
+                {
+                    // Get the next approximation triangle
+                    int e_index[3];
+                    e_index[0] = *edgeIndexList;
+                    e_index[1] = *(edgeIndexList + 1);
+                    e_index[2] = *(edgeIndexList + 2);
+
+                    edgeIndexList = edgeIndexList+3;      // ptr move 3 pos
+
+                    glm::ivec3 face_index;
+                    // Calculate the 3 points coordinates of the face
+                    for (int e_i=0; e_i < 3; e_i ++)
+                    {
+                        int index = getVertexIdx(iter_x, iter_y, iter_z, e_index[e_i], sample_points);
+                        face_index[e_i] = index;
+                    }   // for (int e_i=0; e_i < 3; e_i ++)
+
+                    this->m_faces.push_back(face_index);
+
+                }   // while (*edgelist != -1 )
+
+            }   //  for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+        }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+    }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+
+    std::cout << "Create Mesh from IS_value and sample_points End." << std::endl;
+
+}
+
 #endif
 
 void MarchBox::updateRange()
@@ -1495,6 +1755,82 @@ void MarchBox::createMesh(
     }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
 
     std::cout << "Create Mesh from IS_value and sample_points End." << std::endl;
+}
+
+void MarchBox::createMesh(std::vector<std::vector<std::vector<glm::vec3> > > &sample_points, std::vector<std::vector<std::vector<float> > > &IS_value, glm::vec2 isoLevel)
+{
+    // clear
+    this->m_vertices.clear();
+    this->m_faces.clear();
+    this->m_index_map.clear();
+
+    std::cout << "Create Mesh from IS_value and sample_points Start." << std::endl;
+
+    int ncellsX = sample_points.size();
+    int ncellsY = sample_points[0].size();
+    int ncellsZ = sample_points[0][0].size();
+
+    // Approximation of the all marching cubes
+    for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+    {
+        for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+        {
+            for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+            {
+                // Get the eight point of the cube vertex,
+                // to March the condition in 256 probailities
+
+                int cube_index = 0;
+                // v0 v1 v2 v3 v4 v5 v6 v7
+                if(IS_value[iter_x    ][iter_y    ][iter_z    ] > isoLevel[0]
+                        && IS_value[iter_x    ][iter_y    ][iter_z    ] < isoLevel[1]) cube_index |= 1;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z    ] > isoLevel[0]
+                        && IS_value[iter_x + 1][iter_y    ][iter_z    ] < isoLevel[1]) cube_index |= 2;
+                if(IS_value[iter_x + 1][iter_y    ][iter_z + 1] > isoLevel[0]
+                        && IS_value[iter_x + 1][iter_y    ][iter_z + 1] < isoLevel[1]) cube_index |= 4;
+                if(IS_value[iter_x    ][iter_y    ][iter_z + 1] > isoLevel[0]
+                        && IS_value[iter_x    ][iter_y    ][iter_z + 1] < isoLevel[1]) cube_index |= 8;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z    ] > isoLevel[0]
+                        && IS_value[iter_x    ][iter_y + 1][iter_z    ] < isoLevel[1]) cube_index |= 16;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z    ] > isoLevel[0]
+                        && IS_value[iter_x + 1][iter_y + 1][iter_z    ] < isoLevel[1]) cube_index |= 32;
+                if(IS_value[iter_x + 1][iter_y + 1][iter_z + 1] > isoLevel[0]
+                        && IS_value[iter_x + 1][iter_y + 1][iter_z + 1] < isoLevel[1]) cube_index |= 64;
+                if(IS_value[iter_x    ][iter_y + 1][iter_z + 1] > isoLevel[0]
+                        && IS_value[iter_x    ][iter_y + 1][iter_z + 1] < isoLevel[1]) cube_index |= 128;
+
+                // Get the approximation triangle table
+                int *edgeIndexList = triTable[cube_index];
+
+                // -1 means the end of the triangle.
+                while (*edgeIndexList != -1 )
+                {
+                    // Get the next approximation triangle
+                    int e_index[3];
+                    e_index[0] = *edgeIndexList;
+                    e_index[1] = *(edgeIndexList + 1);
+                    e_index[2] = *(edgeIndexList + 2);
+
+                    edgeIndexList = edgeIndexList+3;      // ptr move 3 pos
+
+                    glm::ivec3 face_index;
+                    // Calculate the 3 points coordinates of the face
+                    for (int e_i=0; e_i < 3; e_i ++)
+                    {
+                        int index = getVertexIdx(iter_x, iter_y, iter_z, e_index[e_i], sample_points);
+                        face_index[e_i] = index;
+                    }   // for (int e_i=0; e_i < 3; e_i ++)
+
+                    this->m_faces.push_back(face_index);
+
+                }   // while (*edgelist != -1 )
+
+            }   //  for (int iter_z = 0; iter_z < ncellsZ-1; iter_z++)
+        }   // for (int iter_y = 0; iter_y < ncellsY-1; iter_y++)
+    }   // for(int iter_x = 0; iter_x < ncellsX-1; iter_x++)
+
+    std::cout << "Create Mesh from IS_value and sample_points End." << std::endl;
+
 }
 
 #ifdef DEBUG_INFO

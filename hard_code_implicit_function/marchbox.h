@@ -76,6 +76,19 @@ public:
             float isoLevel_low = -0.5,
             float isoLevel_high = 0.5);
 
+    // 测试非均匀的拟合效果
+    void mb_pc_diff_test(
+            ImplicitSurface& implicit_surface,
+            SurfaceMesh::SurfaceMeshModel& surface_mesh,
+            float isoLevel_from = 0,
+            float isoLevel_to = 0);
+
+    void mb_pd_diff_test(
+            ImplicitSurface& implicit_surface,
+            SurfaceMesh::SurfaceMeshModel& surface_mesh,
+            glm::vec2 isoLevel_low,
+            glm::vec2 isoLevel_high);
+
     // 利用 surfacemesh 模型设置物理模型范围
     void setRange(SurfaceMesh::SurfaceMeshModel& surface_mesh);
 
@@ -104,6 +117,18 @@ private:
             std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
             std::vector<std::vector<std::vector<float>>>& IS_value,
             int additions);
+
+    // 拟合根据足底压力的非均匀极小曲面
+    void createMesh(
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            std::vector<std::vector<std::vector<float>>>& IS_value,
+            std::vector<std::vector<float>>& isoLevel);
+
+    void createMesh(
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            std::vector<std::vector<std::vector<float>>>& IS_value,
+            std::vector<std::vector<glm::vec2>>& isoLevel);
+
 public:
 #endif
 
@@ -160,10 +185,16 @@ private:
             std::vector<std::vector<std::vector<float>>>& IS_value,
             float isoLevel);
 
+    // 提取有厚度的曲面
     void createMesh(
             std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
             std::vector<std::vector<std::vector<float>>>& IS_value,
             float isoLevel_low, float isoLevel_high);
+
+    void createMesh(
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            std::vector<std::vector<std::vector<float>>>& IS_value,
+            glm::vec2 isoLevel);
 
     // 获得指定采样方格边的中点的 index
     int getVertexIdx(

@@ -210,9 +210,14 @@ void SmoothTool::writeOBJ(const std::string &file_origin, const std::string &fil
     // write mesh to output.obj
     try
     {
+
+        OpenMesh::IO::Options option;
+        option += OpenMesh::IO::Options::Binary;
+
+
         if(file_origin.length() > 0 && m_backup)
         {
-            if ( !OpenMesh::IO::write_mesh(*m_backup, file_origin))
+            if ( !OpenMesh::IO::write_mesh(*m_backup, file_origin, OpenMesh::IO::Options::Binary))
             {
                 std::cerr << "Cannot write origin mesh to "
                           << file_origin
@@ -223,7 +228,7 @@ void SmoothTool::writeOBJ(const std::string &file_origin, const std::string &fil
 
         if(file_result.length() > 0 && m_object)
         {
-            if(!OpenMesh::IO::write_mesh(*m_object, file_result))
+            if(!OpenMesh::IO::write_mesh(*m_object, file_result, OpenMesh::IO::Options::Binary))
             {
                 std::cerr << "Cannot write result mesh to "
                           << file_result

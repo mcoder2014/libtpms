@@ -7,6 +7,7 @@ DESTDIR = ../bin/
 
 SOURCES += \
         implicitsurface.cpp \
+    isolevelgenerator.cpp \
         main.cpp \
         marchbox.cpp \
     qualityinspection.cpp \
@@ -16,6 +17,7 @@ SOURCES += \
 
 HEADERS += \
     implicitsurface.h \
+    isolevelgenerator.h \
     marchbox.h \
     qualityinspection.h \
     simplification.h \
@@ -67,11 +69,15 @@ contains(DEFINES,USING_SURFACEMESH) {
 }
 
 unix {
+    #include path and libraries
     INCLUDEPATH += /usr/include/eigen3 \
-        /usr/include/assimp
+        /usr/include/assimp \
+        /usr/include/opencv4
 
     LIBS += \
-        -L/usr/lib -lOpenMeshCore -lOpenMeshTools -lassimp
+        -L/usr/lib -lOpenMeshCore -lOpenMeshTools \     # openmesh
+        -lassimp \      # assimp
+        -lopencv_core -lopencv_imgproc  # opencv
 }
 
 win32 {
