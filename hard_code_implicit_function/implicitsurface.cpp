@@ -1,11 +1,14 @@
 #include "implicitsurface.h"
 
+#include <map>
+#include <algorithm>
+
 #include <QtMath>
 
 ImplicitSurface::ImplicitSurface()
-    :m_type_flag(0), m_type("p")
+    :m_type("p")
 {
-
+    initFunctionMap();
 }
 
 ///
@@ -13,54 +16,26 @@ ImplicitSurface::ImplicitSurface()
 /// \param type p, d, p, i-wp, f-rd, l, tubular-p, tubular-g, i2-y
 /// \return
 ///
-int ImplicitSurface::setType(QString type)
+void ImplicitSurface::setType(QString type)
 {
-    if(type.toLower() == "p")
-    {
-        this->m_type_flag =0;
-        this->m_type = "P";
-    }
-    else if(type.toLower() == "d")
-    {
-        this->m_type_flag = 1;
-        this->m_type = "d";
-    }
-    else if (type.toLower() == "g")
-    {
-        this->m_type_flag = 2;
-        this->m_type = "g";
-    }
-    else if (type.toLower() == "i-wp")
-    {
-        this->m_type_flag = 3;
-        this->m_type = "i-wp";
-    }
-    else if (type.toLower() == "f-rd")
-    {
-        this->m_type_flag = 4;
-        this->m_type = "f-rd";
-    }
-    else if (type.toLower() == "l")
-    {
-        this->m_type_flag = 5;
-        this->m_type = "l";
-    }
-    else if (type.toLower() == "tubular-p")
-    {
-        this->m_type_flag = 6;
-        this->m_type = "tubular-p";
-    }
-    else if (type.toLower() == "tubular-g")
-    {
-        this->m_type_flag = 7;
-        this->m_type = "tubular-g";
-    }
-    else if (type.toLower() == "i2-y")
-    {
-        this->m_type_flag = 8;
-        this->m_type = "i2-y";
-    }
-    return this->m_type_flag;
+    std::string key = type.toLower().toStdString();
+    if(this->m_funcMap.find(key) != m_funcMap.end())
+        this->m_type = QString::fromStdString(key);
+    else
+        this->m_type = QString("p");
+}
+
+void ImplicitSurface::initFunctionMap()
+{
+    m_funcMap["p"] = &ImplicitSurface::P;
+    m_funcMap["d"] = &ImplicitSurface::D;
+    m_funcMap["g"] = &ImplicitSurface::G;
+    m_funcMap["i-wp"] = &ImplicitSurface::I_WP;
+    m_funcMap["f-rd"] = &ImplicitSurface::F_RD;
+    m_funcMap["l"] = &ImplicitSurface::L;
+    m_funcMap["tubular-g"] = &ImplicitSurface::Tubular_G;
+    m_funcMap["tubular-p"] = &ImplicitSurface::Tubular_P;
+    m_funcMap["i2-y"] = &ImplicitSurface::I2_Y;
 }
 
 ///
@@ -74,28 +49,20 @@ int ImplicitSurface::setType(QString type)
 ///
 double ImplicitSurface::f(double x, double y, double z)
 {
-    switch (this->m_type_flag)
+    return this->f(m_type, x, y, z);
+}
+
+double ImplicitSurface::f(QString type, double x, double y, double z)
+{
+    std::string key = type.toLower().toStdString();
+    if(m_funcMap.find(key) != m_funcMap.end())
     {
-    case 0:
-        return P(x,y,z);
-    case 1:
-        return D(x,y,z);
-    case 2:
-        return G(x,y,z);
-    case 3:
-        return I_WP(x,y,z);
-    case 4:
-        return F_RD(x,y,z);
-    case 5:
-        return L(x,y,z);
-    case 6:
-        return Tubular_P(x,y,z);
-    case 7:
-        return Tubular_G(x,y,z);
-    case 8:
-        return I2_Y(x,y,z);
-    default:
-        return P(x,y,z);
+        auto func = m_funcMap[key];
+        return (this->*func)(x,y,z);
+    }
+    else
+    {
+        return (this->*(m_funcMap.begin())->second)(x,y,z);
     }
 }
 

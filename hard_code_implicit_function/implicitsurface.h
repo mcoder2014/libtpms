@@ -1,6 +1,9 @@
 #ifndef IMPLICITSURFACE_H
 #define IMPLICITSURFACE_H
 
+#include <unordered_map>
+#include <string>
+
 #include <QString>
 
 class ImplicitSurface
@@ -8,11 +11,12 @@ class ImplicitSurface
 public:
     ImplicitSurface();
 
-    int m_type_flag;
     QString m_type;
-    int setType(QString type);
+    void setType(QString type);
+    void initFunctionMap();
 
     double f(double x, double y, double z);     // f(x,y,z) = 0
+    double f(QString type, double x, double y, double z);
 
     double P(double x, double y, double z);     // P type
     double D(double x, double y, double z);     // D type
@@ -24,7 +28,10 @@ public:
     double Tubular_G(double x, double y, double z); // Tubular G type
     double I2_Y(double x, double y,double z);       // I2 - Y **
 
-
+private:
+//    using pFunc = double (ImplicitSurface::*)(double, double, double);
+//    typedef  double (ImplicitSurface::*pFunc)(double, double, double);
+    std::unordered_map<std::string, double (ImplicitSurface::*)(double x, double y, double z)> m_funcMap;
 };
 
 #endif // IMPLICITSURFACE_H

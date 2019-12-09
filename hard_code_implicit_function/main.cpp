@@ -747,9 +747,9 @@ int main()
         smooth_times = 10;
         QString test_floder = "mesh_push_d_diff";
         march_box.setReverse(false);
-        surfacemesh_test(sample, density, {-0.3,0.3}, {-1.0,1.0}, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
+        surfacemesh_test(sample, density, {-0.3,0.3}, {-0.6,0.6}, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
             {"p","d","g","l","tubular-p"});
-        surfacemesh_test(sample, density, {-0.6,0.6}, {-3,3}, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
+        surfacemesh_test(sample, density, {-0.6,0.6}, {-1.0,1.0}, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
             {"i-wp","f-rd","tubular-g","i2-y"});
     }
 #endif
