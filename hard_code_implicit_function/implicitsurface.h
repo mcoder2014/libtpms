@@ -11,12 +11,15 @@ class ImplicitSurface
 public:
     ImplicitSurface();
 
-    QString m_type;
+//    QString m_type;
+    std::string m_type;
     void setType(QString type);
+    void setType(std::string type);
     void initFunctionMap();
 
     double f(double x, double y, double z);     // f(x,y,z) = 0
-    double f(QString type, double x, double y, double z);
+//    double f(QString type, double x, double y, double z);
+    double f(std::string type, double x, double y, double z);
 
     double P(double x, double y, double z);     // P type
     double D(double x, double y, double z);     // D type

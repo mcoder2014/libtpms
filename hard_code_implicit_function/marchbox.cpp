@@ -5,8 +5,6 @@
 #include <limits>
 #include <time.h>
 
-#include <QDebug>
-
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -386,10 +384,11 @@ void MarchBox::marching_cubes(
         ImplicitSurface &implicit_surface,
         float isoLevel)
 {
-    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+    std::cout << "\nImplicit Mesh type: " << implicit_surface.m_type
              << "\nnx: " << m_ncellsX
              << "\nny: " << m_ncellsY
-             << "\nnz: " << m_ncellsZ;
+             << "\nnz: " << m_ncellsZ
+             << "\n";
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
     std::vector<std::vector<std::vector<float>>> IS_value(
@@ -421,10 +420,11 @@ void MarchBox::marching_cubes_closed(
 {
     // 反向操作
     int additions = 4;
-    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+    std::cout << "\nImplicit Mesh type: " << implicit_surface.m_type
              << "\nnx: " << m_ncellsX
              << "\nny: " << m_ncellsY
-             << "\nnz: " << m_ncellsZ;
+             << "\nnz: " << m_ncellsZ
+             << "\n";
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
     std::vector<std::vector<std::vector<float>>> IS_value(
@@ -456,10 +456,11 @@ void MarchBox::marching_cubes_double_closed(
         float isoLevel_high)
 {
     int additions = 4;
-    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+    std::cout << "\nImplicit Mesh type: " << implicit_surface.m_type
              << "\nnx: " << m_ncellsX
              << "\nny: " << m_ncellsY
-             << "\nnz: " << m_ncellsZ;
+             << "\nnz: " << m_ncellsZ
+             << "\n";
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
     std::vector<std::vector<std::vector<float>>> IS_value(
@@ -607,10 +608,10 @@ void MarchBox::marching_cube_push_double_closed(
 
     int additions = 8;
 
-    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+    std::cout << "\nImplicit Mesh type: " << implicit_surface.m_type
              << "\nnum of X: " << m_ncellsX
              << "\nnum of Y: " << m_ncellsY
-             << "\nnum of Z: " << m_ncellsZ << endl;
+             << "\nnum of Z: " << m_ncellsZ << "\n";
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
     std::vector<std::vector<std::vector<float>>> IS_value(
@@ -690,10 +691,10 @@ void MarchBox::mb_pd_diff_test(
 
     int additions = 8;
 
-    qDebug() << "\nImplicit Mesh type: " << implicit_surface.m_type
+    std::cout << "\nImplicit Mesh type: " << implicit_surface.m_type
              << "\nnum of X: " << m_ncellsX
              << "\nnum of Y: " << m_ncellsY
-             << "\nnum of Z: " << m_ncellsZ << endl;
+             << "\nnum of Z: " << m_ncellsZ << std::endl;
 
     // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
     std::vector<std::vector<std::vector<float>>> IS_value(
@@ -731,6 +732,91 @@ void MarchBox::mb_pd_diff_test(
     initSampleMatrix_compress_z(octree, sample_points, additions);
     calculateIS_value(implicit_surface,octree, sample_points,IS_value,additions);
     createMesh(sample_points,IS_value,isoLevels);
+}
+
+void MarchBox::mb_pc_mult_test(
+        std::vector<std::string> surfaces,
+        SurfaceMesh::SurfaceMeshModel &surface_mesh,
+        float isoLevel_from, float isoLevel_to)
+{
+    // Update the two bounding box in the march_box
+    setRange(surface_mesh);
+    // Create Octree
+    Octree octree(&surface_mesh);
+    int additions = 8;
+
+    // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
+    std::vector<std::vector<std::vector<float>>> IS_value(
+                m_ncellsX,std::vector<std::vector<float>>(
+                    m_ncellsY, std::vector<float>(
+                        m_ncellsZ, std::numeric_limits<float>::max())));
+
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
+                m_ncellsX, std::vector<std::vector<glm::vec3>>(
+                    m_ncellsY, std::vector<glm::vec3>(
+                        m_ncellsZ, glm::vec3(0.0))));
+
+    // Test IsoLevel [x][y]
+    std::vector<std::vector<float>> isoLevels(
+                m_ncellsX, std::vector<float>(
+                    m_ncellsY, 0));
+
+    // init y 方向上变换
+    float delta_y = (isoLevel_to-isoLevel_from)/m_ncellsY;
+    for (int iter_y = 0; iter_y < m_ncellsY; iter_y++)
+    {
+        float isoLevel = isoLevel_to - iter_y * delta_y;
+        for(int iter_x = 0; iter_x < m_ncellsX; iter_x++)
+        {
+            isoLevels[iter_x][iter_y] = isoLevel;
+        }
+    }
+
+    // Create implicit surfaces
+    std::vector<std::vector<std::pair<std::string, float>>> implicit_surfaces(m_ncellsY);
+    {
+        int size = surfaces.size();
+        int each_size = m_ncellsY / size + 1;
+        int mix_size = 4 * m_densityXYZ[1];
+        each_size = each_size - mix_size;
+        int mix_step = 1.0/mix_size;
+        int idx = 0;
+        // First
+        for (int i=0; i < size; i++)
+        {
+            for (int j = 0;j < each_size && idx < m_ncellsY; j++, idx++)
+            {
+                implicit_surfaces[idx].push_back(
+                    std::pair<std::string, float>(surfaces[i], 1.0));
+            }
+            idx += mix_size;
+        }
+        for(int i = 1; i < size; i++)
+        {
+            // mid
+            for(int j = 0, idx = i*each_size+(i-1)*mix_size;
+                j < mix_size && idx < m_ncellsY; idx++, j++)
+            {
+                float mix_value = mix_step * j;
+                implicit_surfaces[idx].push_back(
+                            std::pair<std::string, float>(
+                                surfaces[i], mix_value));
+                implicit_surfaces[idx].push_back(
+                            std::pair<std::string, float>(
+                                surfaces[i-1], 1.0-mix_value));
+            }
+        }
+
+    }
+
+    initSampleMatrix_compress_z(octree,sample_points,additions);
+    calculateIS_value(implicit_surfaces,
+                      octree,
+                      sample_points,
+                      IS_value,
+                      additions);
+    // Approximation of the all marching cubes
+    this->createMesh(sample_points, IS_value, isoLevels);
 }
 
 void MarchBox::setRange(SurfaceMesh::SurfaceMeshModel &surface_mesh)
@@ -1259,6 +1345,106 @@ void MarchBox::calculateIS_value(
     std::cout << "Caculating sample points' value finished!\n";
 }
 
+void MarchBox::calculateIS_value(
+        std::vector<std::vector<std::pair<std::string, float> > > &implicit_surfaces,
+        Octree &octree,
+        std::vector<std::vector<std::vector<glm::vec3> > > &sample_points,
+        std::vector<std::vector<std::vector<float> > > &IS_value,
+        int additions)
+{
+
+    std::cout << "Caculating sample points!\n";
+    ImplicitSurface implicit;
+    int ncellsX = m_ncellsX;
+    int ncellsY = m_ncellsY;
+    int ncellsZ = m_ncellsZ;
+
+    Eigen::Vector3d logical_min = m_boundingbox_logical.min();
+    Eigen::Vector3d logical_max = m_boundingbox_logical.max();
+    int half_addition = additions/2;
+
+    Eigen::Vector3d up_direction(0.0,0.0,1.0);
+    // Calculate the step of each box
+    Eigen::Vector3d logical_step = logical_max-logical_min;
+    logical_step[0] = logical_step[0] / (ncellsX - 1 - additions);
+    logical_step[1] = logical_step[1] / (ncellsY - 1 - additions);
+    logical_step[2] = logical_step[2] / (ncellsZ - 1 - additions);
+
+    clock_t time_rec = clock();
+    int msg_interval = 10;
+
+    // init the record values and the sample_points of the marching cubes
+    for(int iter_x = 0; iter_x < ncellsX; iter_x++)
+    {
+        double logical_x = logical_min[0] + logical_step[0] * (iter_x-half_addition);
+        for (int iter_y = 0; iter_y < ncellsY; iter_y++)
+        {
+            double logical_y = logical_min[1] + logical_step[1] * (iter_y-half_addition);
+
+            if(clock() - time_rec > msg_interval * CLOCKS_PER_SEC)
+            {
+                time_rec = clock();
+                std::cout << "calculate IS_value:"
+                          << "\tX: " << iter_x
+                          << "\tY: " << iter_y
+                          << "\n";
+            }
+
+            // 找到最上层顶点（因为下层顶点可能被移出
+            glm::vec3 point = sample_points[iter_x][iter_y][ncellsZ-1];
+
+            // 此处可通过找到上下表面两个交点，将在其区间内的 iter_z 全部执行
+            // To make sure the point is included in the model
+            float upper = std::numeric_limits<float>::lowest();
+            float downer = std::numeric_limits<float>::max();
+
+            Ray down_ray(Eigen::Vector3d(point[0],point[1],point[2]), -up_direction);
+            QSet<int> down_intersects = octree.intersectRay(down_ray, 0.000001, false);
+
+            HitResult res;
+            int down_intersect_count = 0;
+
+            for(int i: down_intersects)
+            {
+                octree.rayTriangleIntersectionTest(SurfaceMesh::Model::Face(i), down_ray, res, false);
+                // find the nearest intersection point
+                if(res.hit)
+                {
+                    down_intersect_count++;
+                    // Calculate the intersect point
+                    Eigen::Vector3d intersect_point = down_ray.origin + (down_ray.direction * res.distance);
+                    if(intersect_point[2] > upper)
+                        upper = intersect_point[2];
+                    if(intersect_point[2] < downer)
+                        downer = intersect_point[2];
+                }
+            }
+
+            // 小于 0 在内部，大于0在外部
+            if(down_intersect_count >= 2)
+            {
+                std::vector<std::pair<std::string, float>>& iss = implicit_surfaces[iter_y];
+                for(int iter_z =0; iter_z < ncellsZ; iter_z++)
+                {
+                    if(sample_points[iter_x][iter_y][iter_z][2] > downer
+                            && sample_points[iter_x][iter_y][iter_z][2] < upper)
+                    {
+                        double logical_z = logical_min[2] + logical_step[2] *(iter_z - half_addition);
+//                        float value = implicit_surface.f(logical_x,logical_y,logical_z);
+                        float value = 0;
+                        for(std::pair<std::string, float> item:iss)
+                        {
+                            value += implicit.f(item.first, logical_x, logical_y, logical_z);
+                        }
+                        IS_value[iter_x][iter_y][iter_z] = m_reverse?-value:value;
+                    }
+                }
+            }
+        }
+    }
+    std::cout << "Caculating sample points' value finished!\n";
+}
+
 /// 封闭孔洞方式的依据足底压力结构粗细
 void MarchBox::createMesh(
         std::vector<std::vector<std::vector<glm::vec3> > > &sample_points,
@@ -1557,7 +1743,7 @@ void MarchBox::calculateIS_value(
         int additions)
 {
     std::cout << "Calculate the value of Implicit Surface: "
-              << implicit_surface.m_type.toStdString()
+              << implicit_surface.m_type
               << std::endl;
 
     int ncellsX = IS_value.size();

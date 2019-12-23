@@ -8,7 +8,7 @@
 #include <stack>
 
 #include <QSet>
-#include <QtOpenGL>
+//#include <QtOpenGL>
 
 #include "surface_mesh/Surface_mesh.h"
 #include "SurfaceMeshModel.h"

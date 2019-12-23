@@ -89,6 +89,13 @@ public:
             glm::vec2 isoLevel_low,
             glm::vec2 isoLevel_high);
 
+    // 测试Y轴多种晶格过渡
+    void mb_pc_mult_test(
+            std::vector<std::string> surfaces,
+            SurfaceMesh::SurfaceMeshModel& surface_mesh,
+            float isoLevel_from = 0,
+            float isoLevel_to = 0);
+
     // 利用 surfacemesh 模型设置物理模型范围
     void setRange(SurfaceMesh::SurfaceMeshModel& surface_mesh);
 
@@ -113,6 +120,14 @@ private:
     // Calculate IS_value
     void calculateIS_value(
             ImplicitSurface& implicit_surface,
+            Octree& octree,
+            std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
+            std::vector<std::vector<std::vector<float>>>& IS_value,
+            int additions);
+
+    /// Y axis direction
+    void calculateIS_value(
+            std::vector<std::vector<std::pair<std::string, float>>>& implicit_surfaces,
             Octree& octree,
             std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,
             std::vector<std::vector<std::vector<float>>>& IS_value,

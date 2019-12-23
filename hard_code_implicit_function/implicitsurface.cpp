@@ -11,18 +11,25 @@ ImplicitSurface::ImplicitSurface()
     initFunctionMap();
 }
 
-///
-/// \brief ImplicitSurface::setType
-/// \param type p, d, p, i-wp, f-rd, l, tubular-p, tubular-g, i2-y
-/// \return
-///
-void ImplicitSurface::setType(QString type)
+/////
+///// \brief ImplicitSurface::setType
+///// \param type p, d, p, i-wp, f-rd, l, tubular-p, tubular-g, i2-y
+///// \return
+/////
+//void ImplicitSurface::setType(QString type)
+//{
+//    std::string key = type.toLower().toStdString();
+//    if(this->m_funcMap.find(key) != m_funcMap.end())
+//        this->m_type = QString::fromStdString(key);
+//    else
+//        this->m_type = QString("p");
+//}
+
+void ImplicitSurface::setType(std::string type)
 {
-    std::string key = type.toLower().toStdString();
-    if(this->m_funcMap.find(key) != m_funcMap.end())
-        this->m_type = QString::fromStdString(key);
-    else
-        this->m_type = QString("p");
+    std::transform(type.begin(),type.end(),type.begin(), tolower);
+    if(this->m_funcMap.find(type) != m_funcMap.end())
+        this->m_type = type;
 }
 
 void ImplicitSurface::initFunctionMap()
@@ -52,12 +59,27 @@ double ImplicitSurface::f(double x, double y, double z)
     return this->f(m_type, x, y, z);
 }
 
-double ImplicitSurface::f(QString type, double x, double y, double z)
+//double ImplicitSurface::f(QString type, double x, double y, double z)
+//{
+//    std::string key = type.toLower().toStdString();
+//    if(m_funcMap.find(key) != m_funcMap.end())
+//    {
+//        auto func = m_funcMap[key];
+//        return (this->*func)(x,y,z);
+//    }
+//    else
+//    {
+//        return (this->*(m_funcMap.begin())->second)(x,y,z);
+//    }
+//}
+
+double ImplicitSurface::f(std::string type, double x, double y, double z)
 {
-    std::string key = type.toLower().toStdString();
-    if(m_funcMap.find(key) != m_funcMap.end())
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+
+    if(m_funcMap.find(type) != m_funcMap.end())
     {
-        auto func = m_funcMap[key];
+        auto func = m_funcMap[type];
         return (this->*func)(x,y,z);
     }
     else

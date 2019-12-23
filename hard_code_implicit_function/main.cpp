@@ -21,7 +21,8 @@
 //#define TEST_SURFACEMESH_PUSH
 //#define TEST_SURFACEMESH_PUSH_DOUBLE
 //#define TEST_MESH_PUSH_DIFF
-#define TEST_MESH_PUSH_D_DIFF
+//#define TEST_MESH_PUSH_D_DIFF
+#define TEST_MESH_PUSH_MUILT_DIFF
 #endif
 
 using namespace std;
@@ -752,6 +753,81 @@ int main()
         surfacemesh_test(sample, density, {-0.6,0.6}, {-1.0,1.0}, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
             {"i-wp","f-rd","tubular-g","i2-y"});
     }
+#endif
+
+#ifdef TEST_MESH_PUSH_MUILT_DIFF
+    {
+        auto march_box_mesh_boundary = [&](
+                QString dir, std::vector<std::string> types,
+                float isoLevel_from, float isoLevel_to,
+                SurfaceMesh::SurfaceMeshModel& boundary)
+        {
+            clock_t time_start = clock();
+            QString savePath = dir;
+            for(std::string s:types)
+                savePath += QString::fromStdString(s);
+            savePath += "_type.obj";
+
+            march_box.mb_pc_mult_test(types, boundary,
+                                      isoLevel_from, isoLevel_to);
+            clock_t time_end = clock();
+            std::cout << "Cost time " << 1.0 * (time_end-time_start)/CLOCKS_PER_SEC << " S\n\n";
+
+            // smooth
+            std::string smoothPath = dir.toStdString();
+            for(std::string s:types)
+            {
+                smoothPath += s;
+            }
+                smoothPath += "_type_smooth_openmesh.ply";
+            smooth_tool_function("", smoothPath);
+
+        };
+
+        // load model
+        SurfaceMesh::SurfaceMeshModel boundary_model;
+        SurfaceMeshLoader loader;
+        loader.load(boundary_model, "origin.obj");
+
+        /// Experience part
+
+        QString outer_dir = "mesh_push_multi";
+        std::vector<std::string> types{"g","l","d"};
+
+        Eigen::Vector3i sample(64,64,64);
+        Eigen::Vector3i density(20, 20, 25);
+        Eigen::Vector3d offset(0.0,0.0,0.0);
+        smooth_times = 10;
+
+        float isoLevel_from = 0.0;
+        float isoLevel_to = 0.5;
+        // Create path
+        QDir path("");
+        if(!path.exists(outer_dir))
+        {
+            path.mkdir(outer_dir);
+        }
+
+        QString density_sample_path =
+                "sample_" + QString::number(sample[0]) +"-"+ QString::number(sample[1])+ '-' + QString::number(sample[2])
+                + "_density_" + QString::number(density[0])+'-' + QString::number(density[1]) + '-' + QString::number(density[2])
+                + "_iso_" + QString::number(isoLevel_from) + '-' + QString::number(isoLevel_to);
+        path.cd(outer_dir);
+        if(!path.exists(density_sample_path))
+        {
+            path.mkdir(density_sample_path);
+        }
+
+        QString prefix = outer_dir + QDir::separator()
+                + density_sample_path + QDir::separator();
+
+        march_box.setSampleSize(sample);
+        march_box.setDensity(density);
+        march_box.setOffset(offset);
+
+        march_box_mesh_boundary(prefix, types, isoLevel_from, isoLevel_to,boundary_model);
+
+   }
 #endif
 
     return 0;
