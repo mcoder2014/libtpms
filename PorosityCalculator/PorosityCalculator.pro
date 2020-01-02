@@ -4,6 +4,12 @@ CONFIG += console c++11
 #CONFIG -= app_bundle
 QT += gui core opengl
 
+message("Starlab" $$[STARLAB])
+message("SurfaceMesh" $$[SURFACEMESH])
+#message("Qhull" $$[QHULL])
+message("nanoflann" $$[NANOFLANN])
+message("octree" $$[OCTREE])
+
 DESTDIR = ../bin/
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -47,13 +53,13 @@ contains(DEFINES,USING_SURFACEMESH) {
     message('DEFINES USING_SURFACEMESH')
 
     HEADERS += \
-        surfacemesh_load.h \
+        $${MBPATH}/surfacemesh_load.h \
         $$PWD/../extern/octree/Octree.h \
         $$PWD/../extern/octree/primitives.h \
         $$PWD/../extern/octree/TriAccel.h
 
     SOURCES += \
-        surfacemesh_load.cpp
+        $${MBPATH}/surfacemesh_load.cpp
 
     unix {
         INCLUDEPATH += \

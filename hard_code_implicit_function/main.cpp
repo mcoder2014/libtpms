@@ -18,11 +18,11 @@
 #include "SurfaceMeshModel.h"
 #include "surfacemesh_load.h"
 //#define TEST_SURFACEMESH            // use surfacemesh as boundary
-//#define TEST_SURFACEMESH_PUSH
-//#define TEST_SURFACEMESH_PUSH_DOUBLE
+#define TEST_SURFACEMESH_PUSH
+#define TEST_SURFACEMESH_PUSH_DOUBLE
 //#define TEST_MESH_PUSH_DIFF
 //#define TEST_MESH_PUSH_D_DIFF
-#define TEST_MESH_PUSH_MUILT_DIFF
+//#define TEST_MESH_PUSH_MUILT_DIFF
 #endif
 
 using namespace std;
@@ -57,7 +57,7 @@ int main()
         clock_t time_start = clock();
         QString savePath = dir + type + "_type.obj";
 
-        implicit_surface.setType(type);
+        implicit_surface.setType(type.toStdString());
         march_box.marching_cubes(implicit_surface, isoLevel);
 
         clock_t time_end = clock();
@@ -74,7 +74,7 @@ int main()
         clock_t time_start = clock();
         QString savePath = dir + type + "_type.obj";
 
-        implicit_surface.setType(type);
+        implicit_surface.setType(type.toStdString());
         march_box.marching_cubes_closed(implicit_surface, isoLevel);
 
         clock_t time_end = clock();
@@ -395,7 +395,7 @@ int main()
             clock_t time_start = clock();
             QString savePath = dir + type + "_type.obj";
 
-            implicit_surface.setType(type);
+            implicit_surface.setType(type.toStdString());
             march_box.marching_cube_push_closed(implicit_surface, boundary, isoLevel);
 
             clock_t time_end = clock();
@@ -451,7 +451,7 @@ int main()
 
         SurfaceMesh::SurfaceMeshModel boundary_model;
         SurfaceMeshLoader loader;
-        loader.load(boundary_model, "origin.obj");
+        loader.load(boundary_model, "final-2.ply");
 //        loader.load(boundary_model, "insole_prototype.ply");
 
         Eigen::Vector3i sample(60,64,64);
@@ -510,7 +510,7 @@ int main()
             clock_t time_start = clock();
             QString savePath = dir + type + "_type.obj";
 
-            implicit_surface.setType(type);
+            implicit_surface.setType(type.toStdString());
             march_box.marching_cube_push_double_closed(implicit_surface, boundary, isoLevel1, isoLevel2);
 
             clock_t time_end = clock();
@@ -562,7 +562,7 @@ int main()
 //        clock_t time_start = clock();
         SurfaceMesh::SurfaceMeshModel boundary_model;
         SurfaceMeshLoader loader;
-        loader.load(boundary_model, "origin.obj");
+        loader.load(boundary_model, "final-2.ply");
 //        loader.load(boundary_model,"insole_prototype.ply");
 
         Eigen::Vector3i sample(64,64,64);
@@ -570,10 +570,10 @@ int main()
         smooth_times = 10;
         QString test_floder = "surfacemesh_push_closed_double_test";
         march_box.setReverse(false);
-        surfacemesh_test(sample, density, -0.3,0.3, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
-            {"p","d","g","l","tubular-p"});
-        surfacemesh_test(sample, density, -0.6,0.6, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
-            {"i-wp","f-rd","tubular-g","i2-y"});
+//        surfacemesh_test(sample, density, -0.3,0.3, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
+//            {"p","d","g","l","tubular-p"});
+//        surfacemesh_test(sample, density, -0.6,0.6, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
+//            {"i-wp","f-rd","tubular-g","i2-y"});
 
         density = Eigen::Vector3i(20, 20, 25);
         march_box.setReverse(false);
@@ -582,19 +582,19 @@ int main()
         surfacemesh_test(sample, density, -0.6,0.6, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
             {"i-wp","f-rd","tubular-g","i2-y"});
 
-        density = Eigen::Vector3i(30, 30, 25);
-        march_box.setReverse(false);
-        surfacemesh_test(sample, density, -0.3,0.3, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
-            {"p","d","g","l","tubular-p"});
-        surfacemesh_test(sample, density, -0.6,0.6, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
-            {"i-wp","f-rd","tubular-g","i2-y"});
+//        density = Eigen::Vector3i(30, 30, 25);
+//        march_box.setReverse(false);
+//        surfacemesh_test(sample, density, -0.3,0.3, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
+//            {"p","d","g","l","tubular-p"});
+//        surfacemesh_test(sample, density, -0.6,0.6, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
+//            {"i-wp","f-rd","tubular-g","i2-y"});
 
-        density = Eigen::Vector3i(40, 40, 25);
-        march_box.setReverse(false);
-        surfacemesh_test(sample, density, -0.3,0.3, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
-            {"p","d","g","l","tubular-p"});
-        surfacemesh_test(sample, density, -0.6,0.6, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
-            {"i-wp","f-rd","tubular-g","i2-y"});
+//        density = Eigen::Vector3i(40, 40, 25);
+//        march_box.setReverse(false);
+//        surfacemesh_test(sample, density, -0.3,0.3, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
+//            {"p","d","g","l","tubular-p"});
+//        surfacemesh_test(sample, density, -0.6,0.6, boundary_model, Eigen::Vector3d(0.0,0.0,0.0), test_floder,
+//            {"i-wp","f-rd","tubular-g","i2-y"});
 
     }
 #endif
