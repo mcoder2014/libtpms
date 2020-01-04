@@ -52,13 +52,22 @@ unix{
 
 HEADERS += \
     controlwidget.h \
+    parameter.h \
     porousdesignplugin.h \
-#    scene.h
+    qmesh/qabstractmesh.h \
+    qmesh/qboxmesh.h \
+    qmesh/qtrianglemesh.h \
+    scene.h \
+    QMesh \
+    QuickMeshDraw.h
 
 SOURCES += \
     controlwidget.cpp \
     porousdesignplugin.cpp \
-#    scene.cpp
+    qmesh/qabstractmesh.cpp \
+    qmesh/qboxmesh.cpp \
+    qmesh/qtrianglemesh.cpp \
+    scene.cpp
 
 FORMS += \
     controlwidget.ui

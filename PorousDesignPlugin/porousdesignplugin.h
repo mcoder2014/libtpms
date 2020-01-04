@@ -4,6 +4,8 @@
 #include <SurfaceMeshPlugins.h>
 #include <interfaces/ModePluginDockWidget.h>
 
+/// Plugin 失败的一个可能原因是有的类的函数没有些函数体，导致生成的so文件
+/// 不符合DLL规范
 
 class ControlWidget;
 //class Scene;
