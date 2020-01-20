@@ -93,13 +93,13 @@ int main()
                        Eigen::Vector3d(0.0, 0.0, 0.0));
 
     int sample = 32;
-    int density = 20;
+    int density = 10;
     march_box.setSampleSize(sample);
     march_box.setDensity(density);
     march_box.setReverse(false);
 
     implicit_surface.setType("G");
-    Mesh *mesh = march_box.mc_cube_double_surface(implicit_surface, 0.5, 2);
+    Mesh *mesh = march_box.mc_cube_double_surface(implicit_surface, 0, 0.6);
     OpenMesh::IO::write_mesh(*mesh,"test.obj");
 
 #endif

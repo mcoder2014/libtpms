@@ -558,10 +558,8 @@ Mesh *MarchBox::mc_cube_double_surface(
     {
         std::cout << "Create vertex normals successed;" << std::endl;
     }
-    std::cout << "Vec: " << m_object->n_vertices()
-              << "\tFaces: " << m_object->n_faces()
-              << std::endl;
-    m_object->update_normals();
+
+    m_object->update_normals();     // Calculate all normals
 
     Mesh * m_result = new Mesh;
     m_result->assign(*m_object);     // Deep copy a openmesh model
@@ -575,18 +573,65 @@ Mesh *MarchBox::mc_cube_double_surface(
     {
         OpenMesh::Vec3f vec = m_object->point(*v_it);
         OpenMesh::Vec3f vnormal = m_object->normal(*v_it);
-        std::cout << "Normal:" << v_it->idx() << " "
-                  << vnormal[0] << " "
-                  << vnormal[1] << " "
-                  << vnormal[2] << std::endl;
-
         vec += vnormal.normalized() * mov_length;
         m_result->set_point(*v_it, vec);
     }
 
+    // Fixed the hole
+    Mesh::HalfedgeIter he_it, he_end(m_result->halfedges_end());
+    for(he_it = m_result->halfedges_begin(); he_it != he_end; he_it++)
+    {
+        // if boundary, add two face
+        if(m_result->is_boundary(*he_it))
+        {
+            Mesh::HalfedgeHandle heh = *he_it;
+            {
+                Mesh::VertexHandle vfrom = m_result->from_vertex_handle(heh);
+                Mesh::VertexHandle vto = m_result->to_vertex_handle(heh);
+
+                int offset = N_VEC;
+                if(vfrom.idx() >= N_VEC)
+                    offset = -N_VEC;
+
+                Mesh::VertexHandle c_vfrom = m_result->vertex_handle(vfrom.idx() + offset);
+                Mesh::VertexHandle c_vto = m_result->vertex_handle(vto.idx() + offset);
+
+//                int face_count = m_result->n_faces();
+                // add face
+                std::vector<Mesh::VertexHandle> face_vhandles;
+                face_vhandles.push_back(vfrom);
+                face_vhandles.push_back(vto);
+                face_vhandles.push_back(c_vfrom);
+                m_result->add_face(face_vhandles);
+//                if(face_count == m_result->n_faces())
+//                {
+//                    std::cout << "Add face error: vfrom vto c_vfrom"<<std::endl;
+//                }
+//                face_count = m_result->n_faces();
+
+                face_vhandles.clear();
+                face_vhandles.push_back(c_vto);
+                face_vhandles.push_back(c_vfrom);
+                face_vhandles.push_back(vto);
+                m_result->add_face(face_vhandles);
+//                if(face_count == m_result->n_faces())
+//                {
+//                    std::cout << "Add face error: vfrom vto c_vfrom"<<std::endl;
+//                }
+
+                heh = m_result->next_halfedge_handle(heh);
+            }
+        }
+    }
+
+
     delete m_object;
 
-    std::cout << "Vec: " << m_result->n_vertices()
+    std::cout << "Single: Vec: " << N_VEC
+             << "\tFaces: " << N_FACE << std::endl;
+    std::cout << "Double: Vec:" << 2*N_VEC
+              << "\tFaces: " << 2*N_FACE << std::endl;
+    std::cout << "Fixed holes Vec: " << m_result->n_vertices()
               << "\tFaces: " << m_result->n_faces()
               << std::endl;
 
