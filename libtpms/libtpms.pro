@@ -1,8 +1,8 @@
-TEMPLATE = app
-TARGET = mktpms
+TEMPLATE = lib
+TARGET = tmpslib
 CONFIG += console c++11
-#CONFIG -= app_bundle
-QT += gui core opengl
+CONFIG -= app_bundle
+CONFIG -= qt
 
 DESTDIR = ../bin/
 
@@ -14,7 +14,6 @@ SOURCES += \
     qualityinspection.cpp \
     simplification.cpp \
     smoothtool.cpp \
-    main.cpp \
 
 HEADERS += \
     implicitsurface.h \
@@ -24,6 +23,7 @@ HEADERS += \
     qualityinspection.h \
     simplification.h \
     smoothtool.h \
+
 
 unix {
     DEFINES += USING_SURFACEMESH
@@ -60,11 +60,6 @@ contains(DEFINES,USING_SURFACEMESH) {
             -L$$OUT_PWD/../bin -lsurfacemesh -lstarlib
     }
 
-    win32 {
-
-    }
-
-
 } else {
     message('Not DEFINE USING_SURFACEMESH')
 }
@@ -73,14 +68,16 @@ unix {
     #include path and libraries
     INCLUDEPATH += /usr/include/eigen3 \
         /usr/include/assimp \
-        /usr/include/opencv4
+        /usr/include/opencv4 \
+        /usr/include/qt \
+        /usr/include/qt/QtGui \
+        /usr/include/qt/QtCore \
+        /usr/include/qt/QtOpenGL \
+        /usr/include/qt/QtWidgets
 
     LIBS += \
         -L/usr/lib -lOpenMeshCore -lOpenMeshTools \     # openmesh
         -lassimp \      # assimp
-        -lopencv_core -lopencv_imgproc  # opencv
-}
-
-win32 {
-
+        -lopencv_core -lopencv_imgproc \ # opencv
+        -lQt5Core -lQt5Gui -lQt5Core -lQt5OpenGL -lQt5Widgets    # Qt
 }
