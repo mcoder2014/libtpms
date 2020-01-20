@@ -11,20 +11,20 @@
 #include <OpenMesh/Core/IO/MeshIO.hh>
 
 //#include "implicitsurface.h"
-
+#include "mesh.h"
 
 
 // OpenMesh Traits
-struct Traits: public OpenMesh::DefaultTraits
-{
-public:
-    VertexTraits
-    {
-        OpenMesh::Vec3f cog;    // center of gravity
-    };
-};
+//struct Traits: public OpenMesh::DefaultTraits
+//{
+//public:
+//    VertexTraits
+//    {
+//        OpenMesh::Vec3f cog;    // center of gravity
+//    };
+//};
 
-using Mesh = OpenMesh::PolyMesh_ArrayKernelT<Traits>;
+//using Mesh = OpenMesh::PolyMesh_ArrayKernelT<Traits>;
 
 class SmoothTool
 {

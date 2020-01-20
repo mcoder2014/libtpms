@@ -8,18 +8,20 @@ DESTDIR = ../bin/
 
 SOURCES += \
         implicitsurface.cpp \
-    isolevelgenerator.cpp \
-        main.cpp \
+    isolevelgenerator.cpp \        
         marchbox.cpp \
+    mesh.cpp \
     qualityinspection.cpp \
     simplification.cpp \
         smoothtool.cpp \
+        main.cpp \
 
 
 HEADERS += \
     implicitsurface.h \
     isolevelgenerator.h \
     marchbox.h \
+    mesh.h \
     qualityinspection.h \
     simplification.h \
     smoothtool.h \

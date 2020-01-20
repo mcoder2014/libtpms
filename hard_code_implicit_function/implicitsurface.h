@@ -13,7 +13,7 @@ public:
 
 //    QString m_type;
     std::string m_type;
-    void setType(QString type);
+//    void setType(QString type);
     void setType(std::string type);
     void initFunctionMap();
 

@@ -18,8 +18,8 @@
 #include "SurfaceMeshModel.h"
 #include "surfacemesh_load.h"
 //#define TEST_SURFACEMESH            // use surfacemesh as boundary
-#define TEST_SURFACEMESH_PUSH
-#define TEST_SURFACEMESH_PUSH_DOUBLE
+//#define TEST_SURFACEMESH_PUSH
+//#define TEST_SURFACEMESH_PUSH_DOUBLE
 //#define TEST_MESH_PUSH_DIFF
 //#define TEST_MESH_PUSH_D_DIFF
 //#define TEST_MESH_PUSH_MUILT_DIFF
@@ -86,6 +86,23 @@ int main()
         smooth_tool_function("", smooth_path.toStdString());
 
     };
+
+#define MC_CUBE_DOUBLE_SURFACE
+#ifdef MC_CUBE_DOUBLE_SURFACE
+    march_box.setRange(Eigen::Vector3d(20.0, 20.0, 20.0),
+                       Eigen::Vector3d(0.0, 0.0, 0.0));
+
+    int sample = 32;
+    int density = 20;
+    march_box.setSampleSize(sample);
+    march_box.setDensity(density);
+    march_box.setReverse(false);
+
+    implicit_surface.setType("G");
+    Mesh *mesh = march_box.mc_cube_double_surface(implicit_surface, 0.5, 2);
+    OpenMesh::IO::write_mesh(*mesh,"test.obj");
+
+#endif
 
 #ifdef CUBE_TEST
     {

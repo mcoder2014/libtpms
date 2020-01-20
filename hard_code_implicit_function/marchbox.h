@@ -14,7 +14,7 @@
 #endif
 
 #include "implicitsurface.h"
-
+#include "mesh.h"
 
 class MarchBox
 {
@@ -47,6 +47,11 @@ public:
             ImplicitSurface& implicit_surface,
             float isoLevel_low = -0.5,
             float isoLevel_high = 0.5);
+
+    Mesh* mc_cube_double_surface(
+            ImplicitSurface& implicit_surface,
+            float isoLevel = 0,
+            float thickness = 0.2);
 
     /// 当使用 Surfacemesh 作为生成八叉树的数据结构时有效
 #ifdef USING_SURFACEMESH

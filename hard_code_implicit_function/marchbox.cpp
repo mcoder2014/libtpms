@@ -479,6 +479,120 @@ void MarchBox::marching_cubes_double_closed(
     this->createMesh(sample_points, IS_value, isoLevel_low, isoLevel_high);
 }
 
+///
+/// \brief MarchBox::mc_cube_double_surface
+/// 利用偏移的方法做处处厚度均匀的两层曲面
+/// \param implicit_surface
+/// \param isoLevel
+/// \param thickness
+///
+Mesh *MarchBox::mc_cube_double_surface(
+        ImplicitSurface &implicit_surface,
+        float isoLevel,
+        float thickness)
+{
+    std::cout << "\nImplicit Mesh type: " << implicit_surface.m_type
+             << "\nnx: " << m_ncellsX
+             << "\nny: " << m_ncellsY
+             << "\nnz: " << m_ncellsZ
+             << "\n";
+
+    // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
+    std::vector<std::vector<std::vector<float>>> IS_value(
+                m_ncellsX,std::vector<std::vector<float>>(
+                    m_ncellsY, std::vector<float>(
+                        m_ncellsZ, std::numeric_limits<float>::max())));
+
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
+                m_ncellsX, std::vector<std::vector<glm::vec3>>(
+                    m_ncellsY, std::vector<glm::vec3>(
+                        m_ncellsZ, glm::vec3(0.0))));
+
+    initSampleMatrix(sample_points, 0);
+    calculateIS_value(implicit_surface, IS_value, 0);
+
+    // Approximation of the all marching cubes
+    this->createMesh(sample_points, IS_value, isoLevel);
+
+    // copy a duplicate mesh
+    int N_VEC = this->m_vertices.size();
+    for(int i =0; i <N_VEC; i++)
+    {
+        this->m_vertices.push_back(m_vertices[i]);
+    }
+
+    int N_FACE = this->m_faces.size();
+
+    glm::ivec3 faceIndexBuffer;
+    for(int i=0; i < N_FACE; i++)
+    {
+        // reverse each face order
+        // get face
+        faceIndexBuffer = this->m_faces[i];
+
+        // add N_VEC
+        faceIndexBuffer[0] += N_VEC;
+        faceIndexBuffer[1] += N_VEC;
+        faceIndexBuffer[2] += N_VEC;
+
+        // reverse
+        int tmp = faceIndexBuffer[0];
+        faceIndexBuffer[0] = faceIndexBuffer[2];
+        faceIndexBuffer[2] = tmp;
+
+        // Insert new face
+        m_faces.push_back(faceIndexBuffer);
+    }
+
+    std::cout << "Single:\tv_count: " << N_VEC
+              << "\tf_count: " << N_FACE
+              << "\nDouble:\tv_count: " << m_vertices.size()
+              << "\tf_count: " << m_faces.size() << std::endl;
+
+    // both move at the direction of vertex normal vector
+    float mov_length = thickness/2.0;
+
+    Mesh * m_object = to2Mesh(m_vertices, m_faces);
+    m_object->request_vertex_normals();
+    if(m_object->has_vertex_normals())
+    {
+        std::cout << "Create vertex normals successed;" << std::endl;
+    }
+    std::cout << "Vec: " << m_object->n_vertices()
+              << "\tFaces: " << m_object->n_faces()
+              << std::endl;
+    m_object->update_normals();
+
+    Mesh * m_result = new Mesh;
+    m_result->assign(*m_object);     // Deep copy a openmesh model
+
+    Mesh::VertexIter v_it, v_end(m_object->vertices_end());
+
+    // To get the value into result object
+    Mesh::VertexIter v_result_it(m_result->vertices_begin());
+
+    for (v_it = m_object->vertices_begin(); v_it != v_end; ++v_it, ++v_result_it)
+    {
+        OpenMesh::Vec3f vec = m_object->point(*v_it);
+        OpenMesh::Vec3f vnormal = m_object->normal(*v_it);
+        std::cout << "Normal:" << v_it->idx() << " "
+                  << vnormal[0] << " "
+                  << vnormal[1] << " "
+                  << vnormal[2] << std::endl;
+
+        vec += vnormal.normalized() * mov_length;
+        m_result->set_point(*v_it, vec);
+    }
+
+    delete m_object;
+
+    std::cout << "Vec: " << m_result->n_vertices()
+              << "\tFaces: " << m_result->n_faces()
+              << std::endl;
+
+    return m_result;
+}
+
 #ifdef USING_SURFACEMESH
 ///
 /// \brief MarchBox::marching_cubes_closed
