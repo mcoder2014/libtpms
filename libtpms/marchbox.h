@@ -104,7 +104,6 @@ public:
     // 利用 surfacemesh 模型设置物理模型范围
     void setRange(SurfaceMesh::SurfaceMeshModel& surface_mesh);
 
-private:
     // 初始化采样矩阵，对鞋垫范围做Z轴方向压缩
     void initSampleMatrix_compress_z(
             Octree& octree,
@@ -149,7 +148,6 @@ private:
             std::vector<std::vector<std::vector<float>>>& IS_value,
             std::vector<std::vector<glm::vec2>>& isoLevel);
 
-public:
 #endif
 
     void setRange(
@@ -187,7 +185,6 @@ public:
                   std::string const & fileName);
 #endif
 
-private:
     // Create sample Points
     void initSampleMatrix(
             std::vector<std::vector<std::vector<glm::vec3>>> &sample_points,

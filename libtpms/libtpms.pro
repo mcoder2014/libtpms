@@ -7,6 +7,8 @@ CONFIG -= qt
 DESTDIR = ../bin/
 
 SOURCES += \
+    IO/exporter.cpp \
+    IO/importer.cpp \
     implicitsurface.cpp \
     isolevelgenerator.cpp \
     marchbox.cpp \
@@ -14,8 +16,11 @@ SOURCES += \
     qualityinspection.cpp \
     simplification.cpp \
     smoothtool.cpp \
+    generalporositycalculator.cpp \
 
 HEADERS += \
+    IO/exporter.h \
+    IO/importer.h \
     implicitsurface.h \
     isolevelgenerator.h \
     marchbox.h \
@@ -23,7 +28,7 @@ HEADERS += \
     qualityinspection.h \
     simplification.h \
     smoothtool.h \
-
+    generalporositycalculator.h \
 
 unix {
     DEFINES += USING_SURFACEMESH

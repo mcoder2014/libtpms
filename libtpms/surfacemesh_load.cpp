@@ -7,6 +7,9 @@ SurfaceMeshLoader::SurfaceMeshLoader()
 
 bool SurfaceMeshLoader::load(SurfaceMesh::SurfaceMeshModel &model, std::string path)
 {
+    model.clear();  // remove all vertices and faces
+
+    // Import new model using Assimp
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(
                 path,aiProcess_Triangulate);

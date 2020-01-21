@@ -2,7 +2,6 @@
 #define SMOOTHTOOL_H
 
 #include <vector>
-
 #include <string>
 
 #include <glm/glm.hpp>
@@ -10,28 +9,13 @@
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/IO/MeshIO.hh>
 
-//#include "implicitsurface.h"
 #include "mesh.h"
-
-
-// OpenMesh Traits
-//struct Traits: public OpenMesh::DefaultTraits
-//{
-//public:
-//    VertexTraits
-//    {
-//        OpenMesh::Vec3f cog;    // center of gravity
-//    };
-//};
-
-//using Mesh = OpenMesh::PolyMesh_ArrayKernelT<Traits>;
 
 class SmoothTool
 {
 public:
     SmoothTool();
     ~SmoothTool();
-
 
     // Use the results from Marchbox algorithm to create
     // a openmesh object
