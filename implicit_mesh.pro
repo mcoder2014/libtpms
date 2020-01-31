@@ -7,6 +7,7 @@ SUBDIRS += \
 #    test_eigen \
  \#    PorosityCalculator
     libtpms \
-    test_double
+    test_double \
+    test_porositycalculator
 
 CONFIG += ordered

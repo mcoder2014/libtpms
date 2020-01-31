@@ -92,7 +92,7 @@ int main()
     march_box.setRange(Eigen::Vector3d(20.0, 20.0, 20.0),
                        Eigen::Vector3d(0.0, 0.0, 0.0));
 
-    int sample = 32;
+    int sample = 128;
     int density = 10;
     march_box.setSampleSize(sample);
     march_box.setDensity(density);

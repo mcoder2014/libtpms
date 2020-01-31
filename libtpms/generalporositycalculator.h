@@ -15,11 +15,17 @@ public:
     float getPorosity(SurfaceMesh::SurfaceMeshModel& porousStructure,
                       SurfaceMesh::SurfaceMeshModel& boundary,
                       float voxelSize);
-//    void setMesh(SurfaceMesh::SurfaceMeshModel& porousStructure,
-//                 SurfaceMesh::SurfaceMeshModel& boundary);
+    float getPorosity(SurfaceMesh::SurfaceMeshModel& porousStructure,
+                      float voxelSize);
 
-//    SurfaceMesh::SurfaceMeshModel * m_porousStructure;
-//    SurfaceMesh::SurfaceMeshModel * m_boundary;
+private:
+    int calcInner(std::vector<std::vector<Eigen::Vector3d>>& points_mat,
+                  std::vector<float>& helper_z,
+                  float voxelSize,
+                  Octree& oct_model);
+    int calcInner(std::vector<std::vector<Eigen::Vector3d>>& points_mat,
+                  std::vector<float>& helper_z,
+                  Eigen::AlignedBox3d boundary);
 };
 
 #endif // GENERALPOROSITYCALCULATOR_H
