@@ -22,6 +22,7 @@ public:
               const std::string path);
 
     SurfaceMesh::SurfaceMeshModel *loadSurfaceMeshModel(const std::string path);
+    Mesh *loadMesh(const std::string path);
 
     Mesh *array2mesh(const std::vector<glm::vec3>& vertices,
                      const std::vector<glm::ivec3>& faces);
@@ -31,7 +32,7 @@ public:
         const std::vector<glm::ivec3>& faces);
 
     SurfaceMesh::SurfaceMeshModel *mesh2SurfaceMeshModel(const Mesh& mesh);
-    Mesh *surfaceMeshModel2mesh(const SurfaceMesh::SurfaceMeshModel& model);
+    Mesh *surfaceMeshModel2mesh(SurfaceMesh::SurfaceMeshModel &model);
 };
 
 #endif // IMPORTER_H

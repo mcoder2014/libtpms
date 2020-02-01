@@ -332,6 +332,13 @@ void MarchBox::setRange(
     updateRange();
 }
 
+void MarchBox::setRange(Eigen::AlignedBox3d bbox)
+{
+    this->m_boundingbox_physical = bbox;
+
+    updateRange();
+}
+
 ///
 /// \brief MarchBox::setRange
 /// 设置逻辑矩阵和物理矩阵

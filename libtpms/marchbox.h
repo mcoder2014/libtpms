@@ -155,6 +155,7 @@ public:
             Eigen::Vector3d physical_min,
             int sampleSize = -1,
             int density = -1);
+    void setRange(Eigen::AlignedBox3d bbox);
 
     void setRange(
             Eigen::Vector3d physical_max,

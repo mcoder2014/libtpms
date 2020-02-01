@@ -28,11 +28,6 @@ float GeneralPorosityCalculator::getPorosity(
 {
     porousStructure.updateBoundingBox();
     boundary.updateBoundingBox();
-    Octree oct_boundary(&boundary);
-    Octree oct_porous(&porousStructure);
-
-    uint count_one = 0;
-    uint count_zero = 0;
 
     Eigen::AlignedBox3d bbox = boundary.bbox();
     // 根据包围盒去设计
@@ -45,6 +40,14 @@ float GeneralPorosityCalculator::getPorosity(
     Eigen::Vector3d range_min = bbox.min();
     Eigen::Vector3d range_max = bbox.max();
 
+    std::cout << "Init sample box:"
+              << "[" << sample_size[0] << ", " << sample_size[1] << ", " << sample_size[2] << "]"
+              << "\n" << std::endl;
+
+    Octree oct_boundary(&boundary);
+    Octree oct_porous(&porousStructure);
+    std::cout << "build octree finished!" << std::endl;
+
     float lower_bwlow_range = range_min[2] - 100;
     /// 从一面发出射线和 boundary 模型相交，确定哪些采样点属于模型内部
     std::vector<std::vector<Eigen::Vector3d>> points_mat(
@@ -55,10 +58,10 @@ float GeneralPorosityCalculator::getPorosity(
     // 矩阵密度均匀，位置在包围盒 z 轴下部
     for(int iter_x = 0; iter_x < sample_size[0]; iter_x++)
     {
-        int co_x = range_min[0] + iter_x * voxelSize;
+        float co_x = range_min[0] + iter_x * voxelSize;
         for(int iter_y = 0; iter_y < sample_size[1]; iter_y++)
         {
-            int co_y = range_min[1] + iter_y * voxelSize;
+            float co_y = range_min[1] + iter_y * voxelSize;
 
             points_mat[iter_x][iter_y][0] = co_x;
             points_mat[iter_x][iter_y][1] = co_y;
@@ -73,8 +76,8 @@ float GeneralPorosityCalculator::getPorosity(
     }
 
     /// 最后通过计算两个点数，计算孔隙率
-    int voxelBoundary = calcInner(points_mat, points_z, voxelSize, oct_boundary);
-    int voxelPorous = calcInner(points_mat, points_z, voxelSize, oct_porous);
+    uint64_t voxelBoundary = calcInner(points_mat, points_z, voxelSize, oct_boundary);
+    uint64_t voxelPorous = calcInner(points_mat, points_z, voxelSize, oct_porous);
     float porosity = 1.0 * voxelPorous / voxelBoundary;
 
     std::cout << "Total Points: " << sample_size[0] * sample_size[1] * sample_size[2]
@@ -84,7 +87,6 @@ float GeneralPorosityCalculator::getPorosity(
 
     /// 返回孔隙率的结果
     return porosity;
-
 }
 
 float GeneralPorosityCalculator::getPorosity(
@@ -93,9 +95,9 @@ float GeneralPorosityCalculator::getPorosity(
 {
     std::cout << "Get Pososity" << std::endl;
     porousStructure.updateBoundingBox();
-    Octree oct_porous(&porousStructure);
+
+    // 根据使用包围盒作为多孔材料的外部尺寸
     Eigen::AlignedBox3d bbox = porousStructure.bbox();
-    // 根据包围盒去设计
 
     Eigen::Vector3d relative_size = bbox.max()-bbox.min();
     Eigen::Vector3i sample_size(
@@ -105,7 +107,13 @@ float GeneralPorosityCalculator::getPorosity(
     Eigen::Vector3d range_min = bbox.min();
     Eigen::Vector3d range_max = bbox.max();
 
-    std::cout << "Init sample box" << std::endl;
+    std::cout << "Init sample box:"
+              << "[" << sample_size[0] << ", " << sample_size[1] << ", " << sample_size[2] << "]"
+              << "\n" << std::endl;
+
+    Octree oct_porous(&porousStructure);
+    std::cout << "Init Octree Finished!" << std::endl;
+
     float lower_bwlow_range = range_min[2] - 100;
     /// 从一面发出射线和 boundary 模型相交，确定哪些采样点属于模型内部
     std::vector<std::vector<Eigen::Vector3d>> points_mat(
@@ -116,10 +124,10 @@ float GeneralPorosityCalculator::getPorosity(
     // 矩阵密度均匀，位置在包围盒 z 轴下部
     for(int iter_x = 0; iter_x < sample_size[0]; iter_x++)
     {
-        int co_x = range_min[0] + iter_x * voxelSize;
+        float co_x = range_min[0] + iter_x * voxelSize;
         for(int iter_y = 0; iter_y < sample_size[1]; iter_y++)
         {
-            int co_y = range_min[1] + iter_y * voxelSize;
+            float co_y = range_min[1] + iter_y * voxelSize;
 
             points_mat[iter_x][iter_y][0] = co_x;
             points_mat[iter_x][iter_y][1] = co_y;
@@ -135,8 +143,9 @@ float GeneralPorosityCalculator::getPorosity(
 
     std::cout << "Calc inner" << std::endl;
     /// 最后通过计算两个点数，计算孔隙率
-    int voxelBoundary = calcInner(points_mat, points_z, bbox);
-    int voxelPorous = calcInner(points_mat, points_z, voxelSize, oct_porous);
+//    int voxelBoundary = calcInner(points_mat, points_z, bbox);
+    uint64_t voxelBoundary = (uint64_t)(sample_size[0]) * (uint64_t)(sample_size[1]) * (uint64_t)(sample_size[2]);
+    uint64_t voxelPorous = calcInner(points_mat, points_z, voxelSize, oct_porous);
     float porosity = 1.0 * voxelPorous / voxelBoundary;
 
     std::cout << "Total Points: " << sample_size[0] * sample_size[1] * sample_size[2]
@@ -148,7 +157,7 @@ float GeneralPorosityCalculator::getPorosity(
     return porosity;
 }
 
-int GeneralPorosityCalculator::calcInner(
+uint64_t GeneralPorosityCalculator::calcInner(
         std::vector<std::vector<Eigen::Vector3d>>& points_mat,
         std::vector<float> &helper_z,
         float voxelSize,
@@ -161,7 +170,7 @@ int GeneralPorosityCalculator::calcInner(
 
     float range_down = helper_z[0];
 
-    int count = 0;
+    uint64_t count = 0;
 
     Eigen::Vector3d up_direction(0,0,1);
     /// 再发出射线和 porous 模型相交，确定哪些段是内部和外部
@@ -199,6 +208,7 @@ int GeneralPorosityCalculator::calcInner(
 
                 std::cout << "There are " << intersect_count << " intersection points"
                           << " at [" << iter_x << "," << iter_y << "]"
+                          << " Line:[x,y] " << points_mat[iter_x][iter_y][0] << ", " << points_mat[iter_x][iter_y][1]
                           << " ERROR" << std::endl;
                 continue;
             }
@@ -210,7 +220,7 @@ int GeneralPorosityCalculator::calcInner(
                 float lower = intersect_z[i];
                 float higher = intersect_z[i+1];
 
-                int tmp_count = static_cast<int>(
+                uint64_t tmp_count = static_cast<uint64_t>(
                     (higher - range_down)/voxelSize - (lower-range_down)/voxelSize);
                 count += tmp_count;
             }
@@ -221,7 +231,7 @@ int GeneralPorosityCalculator::calcInner(
     return count;
 }
 
-int GeneralPorosityCalculator::calcInner(
+uint64_t GeneralPorosityCalculator::calcInner(
         std::vector<std::vector<Eigen::Vector3d> > &points_mat,
         std::vector<float> &helper_z,
         Eigen::AlignedBox3d boundary)
@@ -231,7 +241,7 @@ int GeneralPorosityCalculator::calcInner(
         points_mat[0].size(),
         helper_z.size());
 
-    int count = 0;
+    uint64_t count = 0;
 
     for(int iter_x = 0; iter_x < sample_size[0]; iter_x++)
     {
@@ -263,7 +273,7 @@ int GeneralPorosityCalculator::calcInner(
                     break;
                 }
             }
-            count += (top - down);
+            count += (top - down + 1);
         }   // for(int iter_y = 0; iter_y < sample_size[1]; iter_y++)
     }   // for(int iter_x = 0; iter_x < sample_size[0]; iter_x++)
 

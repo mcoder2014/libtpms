@@ -19,11 +19,11 @@ public:
                       float voxelSize);
 
 private:
-    int calcInner(std::vector<std::vector<Eigen::Vector3d>>& points_mat,
+    uint64_t calcInner(std::vector<std::vector<Eigen::Vector3d>>& points_mat,
                   std::vector<float>& helper_z,
                   float voxelSize,
                   Octree& oct_model);
-    int calcInner(std::vector<std::vector<Eigen::Vector3d>>& points_mat,
+    uint64_t calcInner(std::vector<std::vector<Eigen::Vector3d>>& points_mat,
                   std::vector<float>& helper_z,
                   Eigen::AlignedBox3d boundary);
 };
