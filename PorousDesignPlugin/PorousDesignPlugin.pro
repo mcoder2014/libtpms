@@ -74,3 +74,59 @@ FORMS += \
 
 RESOURCES += \
     porousdesign.qrc
+
+## Include libtpms ##
+unix {
+    DEFINES += USING_SURFACEMESH
+}
+
+contains(DEFINES,USING_SURFACEMESH) {
+    message('DEFINES USING_SURFACEMESH')
+
+    unix {
+        INCLUDEPATH += \
+            $$PWD/../extern/surfacemesh \
+            $$PWD/../extern/surfacemesh/helpers \
+            $$PWD/../extern/surfacemesh/parameters \
+            $$PWD/../extern/starlib \
+            $$PWD/../extern/octree
+
+        DEPENDPATH += \
+            $$PWD/../extern/surfacemesh \
+            $$PWD/../extern/surfacemesh/helpers \
+            $$PWD/../extern/surfacemesh/parameters \
+            $$PWD/../extern/starlib
+
+        LIBS += \
+            -L$$OUT_PWD/../bin -lsurfacemesh -lstarlib
+    }
+
+    win32 {
+
+    }
+
+
+} else {
+    message('Not DEFINE USING_SURFACEMESH')
+}
+
+unix {
+
+    #include path and libraries
+    INCLUDEPATH += /usr/include/eigen3 \
+        /usr/include/assimp \
+        /usr/include/opencv4 \
+        /usr/include/qt \
+        /usr/include/qt/QtGui \
+        /usr/include/qt/QtCore \
+        /usr/include/qt/QtOpenGL \
+        /usr/include/qt/QtWidgets \
+        $$PWD/../libtpms
+
+    LIBS += \
+        -L/usr/lib -lOpenMeshCore -lOpenMeshTools \     # openmesh
+        -lassimp \      # assimp
+        -lopencv_core -lopencv_imgproc \ # opencv
+        -lQt5Core -lQt5Gui -lQt5Core -lQt5OpenGL -lQt5Widgets \   # Qt
+        -L$$OUT_PWD/../bin -ltpmslib
+}

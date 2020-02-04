@@ -1,11 +1,9 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-#    BoxFilling2D \
-#    PorousDesignPlugin \
-#    hard_code_implicit_function \
-#    test_eigen \
- \#    PorosityCalculator
+    BoxFilling2D \
+    PorousDesignPlugin \
+    test_eigen \
     libtpms \
     test_double \
     test_porositycalculator \
