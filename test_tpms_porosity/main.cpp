@@ -7,6 +7,7 @@
 #include <marchbox.h>
 #include <smoothtool.h>
 #include <IO/importer.h>
+#include <IO/exporter.h>
 #include <generalporositycalculator.h>
 
 using namespace std;
@@ -19,11 +20,36 @@ using namespace std;
 /// 指定类型、密度、尺寸
 /// 指定厚度
 ///
-SurfaceMesh::SurfaceMeshModel* createCubeTPMS(
+Mesh* createCubeTPMS(
         string type, Eigen::Vector3i sample, Eigen::Vector3i density,
-        Eigen::Vector3d rangeMin, Eigen::Vector3d rangeMax)
+        Eigen::Vector3d rangeMin, Eigen::Vector3d rangeMax,
+        float isoLevel, float depth, int smooth_times = 10)
 {
-    return nullptr;
+    ImplicitSurface implicit_surface;
+    MarchBox march_box;
+    SmoothTool  smoothTool;
+
+    // Setting
+    implicit_surface.setType(type);
+
+    march_box.setRange(rangeMin, rangeMax);
+    march_box.setDensity(density);
+    march_box.setSampleSize(sample);
+    march_box.setReverse(false);
+
+    // 1. marchbox
+    march_box.marching_cubes(implicit_surface, isoLevel);
+
+    // 2. smooth
+    smoothTool.createMesh(march_box.m_vertices, march_box.m_faces);
+    smoothTool.basicSmooth(smooth_times);
+
+    // 3. offset
+    Mesh *result = new Mesh();
+    result->assign(*(smoothTool.getMesh()));
+    result = smoothTool.meshOffset(result, depth);
+
+    return result;
 }
 
 
@@ -40,6 +66,27 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    std::vector<string> types{"p","d","g","l","tubular-p","i-wp","f-rd","tubular-g","i2-y"};
+    Eigen::Vector3i density{20,20,20};
+    Eigen::Vector3i sampleSize{64,64,64};
+    Eigen::Vector3d rangeMin{0,0,0};
+    Eigen::Vector3d rangeMax{20,20,20};
+    float isoLevel = 0;
+    float depth = 0.2;
+
+    for(string type: types)
+    {
+        std::cout << "Type: " << type << endl;
+
+        Mesh* mesh = createCubeTPMS(type, sampleSize,density, rangeMin, rangeMax,
+                                    isoLevel, depth);
+
+        Exporter exporter;
+        string filename = type + ".ply";
+        exporter.writeOBJ(filename, *mesh);
+
+        delete mesh;
+    }
 
 
     return 0;

@@ -626,7 +626,7 @@ Mesh *MarchBox::mc_cube_double_surface(
 //                    std::cout << "Add face error: vfrom vto c_vfrom"<<std::endl;
 //                }
 
-                heh = m_result->next_halfedge_handle(heh);
+//                heh = m_result->next_halfedge_handle(heh);
             }
         }
     }

@@ -24,6 +24,8 @@ public:
     Mesh* createMesh(std::string filepath);
     Mesh* createMesh(Mesh* mesh);
 
+    Mesh* meshOffset(Mesh* mesh, float depth);  // 将单层曲面变成有厚度的立体
+
     // Basic smooth algorithm, store in m_result
     void basicSmooth(int rounds=1);
     void jacobiLaplaceSmooth(int rounds = 1);   // 效果太弱鸡了
