@@ -39,6 +39,8 @@ Mesh* createCubeTPMS(
 
     // 1. marchbox
     march_box.marching_cubes(implicit_surface, isoLevel);
+    if(march_box.m_vertices.size() <= 10)
+        return nullptr;
 
     // 2. smooth
     smoothTool.createMesh(march_box.m_vertices, march_box.m_faces);
@@ -54,10 +56,8 @@ Mesh* createCubeTPMS(
 
 
 /// 使用指定精度给定立方体 TPMS 的孔隙率
-
 /// 测试一系列不同参数的 TPMS 立方体的孔隙率并将结果保存在文件中
-
-int main(int argc, char *argv[])
+int test_cube_porosity(int argc, char* argv[])
 {
     if(argc < 2)
     {
@@ -65,29 +65,115 @@ int main(int argc, char *argv[])
                   << "\ne.g. test-tpms-porosity ./test_reult.txt"<< std::endl;
         return 0;
     }
+    string fileName(argv[1]);
+    // open file
+    std::ofstream file;
+    file.open(fileName,ios_base::out | ios_base::trunc);
 
-    std::vector<string> types{"p","d","g","l","tubular-p","i-wp","f-rd","tubular-g","i2-y"};
-    Eigen::Vector3i density{20,20,20};
+    if(!file) {
+        std::cout << "Error opening output file" << std::endl;
+        return 0;
+    }
+    file << "Type,IsoLevel,Depth,Porosity" << std::endl;
+
+    GeneralPorosityCalculator porosityCalc;
+
+//    std::vector<string> types{"p","d","g","l","tubular-p","i-wp","f-rd","tubular-g","i2-y"};
+    std::vector<string> types{"p", "d", "g", "i-wp"};
+    Eigen::Vector3i density{1,1,1};
     Eigen::Vector3i sampleSize{64,64,64};
     Eigen::Vector3d rangeMin{0,0,0};
-    Eigen::Vector3d rangeMax{20,20,20};
+    Eigen::Vector3d rangeMax{1,1,1};
+    float isoLevel = 0;
+    float isoLevel_start = -1;
+    float isoLevel_end = 1;
+    int isoLevelTimes = 100;
+    float isoLevel_step = (isoLevel_end-isoLevel_start)/isoLevelTimes;
+
+    float depth = 0.2;
+
+    for(string type: types)
+    {
+
+        for(int iter_iso=0; iter_iso <= isoLevelTimes; iter_iso++)
+        {
+
+            isoLevel = isoLevel_start + iter_iso * isoLevel_step;
+
+            std::cout << "Type: " << type << endl;
+            Mesh* mesh = createCubeTPMS(type, sampleSize,density,
+                                        rangeMin, rangeMax,
+                                        isoLevel, depth);
+            if(mesh == nullptr)
+                continue;
+
+            Exporter exporter;
+            string filename = "exp/" + type + "_" +std::to_string(isoLevel)
+                    + "_" + std::to_string(depth) +".ply";
+
+            exporter.writeOBJ(filename, *mesh);
+
+            float porosity = porosityCalc.getPorosity(*mesh);
+
+            file << type << " , "
+                 << isoLevel << " , "
+                 << depth << " , "
+                 << porosity << std::endl;
+
+            delete mesh;
+        }
+    }
+
+    file.close();
+    return 0;
+}
+
+int test_part_tpms(int argc, char* argv[])
+{
+
+    GeneralPorosityCalculator porosityCalc;
+
+//    std::vector<string> types{"p","d","g","l","tubular-p","i-wp","f-rd","tubular-g","i2-y"};
+    std::vector<string> types{"p", "d", "g", "i-wp"};
+    Eigen::Vector3i density{1,1,1};
+    Eigen::Vector3i sampleSize{64,64,64};
+    Eigen::Vector3d rangeMin{0,0,0};
+    Eigen::Vector3d rangeMax{1,1,1};
     float isoLevel = 0;
     float depth = 0.2;
 
     for(string type: types)
     {
-        std::cout << "Type: " << type << endl;
 
-        Mesh* mesh = createCubeTPMS(type, sampleSize,density, rangeMin, rangeMax,
-                                    isoLevel, depth);
+            std::cout << "Type: " << type << endl;
+            Mesh* mesh = createCubeTPMS(type, sampleSize,density,
+                                        rangeMin, rangeMax,
+                                        isoLevel, depth);
+            if(mesh == nullptr)
+                continue;
 
-        Exporter exporter;
-        string filename = type + ".ply";
-        exporter.writeOBJ(filename, *mesh);
+            Exporter exporter;
+            string filename = "exp/" + type + "_" +std::to_string(isoLevel)
+                    + "_" + std::to_string(depth) +".ply";
 
-        delete mesh;
-    }
+            exporter.writeOBJ(filename, *mesh);
 
+            float porosity = porosityCalc.getPorosity(*mesh);
+
+            delete mesh;
+        }
+    return 0;
+}
+
+
+int main(int argc, char *argv[])
+{
+
+    // 测试 常数 c 厚度 d 对 孔隙率的影响
+//    return test_cube_porosity(argc, argv);
+
+    // 测试 部分 tpms 与总体 tmps 的孔隙率是否一样
+    return test_part_tpms(argc, argv);
 
     return 0;
 }

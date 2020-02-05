@@ -2,6 +2,7 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     BoxFilling2D \
+    Model2TPMS \
     PorousDesignPlugin \
     test_eigen \
     libtpms \

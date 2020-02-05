@@ -21,6 +21,7 @@ public:
 
     void writeOBJ(const std::string & filename,
                   const Mesh& mesh);
+
 };
 
 #endif // EXPORTER_H

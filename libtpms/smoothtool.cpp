@@ -124,8 +124,7 @@ Mesh *SmoothTool::createMesh(Mesh *mesh)
 Mesh *SmoothTool::meshOffset(Mesh *mesh, float depth)
 {
     // 记录当前顶点数目
-    uint nVectices = mesh->n_vertices();
-    uint nFaces = mesh->n_faces();
+    int nVectices = mesh->n_vertices();
 
     /// 将曲面复制一份，追加到 mesh 中，面法相相反
     // 复制网格顶点

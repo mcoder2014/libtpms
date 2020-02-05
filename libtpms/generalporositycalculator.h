@@ -1,6 +1,8 @@
 #ifndef GENERALPOROSITYCALCULATOR_H
 #define GENERALPOROSITYCALCULATOR_H
 
+#include "mesh.h"
+
 #ifdef USING_SURFACEMESH
 #include <SurfaceMeshModel.h>
 #include <Octree.h>
@@ -13,19 +15,15 @@ public:
     ~GeneralPorosityCalculator();
 
     float getPorosity(SurfaceMesh::SurfaceMeshModel& porousStructure,
-                      SurfaceMesh::SurfaceMeshModel& boundary,
-                      float voxelSize);
-    float getPorosity(SurfaceMesh::SurfaceMeshModel& porousStructure,
-                      float voxelSize);
+                      SurfaceMesh::SurfaceMeshModel& boundary);
+    float getPorosity(SurfaceMesh::SurfaceMeshModel& porousStructure);
 
-private:
-    uint64_t calcInner(std::vector<std::vector<Eigen::Vector3d>>& points_mat,
-                  std::vector<float>& helper_z,
-                  float voxelSize,
-                  Octree& oct_model);
-    uint64_t calcInner(std::vector<std::vector<Eigen::Vector3d>>& points_mat,
-                  std::vector<float>& helper_z,
-                  Eigen::AlignedBox3d boundary);
+    float getPorosity(Mesh& porosusStructure,
+                      Mesh& boundary);
+    float getPorosity(Mesh& porosusStructure);
+
+    double calcVolume(Mesh& mesh);  // 计算三维模型体积
+    double calcVolume(SurfaceMesh::SurfaceMeshModel& model);
 };
 
 #endif // GENERALPOROSITYCALCULATOR_H

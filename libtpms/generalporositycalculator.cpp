@@ -23,259 +23,168 @@ GeneralPorosityCalculator::~GeneralPorosityCalculator()
 ///
 float GeneralPorosityCalculator::getPorosity(
         SurfaceMesh::SurfaceMeshModel &porousStructure,
-        SurfaceMesh::SurfaceMeshModel &boundary,
-        float voxelSize)
+        SurfaceMesh::SurfaceMeshModel &boundary)
 {
-    porousStructure.updateBoundingBox();
-    boundary.updateBoundingBox();
 
-    Eigen::AlignedBox3d bbox = boundary.bbox();
-    // 根据包围盒去设计
+    float boundaryVolume = calcVolume(boundary);
+    float porosusVolume = calcVolume(porousStructure);
 
-    Eigen::Vector3d relative_size = bbox.max()-bbox.min();
-    Eigen::Vector3i sample_size(
-        std::lround(relative_size[0]/voxelSize),
-        std::lround(relative_size[1]/voxelSize),
-        std::lround(relative_size[2]/voxelSize));
-    Eigen::Vector3d range_min = bbox.min();
-    Eigen::Vector3d range_max = bbox.max();
+    float porosity = static_cast<float>(porosusVolume / boundaryVolume);
 
-    std::cout << "Init sample box:"
-              << "[" << sample_size[0] << ", " << sample_size[1] << ", " << sample_size[2] << "]"
-              << "\n" << std::endl;
-
-    Octree oct_boundary(&boundary);
-    Octree oct_porous(&porousStructure);
-    std::cout << "build octree finished!" << std::endl;
-
-    float lower_bwlow_range = range_min[2] - 100;
-    /// 从一面发出射线和 boundary 模型相交，确定哪些采样点属于模型内部
-    std::vector<std::vector<Eigen::Vector3d>> points_mat(
-                sample_size[0], std::vector<Eigen::Vector3d>(
-                    sample_size[1],Eigen::Vector3d(0.0,0.0,lower_bwlow_range)));
-
-    // 初始化一个发送射线的平面二维矩阵
-    // 矩阵密度均匀，位置在包围盒 z 轴下部
-    for(int iter_x = 0; iter_x < sample_size[0]; iter_x++)
-    {
-        float co_x = range_min[0] + iter_x * voxelSize;
-        for(int iter_y = 0; iter_y < sample_size[1]; iter_y++)
-        {
-            float co_y = range_min[1] + iter_y * voxelSize;
-
-            points_mat[iter_x][iter_y][0] = co_x;
-            points_mat[iter_x][iter_y][1] = co_y;
-        }
-    }
-
-    // 为了方便计算点的个数，初始化一个 Z 轴向量
-    std::vector<float> points_z(sample_size[2]);
-    for(int i = 0; i < sample_size[2]; i++)
-    {
-        points_z[i] = range_min[2] + i * voxelSize;
-    }
-
-    /// 最后通过计算两个点数，计算孔隙率
-    uint64_t voxelBoundary = calcInner(points_mat, points_z, voxelSize, oct_boundary);
-    uint64_t voxelPorous = calcInner(points_mat, points_z, voxelSize, oct_porous);
-    float porosity = 1.0 * voxelPorous / voxelBoundary;
-
-    std::cout << "Total Points: " << sample_size[0] * sample_size[1] * sample_size[2]
-             << "\nPoints in Boundary: " << voxelBoundary
-             << "\nPoints in Porous: " << voxelPorous
-             << "\nPorosity: " << porosity;
+    std::cout<< "Volume of bondary structure: " << boundaryVolume
+             << "\nVolume of porosus structure: " << porosusVolume
+             << "\nPorosity: " << porosity
+             << std::endl;
+    return porosity;
 
     /// 返回孔隙率的结果
     return porosity;
 }
 
-float GeneralPorosityCalculator::getPorosity(
-        SurfaceMesh::SurfaceMeshModel &porousStructure,
-        float voxelSize)
+float GeneralPorosityCalculator::getPorosity(SurfaceMesh::SurfaceMeshModel &porousStructure)
 {
-    std::cout << "Get Pososity" << std::endl;
+    // 计算包围盒的体积
     porousStructure.updateBoundingBox();
-
-    // 根据使用包围盒作为多孔材料的外部尺寸
     Eigen::AlignedBox3d bbox = porousStructure.bbox();
+    double boundingVolume = bbox.volume();
 
-    Eigen::Vector3d relative_size = bbox.max()-bbox.min();
-    Eigen::Vector3i sample_size(
-        std::lround(relative_size[0]/voxelSize),
-        std::lround(relative_size[1]/voxelSize),
-        std::lround(relative_size[2]/voxelSize));
-    Eigen::Vector3d range_min = bbox.min();
-    Eigen::Vector3d range_max = bbox.max();
+    // 计算体积
+    double porosusVolume = calcVolume(porousStructure);
+    float porosity = static_cast<float>(porosusVolume / boundingVolume);
 
-    std::cout << "Init sample box:"
-              << "[" << sample_size[0] << ", " << sample_size[1] << ", " << sample_size[2] << "]"
-              << "\n" << std::endl;
+    std::cout<< "Volume of bounding box: " << boundingVolume
+             << "\nVolume of porosus structure: " << porosusVolume
+             << "\nPorosity: " << porosity
+             << std::endl;
 
-    Octree oct_porous(&porousStructure);
-    std::cout << "Init Octree Finished!" << std::endl;
-
-    float lower_bwlow_range = range_min[2] - 100;
-    /// 从一面发出射线和 boundary 模型相交，确定哪些采样点属于模型内部
-    std::vector<std::vector<Eigen::Vector3d>> points_mat(
-                sample_size[0], std::vector<Eigen::Vector3d>(
-                    sample_size[1],Eigen::Vector3d(0.0,0.0,lower_bwlow_range)));
-
-    // 初始化一个发送射线的平面二维矩阵
-    // 矩阵密度均匀，位置在包围盒 z 轴下部
-    for(int iter_x = 0; iter_x < sample_size[0]; iter_x++)
-    {
-        float co_x = range_min[0] + iter_x * voxelSize;
-        for(int iter_y = 0; iter_y < sample_size[1]; iter_y++)
-        {
-            float co_y = range_min[1] + iter_y * voxelSize;
-
-            points_mat[iter_x][iter_y][0] = co_x;
-            points_mat[iter_x][iter_y][1] = co_y;
-        }
-    }
-
-    // 为了方便计算点的个数，初始化一个 Z 轴向量
-    std::vector<float> points_z(sample_size[2]);
-    for(int i = 0; i < sample_size[2]; i++)
-    {
-        points_z[i] = range_min[2] + i * voxelSize;
-    }
-
-    std::cout << "Calc inner" << std::endl;
-    /// 最后通过计算两个点数，计算孔隙率
-//    int voxelBoundary = calcInner(points_mat, points_z, bbox);
-    uint64_t voxelBoundary = (uint64_t)(sample_size[0]) * (uint64_t)(sample_size[1]) * (uint64_t)(sample_size[2]);
-    uint64_t voxelPorous = calcInner(points_mat, points_z, voxelSize, oct_porous);
-    float porosity = 1.0 * voxelPorous / voxelBoundary;
-
-    std::cout << "Total Points: " << sample_size[0] * sample_size[1] * sample_size[2]
-             << "\nPoints in Boundary: " << voxelBoundary
-             << "\nPoints in Porous: " << voxelPorous
-             << "\nPorosity: " << porosity;
-
-    /// 返回孔隙率的结果
     return porosity;
 }
 
-uint64_t GeneralPorosityCalculator::calcInner(
-        std::vector<std::vector<Eigen::Vector3d>>& points_mat,
-        std::vector<float> &helper_z,
-        float voxelSize,
-        Octree& oct_model)
+float GeneralPorosityCalculator::getPorosity(Mesh &porosusStructure, Mesh &boundary)
 {
-    Eigen::Vector3i sample_size(
-        points_mat.size(),
-        points_mat[0].size(),
-            helper_z.size());
+    float boundaryVolume = calcVolume(boundary);
+    float porosusVolume = calcVolume(porosusStructure);
 
-    float range_down = helper_z[0];
+    float porosity = static_cast<float>(porosusVolume / boundaryVolume);
 
-    uint64_t count = 0;
-
-    Eigen::Vector3d up_direction(0,0,1);
-    /// 再发出射线和 porous 模型相交，确定哪些段是内部和外部
-    for(int iter_x = 0; iter_x < sample_size[0]; iter_x++)
-    {
-        for(int iter_y = 0; iter_y < sample_size[1]; iter_y++)
-        {
-            // 发射射线
-            Ray up_ray(points_mat[iter_x][iter_y], up_direction);
-            QSet<int> down_intersects = oct_model.intersectRay(
-                        up_ray, 0.000001, false);
-
-            HitResult res;
-            std::vector<float> intersect_z;
-
-            for(int face_index : down_intersects)
-            {
-                oct_model.rayTriangleIntersectionTest(
-                    SurfaceMesh::Model::Face(face_index), up_ray, res, false);
-
-                if(res.hit)
-                {
-                    // 统计交点
-                    Eigen::Vector3d intersect_point = up_ray.origin + up_ray.direction * res.distance;
-                    intersect_z.push_back(intersect_point[2]);
-                }
-            }
-
-            // 分析哪部分位于内部哪部分位于外部
-            uint intersect_count = intersect_z.size();
-            if(intersect_count %2 != 0)
-            {
-                // 理论上只有偶数个交点，因此如果有奇数个交点是错误情况
-                // 暂时跳过不计入总数
-
-                std::cout << "There are " << intersect_count << " intersection points"
-                          << " at [" << iter_x << "," << iter_y << "]"
-                          << " Line:[x,y] " << points_mat[iter_x][iter_y][0] << ", " << points_mat[iter_x][iter_y][1]
-                          << " ERROR" << std::endl;
-                continue;
-            }
-
-            // 两两一组，快速计算范围内点的数量
-            std::sort(intersect_z.begin(), intersect_z.end());
-            for(int i=0; i < intersect_z.size()-1 && intersect_count > 0; i+=2)
-            {
-                float lower = intersect_z[i];
-                float higher = intersect_z[i+1];
-
-                uint64_t tmp_count = static_cast<uint64_t>(
-                    (higher - range_down)/voxelSize - (lower-range_down)/voxelSize);
-                count += tmp_count;
-            }
-
-        }   // for(int iter_y = 0; iter_y < sample_size[1]; iter_y++)
-    }   // for(int iter_x = 0; iter_x < sample_size[0]; iter_x++)
-
-    return count;
+    std::cout<< "Volume of bondary structure: " << boundaryVolume
+             << "\nVolume of porosus structure: " << porosusVolume
+             << "\nPorosity: " << porosity
+             << std::endl;
+    return porosity;
 }
 
-uint64_t GeneralPorosityCalculator::calcInner(
-        std::vector<std::vector<Eigen::Vector3d> > &points_mat,
-        std::vector<float> &helper_z,
-        Eigen::AlignedBox3d boundary)
+float GeneralPorosityCalculator::getPorosity(Mesh &porosusStructure)
 {
-    Eigen::Vector3i sample_size(
-        points_mat.size(),
-        points_mat[0].size(),
-        helper_z.size());
+    // 计算包围盒的体积
+    Eigen::AlignedBox3d bbox;
+    Mesh::VertexIter vit, vend(porosusStructure.vertices_end());
 
-    uint64_t count = 0;
-
-    for(int iter_x = 0; iter_x < sample_size[0]; iter_x++)
+    for(vit = porosusStructure.vertices_begin(); vit != vend; ++vit)
     {
-        for(int iter_y = 0; iter_y < sample_size[1]; iter_y++)
+        OpenMesh::Vec3f& point = porosusStructure.point(*vit);
+        bbox.extend(Eigen::Vector3d(point[0], point[1], point[2]));
+    }
+
+    double boundingVolume = bbox.volume();
+
+    // 计算体积
+    double porosusVolume = calcVolume(porosusStructure);
+    float porosity = static_cast<float>(porosusVolume / boundingVolume);
+
+    std::cout<< "Volume of bounding box: " << boundingVolume
+             << "\nVolume of porosus structure: " << porosusVolume
+             << "\nPorosity: " << porosity
+             << std::endl;
+
+    return porosity;
+}
+
+///
+/// \brief GeneralPorosityCalculator::calcVolume
+/// 测试使用计算三维模型体积的方法计算孔隙率
+/// \param mesh
+/// \return
+/// https://stackoverflow.com/questions/5695322/calculate-volume-of-3d-mesh
+///
+double GeneralPorosityCalculator::calcVolume(Mesh &mesh)
+{
+    // 思路是用每个面片和原点形成的有符号的 四面体，
+    // 体积之和的绝对值是总体的体积
+
+    auto signedVolumeOfTriangle = [](
+            OpenMesh::Vec3f& p1,
+            OpenMesh::Vec3f& p2,
+            OpenMesh::Vec3f& p3) -> float
+    {
+        float v321 = p3[0] * p2[1] * p1[2];
+        float v231 = p2[0] * p3[1] * p1[2];
+        float v312 = p3[0] * p1[1] * p2[2];
+        float v132 = p1[0] * p3[1] * p2[2];
+        float v213 = p2[0] * p1[1] * p3[2];
+        float v123 = p1[0] * p2[1] * p3[2];
+        return (1.0/6) * (
+                    -v321 + v231 + v312 -v132 -v213 + v123);
+    };
+
+    double volume = 0.0;    // 最终的体积
+
+    Mesh::FaceIter fit, fend = mesh.faces_end();
+    std::vector<OpenMesh::Vec3f> vface;
+    for(fit = mesh.faces_begin(); fit != fend; fit++)
+    {
+        // 找到三个顶点
+        vface.clear();
+        Mesh::FaceVertexIter fvit;
+        for(fvit = mesh.fv_begin(*fit); fvit.is_valid(); fvit++)
         {
-            // 从数组中找到两头刚好在包围盒内的点的数量
-            Eigen::Vector3d pos = points_mat[iter_x][iter_y];
+            vface.push_back(mesh.point(*fvit));
+        }
+        if(vface.size() >= 3)
+            volume += signedVolumeOfTriangle(vface[0], vface[1], vface[2]);
+    }
 
-            // 找上界
-            int top = helper_z.size()-1;
-            for(; top >=0; top--)
-            {
-                pos[2] = helper_z[top];
-                if(boundary.contains(pos))
-                {
-                    // 包含
-                    break;
-                }
-            }
+    return abs(volume);
+}
 
-            // 找下界
-            int down = 0;
-            for(; down < top; down++)
-            {
-                pos[2] = helper_z[down];
-                if(boundary.contains(pos))
-                {
-                    // 包含
-                    break;
-                }
-            }
-            count += (top - down + 1);
-        }   // for(int iter_y = 0; iter_y < sample_size[1]; iter_y++)
-    }   // for(int iter_x = 0; iter_x < sample_size[0]; iter_x++)
+double GeneralPorosityCalculator::calcVolume(SurfaceMesh::SurfaceMeshModel &model)
+{
+    auto signedVolumeOfTriangle = [](
+            Eigen::Vector3d& p1,
+            Eigen::Vector3d& p2,
+            Eigen::Vector3d& p3) -> float
+    {
+        float v321 = p3[0] * p2[1] * p1[2];
+        float v231 = p2[0] * p3[1] * p1[2];
+        float v312 = p3[0] * p1[1] * p2[2];
+        float v132 = p1[0] * p3[1] * p2[2];
+        float v213 = p2[0] * p1[1] * p3[2];
+        float v123 = p1[0] * p2[1] * p3[2];
+        return (1.0/6) * (
+                    -v321 + v231 + v312 -v132 -v213 + v123);
+    };
 
-    return count;
+    double volume = 0.0;
+    // Vertex
+    SurfaceMesh::Vector3VertexProperty vecs = model.vertex_coordinates();
+
+    //Faces
+    std::vector<Eigen::Vector3d> vface;
+    for(SurfaceMesh::Face f:model.faces())
+    {
+        vface.clear();
+
+        SurfaceMesh::SurfaceMeshForEachVertexOnFaceHelper vit = model.vertices(f);
+        vit = vit.begin();
+        SurfaceMesh::SurfaceMeshForEachVertexOnFaceHelper vend = vit;
+        for(;vit!=vend;++vit)
+        {
+            vface.push_back(vecs[vit]);
+        }
+
+        if(vface.size() >= 3)
+            volume += signedVolumeOfTriangle(vface[0], vface[1], vface[2]);
+    }
+
+    return volume;
 }
