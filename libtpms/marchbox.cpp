@@ -799,6 +799,44 @@ void MarchBox::marching_cube_push_double_closed(
     createMesh(sample_points,IS_value,isoLevel_low,isoLevel_high);
 }
 
+///
+/// \brief MarchBox::mb_push
+/// 生成压缩 Z轴 的单层的曲面
+/// \param implicit_surface
+/// \param boundary
+///
+void MarchBox::mb_push(ImplicitSurface &implicit_surface, SurfaceMesh::SurfaceMeshModel &boundary)
+{
+    // Update the two bounding box in the march_box
+    setRange(boundary);
+
+    // Create Octree
+    Octree octree(&boundary);
+
+    int additions = -2;
+
+    std::cout << "\nImplicit Mesh type: " << implicit_surface.m_type
+             << "\nnum of X: " << m_ncellsX
+             << "\nnum of Y: " << m_ncellsY
+             << "\nnum of Z: " << m_ncellsZ << "\n";
+
+    // To record the value of [ncellsX x ncellsY x ncellsZ] sample points
+    std::vector<std::vector<std::vector<float>>> IS_value(
+                m_ncellsX,std::vector<std::vector<float>>(
+                    m_ncellsY, std::vector<float>(
+                        m_ncellsZ, std::numeric_limits<float>::max())));
+
+    std::vector<std::vector<std::vector<glm::vec3>>> sample_points(
+                m_ncellsX, std::vector<std::vector<glm::vec3>>(
+                    m_ncellsY, std::vector<glm::vec3>(
+                        m_ncellsZ, glm::vec3(0.0))));
+
+    initSampleMatrix_compress_z(octree, sample_points, additions);
+    calculateIS_value(implicit_surface,octree, sample_points,IS_value,additions);
+
+
+}
+
 void MarchBox::mb_pc_diff_test(
         ImplicitSurface &implicit_surface,
         SurfaceMesh::SurfaceMeshModel &surface_mesh,

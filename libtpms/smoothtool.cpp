@@ -152,39 +152,6 @@ Mesh *SmoothTool::meshOffset(Mesh *mesh, float depth)
         mesh->add_face(vface);
     }
 
-    /// 曲面中各定点向法方向移动 depth/2 位置
-    mesh->request_vertex_normals();
-    mesh->update_normals();
-
-    // init iterator
-    vit = mesh->vertices_begin();
-    vend = mesh->vertices_end();
-
-    float mov_len = depth/2;    // Every point's mov length
-    for( ; vit!=vend ; ++vit)
-    {
-        OpenMesh::Vec3f vpos = mesh->point(*vit);
-        if(!mesh->is_boundary(*vit))
-        {
-            // 内部点向顶点法向量移动 depth/2 位置
-            OpenMesh::Vec3f vnormal = mesh->normal(*vit);
-            vpos += vnormal.normalized() * mov_len;
-            mesh->set_point(*vit, vpos);
-        }
-        else
-        {
-            // 边界点向临界面法相平均值移动 depth/2 位置
-            OpenMesh::Vec3f fnoraml(0.0, 0.0, 0.0);
-            Mesh::VertexFaceIter vfit = mesh->vf_begin(vit);
-            for(; vfit.is_valid(); vfit++)
-            {
-                fnoraml += mesh->normal(*vfit);
-            }
-            vpos += fnoraml.normalized() * mov_len;
-            mesh->set_point(*vit, vpos);
-        }
-    }
-
     /// 封闭曲面的缺口
     Mesh::HalfedgeIter heit, heend(mesh->halfedges_end());
     for(heit = mesh->halfedges_begin(); heit != heend; heit++)
@@ -220,6 +187,41 @@ Mesh *SmoothTool::meshOffset(Mesh *mesh, float depth)
         }
     }
 
+    /// 曲面中各定点向法方向移动 depth/2 位置
+    mesh->request_vertex_normals();
+    mesh->update_normals();
+
+    // init iterator
+    vit = mesh->vertices_begin();
+    vend = mesh->vertices_end();
+
+    float mov_len = depth/2;    // Every point's mov length
+    for( ; vit!=vend ; ++vit)
+    {
+        OpenMesh::Vec3f vpos = mesh->point(*vit);
+        if(!mesh->is_boundary(*vit))
+        {
+            // 内部点向顶点法向量移动 depth/2 位置
+            OpenMesh::Vec3f vnormal = mesh->normal(*vit);
+            vpos += vnormal.normalized() * mov_len;
+            mesh->set_point(*vit, vpos);
+        }
+        else
+        {
+            // 边界点向临界面法相平均值移动 depth/2 位置
+            OpenMesh::Vec3f fnoraml(0.0, 0.0, 0.0);
+            Mesh::VertexFaceIter vfit = mesh->vf_begin(vit);
+            for(; vfit.is_valid(); vfit++)
+            {
+                fnoraml += mesh->normal(*vfit);
+            }
+            vpos += fnoraml.normalized() * mov_len;
+            mesh->set_point(*vit, vpos);
+        }
+    }
+
+
+
     return mesh;
 }
 
@@ -253,8 +255,10 @@ void SmoothTool::basicSmooth(int rounds)
         int valance = 0;            // Record the degree of the point
         int points_count = 0;
 
+        /// 计算每个顶点的目标坐标
         for (v_it = m_object->vertices_begin(); v_it != v_end; ++v_it, ++v_result_it)
         {
+            // 决定边界的点要不要平滑一下
             if(!m_object->is_boundary(*v_it))
             {
                 // Don't change the position of boundary vertex
@@ -280,9 +284,29 @@ void SmoothTool::basicSmooth(int rounds)
                 cog = cog / static_cast<float>(valance);
 
                 // Record the calculated value
-                m_result->set_point(*v_result_it, cog);
+                 m_result->set_point(*v_result_it, cog);
+
 
             } // if(!m_object->is_boundary(*v_it))
+            else
+            {
+                // 对于边界点，只和相邻边界点进行平滑
+                cog = OpenMesh::Vec3f(0.0); // Init it into origin point
+                valance = 0;
+                for(vv_it = m_object->vv_begin(*v_it); vv_it.is_valid(); ++vv_it)
+                {
+                    if(m_object->is_boundary(*vv_it))
+                    {
+                        valance++;
+                        cog += m_object->point(*vv_it);
+                    }
+                }
+                cog /= valance;
+                cog = 0.5 * cog + 0.5 * m_object->point(*v_it);
+
+                // Record the calculated value
+                m_result->set_point(*v_it, cog);
+            }
         }
 
         std::cout << "Valuable round: " << round

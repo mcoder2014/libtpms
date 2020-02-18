@@ -16,7 +16,7 @@
 
 #ifdef USING_SURFACEMESH
 #include "SurfaceMeshModel.h"
-#include "surfacemesh_load.h"
+//#include "surfacemesh_load.h"
 //#define TEST_SURFACEMESH            // use surfacemesh as boundary
 //#define TEST_SURFACEMESH_PUSH
 //#define TEST_SURFACEMESH_PUSH_DOUBLE

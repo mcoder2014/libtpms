@@ -81,6 +81,11 @@ public:
             float isoLevel_low = -0.5,
             float isoLevel_high = 0.5);
 
+    // 测试生成压缩的单层 曲面 Z轴方向压缩的单层网络，不封闭
+    void mb_push(
+            ImplicitSurface& implicit_surface,
+            SurfaceMesh::SurfaceMeshModel& boundary);
+
     // 测试非均匀的拟合效果
     void mb_pc_diff_test(
             ImplicitSurface& implicit_surface,

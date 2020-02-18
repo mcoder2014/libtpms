@@ -39,13 +39,11 @@ contains(DEFINES,USING_SURFACEMESH) {
     message('DEFINES USING_SURFACEMESH')
 
     HEADERS += \
-        surfacemesh_load.h \
         $$PWD/../extern/octree/Octree.h \
         $$PWD/../extern/octree/primitives.h \
         $$PWD/../extern/octree/TriAccel.h
 
-    SOURCES += \
-        surfacemesh_load.cpp
+    SOURCES +=
 
     unix {
         INCLUDEPATH += \
