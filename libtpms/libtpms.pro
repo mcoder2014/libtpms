@@ -9,6 +9,8 @@ DESTDIR = ../bin/
 SOURCES += \
     IO/exporter.cpp \
     IO/importer.cpp \
+    TPMS/tpmsconfig.cpp \
+    TPMS/tpmscreater.cpp \
     implicitsurface.cpp \
     isolevelgenerator.cpp \
     marchbox.cpp \
@@ -21,6 +23,8 @@ SOURCES += \
 HEADERS += \
     IO/exporter.h \
     IO/importer.h \
+    TPMS/tpmsconfig.h \
+    TPMS/tpmscreater.h \
     implicitsurface.h \
     isolevelgenerator.h \
     marchbox.h \

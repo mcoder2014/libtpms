@@ -15,6 +15,8 @@
 #include <IO/exporter.h>
 #include <generalporositycalculator.h>
 
+void setOptions(QList<QCommandLineOption>& options);
+
 ///
 /// 将鞋垫模型转换成 TPMS 结构
 ///
@@ -32,6 +34,8 @@ int main(int argc, char *argv[])
     parser.addHelpOption();             // --help
     //    parser.addVersionOption();          // --Version
 
+    QList<QCommandLineOption> options;
+
     // model file
     QCommandLineOption modelPathOption(
                 QStringList() << "m" << "model",
@@ -46,6 +50,7 @@ int main(int argc, char *argv[])
                 QCoreApplication::translate("main", "<filepath> filepath to save the converting result e.g. tpms.ply"),
                 QCoreApplication::translate("porosus","porosus"));
     parser.addOption(savePorosusPathOption);
+
 
     // type
 

@@ -1,5 +1,5 @@
 QT -= gui
-TARGET = Model2TPMS
+TARGET = tpms_creator
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
