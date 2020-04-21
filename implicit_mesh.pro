@@ -1,10 +1,8 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    BoxFilling2D \
-    Model2TPMS \
-    PorousDesignPlugin \
-    test_eigen \
+#    BoxFilling2D \
+#    Model2TPMS \
     libtpms \
     test_double \
     test_porositycalculator \

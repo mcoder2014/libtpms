@@ -19,6 +19,7 @@ void setOptions(QList<QCommandLineOption>& options);
 
 ///
 /// 将鞋垫模型转换成 TPMS 结构
+/// 未完成
 ///
 
 int main(int argc, char *argv[])
