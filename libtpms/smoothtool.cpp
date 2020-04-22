@@ -210,7 +210,7 @@ Mesh *SmoothTool::meshOffset(Mesh *mesh, float depth)
         {
             // 边界点向临界面法相平均值移动 depth/2 位置
             OpenMesh::Vec3f fnoraml(0.0, 0.0, 0.0);
-            Mesh::VertexFaceIter vfit = mesh->vf_begin(vit);
+            Mesh::VertexFaceIter vfit = mesh->vf_begin(*vit);
             for(; vfit.is_valid(); vfit++)
             {
                 fnoraml += mesh->normal(*vfit);

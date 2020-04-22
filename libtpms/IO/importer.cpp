@@ -233,7 +233,7 @@ SurfaceMesh::SurfaceMeshModel *Importer::mesh2SurfaceMeshModel(const Mesh &mesh)
     }
 
     // faces
-    Mesh::FaceIter fit, fend = mesh.faces_end();
+    Mesh::FaceIter fit;
     std::vector<SurfaceMesh::Vertex> vface;
     for(fit = mesh.faces_begin(); fit!=mesh.faces_end(); fit++)
     {

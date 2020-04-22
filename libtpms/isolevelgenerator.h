@@ -14,7 +14,6 @@ class IsoLevelGenerator
 public:
     IsoLevelGenerator();
 
-    cv::Mat load(const QString& filepath);
     cv::Mat load(const std::string& filepath);
     // input cvMat output vector<vector<float>>
 };

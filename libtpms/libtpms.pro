@@ -42,12 +42,12 @@ unix {
 contains(DEFINES,USING_SURFACEMESH) {
     message('DEFINES USING_SURFACEMESH')
 
-    HEADERS += \
-        $$PWD/../extern/octree/Octree.h \
-        $$PWD/../extern/octree/primitives.h \
-        $$PWD/../extern/octree/TriAccel.h
+#    HEADERS += \
+#        $$PWD/../extern/octree/Octree.h \
+#        $$PWD/../extern/octree/primitives.h \
+#        $$PWD/../extern/octree/TriAccel.h
 
-    SOURCES +=
+#    SOURCES +=
 
     unix {
         INCLUDEPATH += \

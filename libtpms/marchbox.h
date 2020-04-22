@@ -176,9 +176,9 @@ public:
 
     // 极小曲面的周期大小与物理大小的映射
     inline void setDensity(int density){
-        if(density > 0) m_densityXYZ = Eigen::Vector3i(density,density,density); this->updateRange();}
+        if(density > 0) { m_densityXYZ = Eigen::Vector3i(density,density,density); } this->updateRange();}
     inline void setDensity(Eigen::Vector3i density){
-        if(density[0]>0 && density[1]>0&&density[2] > 0){m_densityXYZ=density;this->updateRange();}}
+        if(density[0]>0 && density[1]>0&&density[2] > 0){m_densityXYZ=density; }this->updateRange();}
 
     // 极小曲面起始的点坐标
     inline void setOffset(Eigen::Vector3d offset){ this->m_offset = offset; this->updateRange();}
