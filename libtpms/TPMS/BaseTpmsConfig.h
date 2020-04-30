@@ -3,7 +3,7 @@
 
 #include <eigen3/Eigen/Dense>
 
-#include "TpmsImplicitSurface.h"
+#include "TpmsImplicitFunction.h"
 
 ///
 /// \brief The TPMSConfig class
@@ -20,22 +20,20 @@ public:
     Eigen::AlignedBox3d getBoundingBoxLogical() const;
     void setBoundingBoxLogical(const Eigen::AlignedBox3d &value);
 
-    TpmsType getTpmsType() const;
-    void setTpmsType(const TpmsType &value);
-
     Eigen::Vector3i getVoxelDensity() const;
     void setVoxelDensity(const Eigen::Vector3i &value);
 
 protected:
     // 生成模型的物理尺寸大小 physical size
     Eigen::AlignedBox3d boundingBoxPhysial;
+
     // 生成模型的逻辑周期大小（会缩放到物理尺寸） logical size
     Eigen::AlignedBox3d boundingBoxLogical;
 
     // 物理尺度上的采样体素密度 voxel density
     // [x][y][z] in one period
     Eigen::Vector3i voxelDensity;
-    TpmsType tpmsType;
+
 };
 
 #endif // TPMSCONFIG_H

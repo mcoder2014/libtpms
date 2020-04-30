@@ -19,7 +19,7 @@ enum TpmsType
 };
 
 
-class TpmsImplicitSurface
+class TpmsImplicitFunction
 {
 public:
     TpmsType getType() const;

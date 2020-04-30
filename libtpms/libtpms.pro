@@ -1,5 +1,5 @@
 TEMPLATE = lib
-TARGET = tpmslib
+TARGET = tpms
 CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
@@ -12,7 +12,8 @@ SOURCES += \
     TPMS/BaseTpmsConfig.cpp \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.cpp \
     TPMS/BoxTpmsSingleSurfaceConfig.cpp \
-    TPMS/TpmsImplicitSurface.cpp \
+    TPMS/MarchBoxUtil.cpp \
+    TPMS/TpmsImplicitFunction.cpp \
     implicitsurface.cpp \
     isolevelgenerator.cpp \
     marchbox.cpp \
@@ -29,7 +30,9 @@ HEADERS += \
     TPMS/BaseTpmsConfig.h \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.h \
     TPMS/BoxTpmsSingleSurfaceConfig.h \
-    TPMS/TpmsImplicitSurface.h \
+    TPMS/MarchBoxUtil.h \
+    TPMS/SamplePoint.h \
+    TPMS/TpmsImplicitFunction.h \
     implicitsurface.h \
     isolevelgenerator.h \
     marchbox.h \

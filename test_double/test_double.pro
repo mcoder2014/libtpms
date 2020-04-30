@@ -69,5 +69,5 @@ unix {
         -lassimp \      # assimp
         -lopencv_core -lopencv_imgproc \ # opencv
         -lQt5Core -lQt5Gui -lQt5Core -lQt5OpenGL -lQt5Widgets \   # Qt
-        -L$$OUT_PWD/../bin -ltpmslib
+        -L$$OUT_PWD/../bin -ltpms
 }

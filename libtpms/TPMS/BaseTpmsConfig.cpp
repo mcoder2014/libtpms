@@ -21,16 +21,6 @@ void BaseTpmsConfig::setBoundingBoxLogical(const Eigen::AlignedBox3d &value)
     boundingBoxLogical = value;
 }
 
-TpmsType BaseTpmsConfig::getTpmsType() const
-{
-    return tpmsType;
-}
-
-void BaseTpmsConfig::setTpmsType(const TpmsType &value)
-{
-    tpmsType = value;
-}
-
 Eigen::Vector3i BaseTpmsConfig::getVoxelDensity() const
 {
     return voxelDensity;
