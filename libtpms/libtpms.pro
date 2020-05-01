@@ -12,6 +12,7 @@ SOURCES += \
     TPMS/BaseTpmsConfig.cpp \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.cpp \
     TPMS/BoxTpmsSingleSurfaceConfig.cpp \
+    TPMS/MarchBoxTable.cpp \
     TPMS/MarchBoxUtil.cpp \
     TPMS/TpmsImplicitFunction.cpp \
     implicitsurface.cpp \
@@ -30,6 +31,7 @@ HEADERS += \
     TPMS/BaseTpmsConfig.h \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.h \
     TPMS/BoxTpmsSingleSurfaceConfig.h \
+    TPMS/MarchBoxTable.h \
     TPMS/MarchBoxUtil.h \
     TPMS/SamplePoint.h \
     TPMS/TpmsImplicitFunction.h \
@@ -49,13 +51,6 @@ unix {
 
 contains(DEFINES,USING_SURFACEMESH) {
     message('DEFINES USING_SURFACEMESH')
-
-#    HEADERS += \
-#        $$PWD/../extern/octree/Octree.h \
-#        $$PWD/../extern/octree/primitives.h \
-#        $$PWD/../extern/octree/TriAccel.h
-
-#    SOURCES +=
 
     unix {
         INCLUDEPATH += \
@@ -94,5 +89,5 @@ unix {
         -L/usr/lib -lOpenMeshCore -lOpenMeshTools \     # openmesh
         -lassimp \      # assimp
         -lopencv_core -lopencv_imgproc \ # opencv
-        -lQt5Core -lQt5Gui -lQt5Core -lQt5OpenGL -lQt5Widgets    # Qt
+        -lQt5Core -lQt5Gui -lQt5Core -lQt5OpenGL -lQt5Widgets \    # Qt
 }

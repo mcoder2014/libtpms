@@ -23,6 +23,8 @@ public:
     Eigen::Vector3i getVoxelDensity() const;
     void setVoxelDensity(const Eigen::Vector3i &value);
 
+    virtual Eigen::Vector3i getMatrixSize() const;
+
 protected:
     // 生成模型的物理尺寸大小 physical size
     Eigen::AlignedBox3d boundingBoxPhysial;

@@ -30,3 +30,21 @@ void BaseTpmsConfig::setVoxelDensity(const Eigen::Vector3i &value)
 {
     voxelDensity = value;
 }
+
+/**
+ * 根据 config 的值计算采样矩阵的尺寸
+ * 由 物理包围盒 和 体素密度决定
+ * @brief BaseTpmsConfig::getMatrixSize
+ * @return
+ */
+Eigen::Vector3i BaseTpmsConfig::getMatrixSize() const
+{
+    Eigen::Vector3d relativeSize = boundingBoxPhysial.max() - boundingBoxPhysial.min();
+    Eigen::Vector3i matrixSize;
+
+    matrixSize.x() = relativeSize.x() / voxelDensity.x();
+    matrixSize.y() = relativeSize.y() / voxelDensity.y();
+    matrixSize.z() = relativeSize.z() / voxelDensity.z();
+
+    return matrixSize;
+}

@@ -4,22 +4,23 @@
 #include<memory>
 
 #include "BaseTpmsAlgorithm.h"
+#include "BoxTpmsSingleSurfaceConfig.h"
 
 class BoxTpmsSingeSurfaceAlgorithm
         :public BaseTpmsAlgorithm
 {
 public:
     BoxTpmsSingeSurfaceAlgorithm();
-    virtual void process() override;
+    virtual Mesh process() override;
     virtual void setConfig(std::shared_ptr<BaseTpmsConfig> config) override {
-        this->config = std::dynamic_pointer_cast<BoxTpmsSingeSurfaceAlgorithm>(config);
+        this->config = std::dynamic_pointer_cast<BoxTpmsSingleSurfaceConfig>(config);
     }
-    std::shared_ptr<BoxTpmsSingeSurfaceAlgorithm> getConfig() {
+    std::shared_ptr<BoxTpmsSingleSurfaceConfig> getConfig() {
         return config;
     }
 
 private:
-    std::shared_ptr<BoxTpmsSingeSurfaceAlgorithm> config;
+    std::shared_ptr<BoxTpmsSingleSurfaceConfig> config;
 };
 
 #endif // BOXTPMSSINGESURFACEALGORITHM_H

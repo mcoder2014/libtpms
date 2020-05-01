@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "BaseTpmsConfig.h"
+#include "mesh.h"
 
 
 class BaseTpmsAlgorithm
@@ -14,7 +15,7 @@ public:
      * 执行算法
      * @brief process
      */
-    virtual void process() = 0;
+    virtual Mesh process() = 0;
 
     /**
      * 设置 配置
