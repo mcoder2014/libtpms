@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 
 using Eigen::Vector3d;
+using Eigen::Vector3i;
 
 class SamplePoint
 {

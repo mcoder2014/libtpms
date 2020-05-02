@@ -2,6 +2,7 @@
 #define BOXTPMSSINGLESURFACECONFIG_H
 
 #include "BaseTpmsConfig.h"
+#include "TpmsImplicitFunction.h"
 
 class BoxTpmsSingleSurfaceConfig
         :public BaseTpmsConfig

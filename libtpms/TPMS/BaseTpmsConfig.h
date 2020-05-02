@@ -3,8 +3,6 @@
 
 #include <eigen3/Eigen/Dense>
 
-#include "TpmsImplicitFunction.h"
-
 ///
 /// \brief The TPMSConfig class
 /// 主要关于用什么方法生成TPMS的一些配置问题

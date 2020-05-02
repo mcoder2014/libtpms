@@ -22,6 +22,11 @@ enum TpmsType
 class TpmsImplicitFunction
 {
 public:
+    TpmsImplicitFunction(){};
+    TpmsImplicitFunction(TpmsType tpmsType){
+        this->type = tpmsType;
+    }
+
     TpmsType getType() const;
     void setType(const TpmsType &value);
     void setType(std::string value);
