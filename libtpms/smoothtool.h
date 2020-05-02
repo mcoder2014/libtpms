@@ -9,7 +9,7 @@
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/IO/MeshIO.hh>
 
-#include "mesh.h"
+#include "Mesh/Mesh.h"
 
 class SmoothTool
 {

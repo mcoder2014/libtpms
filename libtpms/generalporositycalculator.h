@@ -1,7 +1,7 @@
 #ifndef GENERALPOROSITYCALCULATOR_H
 #define GENERALPOROSITYCALCULATOR_H
 
-#include "mesh.h"
+#include "Mesh/Mesh.h"
 
 #ifdef USING_SURFACEMESH
 #include <SurfaceMeshModel.h>

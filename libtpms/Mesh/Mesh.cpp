@@ -1,4 +1,4 @@
-#include "mesh.h"
+#include "Mesh.h"
 
 Mesh *to2Mesh(std::vector<glm::vec3> &vertices, std::vector<glm::ivec3> &faces)
 {

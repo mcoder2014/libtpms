@@ -11,7 +11,7 @@
 
 #include <SurfaceMeshModel.h>
 
-#include "mesh.h"
+#include "Mesh/Mesh.h"
 
 class Importer
 {

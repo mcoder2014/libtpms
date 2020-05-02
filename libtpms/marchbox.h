@@ -14,7 +14,7 @@
 #endif
 
 #include "implicitsurface.h"
-#include "mesh.h"
+#include "Mesh/Mesh.h"
 
 class MarchBox
 {

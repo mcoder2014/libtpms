@@ -8,7 +8,7 @@
 
 #include <glm/glm.hpp>
 
-#include "mesh.h"
+#include "Mesh/Mesh.h"
 
 class Exporter
 {

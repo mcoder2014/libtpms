@@ -9,6 +9,8 @@ DESTDIR = ../bin/
 SOURCES += \
     IO/exporter.cpp \
     IO/importer.cpp \
+    Mesh/Mesh.cpp \
+    Mesh/MeshShellTool.cpp \
     TPMS/BaseTpmsConfig.cpp \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.cpp \
     TPMS/BoxTpmsSingleSurfaceConfig.cpp \
@@ -18,7 +20,6 @@ SOURCES += \
     implicitsurface.cpp \
     isolevelgenerator.cpp \
     marchbox.cpp \
-    mesh.cpp \
     qualityinspection.cpp \
     simplification.cpp \
     smoothtool.cpp \
@@ -27,6 +28,8 @@ SOURCES += \
 HEADERS += \
     IO/exporter.h \
     IO/importer.h \
+    Mesh/Mesh.h \
+    Mesh/MeshShellTool.h \
     TPMS/BaseTpmsAlgorithm.h \
     TPMS/BaseTpmsConfig.h \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.h \
@@ -38,7 +41,6 @@ HEADERS += \
     implicitsurface.h \
     isolevelgenerator.h \
     marchbox.h \
-    mesh.h \
     qualityinspection.h \
     simplification.h \
     smoothtool.h \
