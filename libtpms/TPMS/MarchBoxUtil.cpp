@@ -25,17 +25,6 @@ Vector3d getStepSize(Eigen::AlignedBox3d boundingBox, Vector3i size)
 }
 
 /**
- * 创造一个指定大小的三维矩阵，用 initValue 初始化
- */
-template<class T>
-vector<vector<vector<T> > >  create3DMatrix(Vector3i size, T initValue)
-{
-    return vector<vector<vector<T>>>(size.x(),
-        vector<vector<T>>(size.y(),
-            vector<T>(size.z(), initValue)));
-}
-
-/**
  * 初始化采样矩阵的物理坐标和 tpms 坐标
  * @brief initMatrix
  * @param matrix

@@ -15,12 +15,16 @@
 using std::vector;
 using Eigen::Vector3d;
 
-// 用某种初始值创建一个三维矩阵
+/**
+ * 创造一个指定大小的三维矩阵，用 initValue 初始化
+ */
 template<class T>
-vector<vector<vector<T> > >  create3DMatrix(Vector3i size, T initValue);
-
-template<class T>
-std::shared_ptr<vector<vector<vector<T>>>> create3DMatrixShared(Vector3i size, T initValue);
+vector<vector<vector<T> > >  create3DMatrix(Vector3i size, T initValue)
+{
+    return vector<vector<vector<T>>>(size.x(),
+        vector<vector<T>>(size.y(),
+            vector<T>(size.z(), initValue)));
+}
 
 // 初始化物理坐标三维矩阵
 void initMatrix(
