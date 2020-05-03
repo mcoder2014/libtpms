@@ -11,6 +11,7 @@ SOURCES += \
     IO/importer.cpp \
     Mesh/Mesh.cpp \
     Mesh/MeshShellTool.cpp \
+    Mesh/MeshSmoothTool.cpp \
     TPMS/BaseTpmsConfig.cpp \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.cpp \
     TPMS/BoxTpmsSingleSurfaceConfig.cpp \
@@ -30,6 +31,7 @@ HEADERS += \
     IO/importer.h \
     Mesh/Mesh.h \
     Mesh/MeshShellTool.h \
+    Mesh/MeshSmoothTool.h \
     TPMS/BaseTpmsAlgorithm.h \
     TPMS/BaseTpmsConfig.h \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.h \

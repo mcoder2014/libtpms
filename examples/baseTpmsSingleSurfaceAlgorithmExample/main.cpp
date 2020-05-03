@@ -5,10 +5,12 @@
 using namespace std;
 
 #include <TPMS/BoxTpmsSingeSurfaceAlgorithm.h>
-#include <smoothtool.h>
+#include <Mesh/MeshSmoothTool.h>
+#include <Mesh/MeshShellTool.h>
 #include <IO/exporter.h>
 
 void createTPMS(string savePath, shared_ptr<BoxTpmsSingleSurfaceConfig> boxTpmsSingleSurfaceConfig);
+void createTpmsShell(string savePath, shared_ptr<BoxTpmsSingleSurfaceConfig> boxTpmsSingleSurfaceConfig);
 
 int main(int argc, char *argv[])
 {
@@ -41,6 +43,11 @@ int main(int argc, char *argv[])
         cout << "start " << path << endl;
         createTPMS(path, boxTpmsSingleSurfaceConfig);
         cout << "finished " << path << endl;
+
+        string shellPath = saveFolder + "/" + tpmsTypeToString(i) + "_shell.ply";
+        cout << "start shell" << shellPath << endl;
+        createTpmsShell(shellPath, boxTpmsSingleSurfaceConfig);
+        cout << "finished " << shellPath << endl;
     }
 
     return 0;
@@ -52,10 +59,26 @@ void createTPMS(string savePath, shared_ptr<BoxTpmsSingleSurfaceConfig> boxTpmsS
     boxTpmsSingeSurfaceAlgorithm.setConfig(boxTpmsSingleSurfaceConfig);
     Mesh mesh = boxTpmsSingeSurfaceAlgorithm.process();
 
-    SmoothTool smoothTool;
-    smoothTool.createMesh(&mesh);
-    smoothTool.basicSmooth(10);
+    MeshSmoothTool smoothTool;
+    smoothTool.basicSmooth(mesh, 10);
+
 
     Exporter expoter;
-    expoter.writeOBJ(savePath, *smoothTool.getMesh());
+    expoter.writeOBJ(savePath, mesh);
+}
+
+void createTpmsShell(string savePath, shared_ptr<BoxTpmsSingleSurfaceConfig> boxTpmsSingleSurfaceConfig)
+{
+    BoxTpmsSingeSurfaceAlgorithm boxTpmsSingeSurfaceAlgorithm;
+    boxTpmsSingeSurfaceAlgorithm.setConfig(boxTpmsSingleSurfaceConfig);
+    Mesh mesh = boxTpmsSingeSurfaceAlgorithm.process();
+
+    MeshSmoothTool smoothTool;
+    smoothTool.basicSmooth(mesh, 10);
+
+    MeshShellTool meshShellTool;
+    meshShellTool.offset(mesh, 0.03);
+
+    Exporter expoter;
+    expoter.writeOBJ(savePath, mesh);
 }
