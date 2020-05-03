@@ -18,6 +18,7 @@ enum TpmsType
     I2_Y = 8
 };
 
+std::string tpmsTypeToString(TpmsType tpmsType);
 
 class TpmsImplicitFunction
 {
@@ -47,7 +48,7 @@ public:
 private:
     TpmsType type;
     static std::unordered_map<std::string, TpmsType> typeTable;
-    static std::unordered_map<TpmsType, std::function<double(double,int,int)>> implicitFuncitonTable;
+    static std::unordered_map<TpmsType, std::function<double(double,double,double)>> implicitFuncitonTable;
 
     static void toRadian(double& x, double& y, double& z);
 };

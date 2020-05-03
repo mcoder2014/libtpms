@@ -32,8 +32,6 @@ unix {
 }
 
 contains(DEFINES,USING_SURFACEMESH) {
-    message('DEFINES USING_SURFACEMESH')
-
     unix {
         INCLUDEPATH += \
             $$PWD/../extern/surfacemesh \

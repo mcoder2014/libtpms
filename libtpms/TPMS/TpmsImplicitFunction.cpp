@@ -5,7 +5,7 @@
 
 using namespace std::placeholders;
 
-std::unordered_map<TpmsType, std::function<double(double,int,int)>>
+std::unordered_map<TpmsType, std::function<double(double,double,double)>>
     TpmsImplicitFunction::implicitFuncitonTable{
         {TpmsType::D, std::bind(&TpmsImplicitFunction::D,_1,_2,_3)},
         {TpmsType::G, std::bind(&TpmsImplicitFunction::G,_1,_2,_3)},
@@ -128,4 +128,20 @@ void TpmsImplicitFunction::toRadian(double &x, double &y, double &z)
     x = 2 * M_PI * x;
     y = 2 * M_PI * y;
     z = 2 * M_PI * z;
+}
+
+std::string tpmsTypeToString(TpmsType tpmsType)
+{
+    static std::unordered_map<TpmsType, std::string> tpmsType2String{
+        {TpmsType::D, "d"},
+        {TpmsType::G, "g"},
+        {TpmsType::P, "p"},
+        {TpmsType::I_WP, "i-wp"},
+        {TpmsType::F_RD, "f-rd"},
+        {TpmsType::L, "l"},
+        {TpmsType::TUBULAR_G, "tubular-g"},
+        {TpmsType::TUBULAR_P, "tubular-p"},
+        {TpmsType::I2_Y, "i2-y"}};
+
+    return tpmsType2String[tpmsType];
 }

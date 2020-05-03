@@ -337,7 +337,7 @@ Vector3i vertexToIndex(Vector3i &index, int vertexId)
 vector<Vector3i> edgeToIndex(Vector3i index, int edgeIndex)
 {
     vector<int> vertex = edgeToVertex(edgeIndex);
-    vector<Vector3i> indexs;
+    vector<Vector3i> indexs(2);
     indexs[0] = vertexToIndex(index, vertex[0]);
     indexs[1] = vertexToIndex(index, vertex[1]);
 

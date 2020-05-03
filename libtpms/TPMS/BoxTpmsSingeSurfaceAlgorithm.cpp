@@ -59,17 +59,18 @@ void BoxTpmsSingeSurfaceAlgorithm::clear()
  */
 Mesh BoxTpmsSingeSurfaceAlgorithm::marchMesh( vector<vector<vector<SamplePoint>>> &sampleMatrix)
 {
-    Vector3i sampleMatrixSize;
-    sampleMatrixSize.x() = sampleMatrix.size();
-    sampleMatrixSize.y() = sampleMatrix[0].size();
-    sampleMatrixSize.z() = sampleMatrix[0][0].size();
+    // 提前 -1 约束边界
+    Vector3i indexBoundary;
+    indexBoundary.x() = sampleMatrix.size() -1;
+    indexBoundary.y() = sampleMatrix[0].size() -1;
+    indexBoundary.z() = sampleMatrix[0][0].size() -1;
 
     Vector3i index(0,0,0);
     Mesh mesh;  // 预备生成的 mesh
     std::unordered_map<std::string, int> vertexIdMap;
-    for(index.x() = 0; index.x() < sampleMatrixSize.x(); index.x()++ ) {
-        for(index.y() = 0; index.y() < sampleMatrixSize.y(); index.y()++) {
-            for(index.z() = 0; index.z() < sampleMatrixSize.z(); index.z()++) {
+    for(index.x() = 0; index.x() < indexBoundary.x(); index.x()++ ) {
+        for(index.y() = 0; index.y() < indexBoundary.y(); index.y()++) {
+            for(index.z() = 0; index.z() < indexBoundary.z(); index.z()++) {
                 int cubeIndex = getMarchBoxCubeIndex(sampleMatrix, index, config->getIsoLevel());
                 // 根据 cubeIndex 找到拟合情况
                 int *faces = marchboxTriTable[cubeIndex];

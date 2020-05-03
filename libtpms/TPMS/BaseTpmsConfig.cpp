@@ -42,9 +42,9 @@ Eigen::Vector3i BaseTpmsConfig::getMatrixSize() const
     Eigen::Vector3d relativeSize = boundingBoxPhysial.max() - boundingBoxPhysial.min();
     Eigen::Vector3i matrixSize;
 
-    matrixSize.x() = relativeSize.x() / voxelDensity.x();
-    matrixSize.y() = relativeSize.y() / voxelDensity.y();
-    matrixSize.z() = relativeSize.z() / voxelDensity.z();
+    matrixSize.x() = relativeSize.x() * voxelDensity.x();
+    matrixSize.y() = relativeSize.y() * voxelDensity.y();
+    matrixSize.z() = relativeSize.z() * voxelDensity.z();
 
     return matrixSize;
 }
