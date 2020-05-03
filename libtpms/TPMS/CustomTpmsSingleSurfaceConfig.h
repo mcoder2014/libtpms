@@ -1,25 +1,29 @@
 #ifndef CUSTOMTPMSSINGLESURFACECONFIG_H
 #define CUSTOMTPMSSINGLESURFACECONFIG_H
 
-#include "BaseTpmsConfig.h"
-#include "TpmsImplicitFunction.h"
+#include "BaseTpmsSingleSurfaceConfig.h"
 #include "Mesh/Mesh.h"
+#include <SurfaceMeshModel.h>
 
 class CustomTpmsSingleSurfaceConfig
-        :public BaseTpmsConfig
+        :public BaseTpmsSingleSurfaceConfig
 {
 public:
     virtual ~CustomTpmsSingleSurfaceConfig(){}
+    virtual Eigen::Vector3i getMatrixSize() const;
+
+    std::shared_ptr<SurfaceMesh::SurfaceMeshModel> getCustomBoundary() const;
+    void setCustomBoundary(const std::shared_ptr<SurfaceMesh::SurfaceMeshModel> &value);
+
+    Eigen::Vector3d getPeriodCycleLength() const;
+    void setPeriodCycleLength(const Eigen::Vector3d &value);
 
 protected:
-    // TPMS 种类 enum
-    TpmsType tpmsType;
     // Boundary
+    std::shared_ptr<SurfaceMesh::SurfaceMeshModel> customBoundary;
 
-    // 阈值面 isoLevel
-    float isoLevel;
-    // 反向 reverse
-    bool reverse;
+    // Tpms 的周期长度
+    Eigen::Vector3d periodCycleLength;
 };
 
 #endif // CUSTOMTPMSSINGLESURFACECONFIG_H

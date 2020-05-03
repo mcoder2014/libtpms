@@ -14,6 +14,7 @@ SOURCES += \
     Mesh/MeshShellTool.cpp \
     Mesh/MeshSmoothTool.cpp \
     TPMS/BaseTpmsConfig.cpp \
+    TPMS/BaseTpmsSingleSurfaceConfig.cpp \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.cpp \
     TPMS/BoxTpmsSingleSurfaceConfig.cpp \
     TPMS/CustomTpmsSingleSurfaceAlgorithm.cpp \
@@ -38,6 +39,7 @@ HEADERS += \
     Mesh/MeshSmoothTool.h \
     TPMS/BaseTpmsAlgorithm.h \
     TPMS/BaseTpmsConfig.h \
+    TPMS/BaseTpmsSingleSurfaceConfig.h \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.h \
     TPMS/BoxTpmsSingleSurfaceConfig.h \
     TPMS/CustomTpmsSingleSurfaceAlgorithm.h \
