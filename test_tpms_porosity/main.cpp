@@ -9,8 +9,8 @@
 
 #include <marchbox.h>
 #include <smoothtool.h>
-#include <IO/importer.h>
-#include <IO/exporter.h>
+#include <IO/Importer.h>
+#include <IO/Exporter.h>
 #include <generalporositycalculator.h>
 
 using namespace std;

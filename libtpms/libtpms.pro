@@ -7,14 +7,17 @@ CONFIG -= qt
 DESTDIR = ../bin/
 
 SOURCES += \
-    IO/exporter.cpp \
-    IO/importer.cpp \
+    IO/Convertor.cpp \
+    IO/Exporter.cpp \
+    IO/Importer.cpp \
     Mesh/Mesh.cpp \
     Mesh/MeshShellTool.cpp \
     Mesh/MeshSmoothTool.cpp \
     TPMS/BaseTpmsConfig.cpp \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.cpp \
     TPMS/BoxTpmsSingleSurfaceConfig.cpp \
+    TPMS/CustomTpmsSingleSurfaceAlgorithm.cpp \
+    TPMS/CustomTpmsSingleSurfaceConfig.cpp \
     TPMS/MarchBoxTable.cpp \
     TPMS/MarchBoxUtil.cpp \
     TPMS/TpmsImplicitFunction.cpp \
@@ -27,8 +30,9 @@ SOURCES += \
     generalporositycalculator.cpp \
 
 HEADERS += \
-    IO/exporter.h \
-    IO/importer.h \
+    IO/Convertor.h \
+    IO/Exporter.h \
+    IO/Importer.h \
     Mesh/Mesh.h \
     Mesh/MeshShellTool.h \
     Mesh/MeshSmoothTool.h \
@@ -36,6 +40,8 @@ HEADERS += \
     TPMS/BaseTpmsConfig.h \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.h \
     TPMS/BoxTpmsSingleSurfaceConfig.h \
+    TPMS/CustomTpmsSingleSurfaceAlgorithm.h \
+    TPMS/CustomTpmsSingleSurfaceConfig.h \
     TPMS/MarchBoxTable.h \
     TPMS/MarchBoxUtil.h \
     TPMS/SamplePoint.h \

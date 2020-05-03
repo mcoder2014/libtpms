@@ -1,5 +1,8 @@
-#include <QCoreApplication>
+#include <memory>
 #include <iostream>
+
+#include <QCoreApplication>
+
 #include <QCommandLineParser>
 #include <QCommandLineOption>
 #include <QObject>
@@ -8,7 +11,7 @@
 #include <QDir>
 
 #include <generalporositycalculator.h>
-#include <IO/importer.h>
+#include <IO/Importer.h>
 
 using namespace std;
 
@@ -68,34 +71,33 @@ int main(int argc, char *argv[])
     {
         std::cout << "Boundary Mode." << std::endl;
 
-        SurfaceMesh::SurfaceMeshModel* porous = importer.loadSurfaceMeshModel(
+
+        std::shared_ptr<SurfaceMeshModel> porous = importer.loadSurfaceMeshModel(
                     porousPath.toStdString());
 
-        SurfaceMesh::SurfaceMeshModel* boundary = importer.loadSurfaceMeshModel(
+
+        std::shared_ptr<SurfaceMeshModel> boundary = importer.loadSurfaceMeshModel(
                     boundaryPath.toStdString());
 
         float porosity = porosityCalc.getPorosity(*porous,*boundary);
         std::cout << "Porosity: " << porosity << std::endl;
-        delete porous;
-        delete boundary;
     }
     else if(porousPath.size() > 0)
     {
         std::cout << "BoundingBox Mode." << std::endl;
         {
-            SurfaceMesh::SurfaceMeshModel* porous = importer.loadSurfaceMeshModel(
+
+            std::shared_ptr<SurfaceMeshModel> porous = importer.loadSurfaceMeshModel(
                         porousPath.toStdString());
 
             float porosity = porosityCalc.getPorosity(*porous);
             std::cout << "Porosity: " << porosity << std::endl;
-            delete porous;
         }
         {
-            Mesh *porous = importer.loadMesh(porousPath.toStdString());
-            float porosity = porosityCalc.getPorosity(*porous);
+            Mesh porous = importer.loadMesh(porousPath.toStdString());
+            float porosity = porosityCalc.getPorosity(porous);
 
             std::cout << "Porosity: " << porosity << std::endl;
-            delete porous;
         }
     }
     else
