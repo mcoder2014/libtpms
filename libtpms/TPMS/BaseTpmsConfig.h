@@ -10,7 +10,7 @@
 class BaseTpmsConfig
 {
 public:
-    virtual ~BaseTpmsConfig()=0;
+    virtual ~BaseTpmsConfig(){};
 
     Eigen::AlignedBox3d getBoundingBoxPhysial() const;
     void setBoundingBoxPhysial(const Eigen::AlignedBox3d &value);

@@ -13,8 +13,6 @@
 class Exporter
 {
 public:
-    Exporter();
-
     void writeOBJ(const std::string & filename,
                   const std::vector<glm::vec3>& vertices,
                   const std::vector<glm::ivec3>& faces);
