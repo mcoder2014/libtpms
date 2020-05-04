@@ -226,7 +226,6 @@ public:
 
 private:
     // 数据区域
-    static int edgeTable[256];      // edge table
     static int triTable[256][16];   // triangle table
 
     // dimension of the marching box

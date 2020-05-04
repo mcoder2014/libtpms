@@ -62,7 +62,6 @@ void createTPMS(string savePath, shared_ptr<BoxTpmsSingleSurfaceConfig> boxTpmsS
     MeshSmoothTool smoothTool;
     smoothTool.basicSmooth(mesh, 10);
 
-
     Exporter expoter;
     expoter.writeOBJ(savePath, mesh);
 }
@@ -77,7 +76,7 @@ void createTpmsShell(string savePath, shared_ptr<BoxTpmsSingleSurfaceConfig> box
     smoothTool.basicSmooth(mesh, 10);
 
     MeshShellTool meshShellTool;
-    meshShellTool.offset(mesh, 0.03);
+    meshShellTool.shell(mesh, 0.03);
 
     Exporter expoter;
     expoter.writeOBJ(savePath, mesh);

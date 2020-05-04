@@ -1,4 +1,7 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    baseTpmsSingleSurfaceAlgorithmExample
+    BoxTpmsSingeSurfaceAlgorithmExample \
+    CustomTpmsSingleSurfaceAlgorithmExample
+
+CONFIG += ordered

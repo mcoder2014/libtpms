@@ -13,6 +13,7 @@ SOURCES += \
     Mesh/Mesh.cpp \
     Mesh/MeshShellTool.cpp \
     Mesh/MeshSmoothTool.cpp \
+    Mesh/PorosityCalculator.cpp \
     TPMS/BaseTpmsConfig.cpp \
     TPMS/BaseTpmsSingleSurfaceConfig.cpp \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.cpp \
@@ -22,6 +23,9 @@ SOURCES += \
     TPMS/MarchBoxTable.cpp \
     TPMS/MarchBoxUtil.cpp \
     TPMS/TpmsImplicitFunction.cpp \
+    Voxel/VoxelModel.cpp \
+    Voxel/VoxelNode.cpp \
+    Voxel/VoxelOctree.cpp \
     implicitsurface.cpp \
     isolevelgenerator.cpp \
     marchbox.cpp \
@@ -37,6 +41,7 @@ HEADERS += \
     Mesh/Mesh.h \
     Mesh/MeshShellTool.h \
     Mesh/MeshSmoothTool.h \
+    Mesh/PorosityCalculator.h \
     TPMS/BaseTpmsAlgorithm.h \
     TPMS/BaseTpmsConfig.h \
     TPMS/BaseTpmsSingleSurfaceConfig.h \
@@ -48,6 +53,9 @@ HEADERS += \
     TPMS/MarchBoxUtil.h \
     TPMS/SamplePoint.h \
     TPMS/TpmsImplicitFunction.h \
+    Voxel/VoxelModel.h \
+    Voxel/VoxelNode.h \
+    Voxel/VoxelOctree.h \
     implicitsurface.h \
     isolevelgenerator.h \
     marchbox.h \

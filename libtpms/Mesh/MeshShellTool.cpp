@@ -1,6 +1,6 @@
 #include "MeshShellTool.h"
 
-void MeshShellTool::offset(Mesh &mesh, double depth)
+void MeshShellTool::shell(Mesh &mesh, double depth)
 {
 
     /// 将曲面复制一份，追加到 mesh 中，面法相相反
@@ -10,7 +10,7 @@ void MeshShellTool::offset(Mesh &mesh, double depth)
     fixHole(mesh);
 
     /// 曲面中各定点向法方向移动 depth/2 位置
-    verticeMoveNormalDirection(mesh, depth/2);
+    verticeNormarlDirectionMove(mesh, depth/2);
 
 }
 
@@ -84,7 +84,7 @@ void MeshShellTool::fixHole(Mesh &mesh)
 
 }
 
-void MeshShellTool::verticeMoveNormalDirection(Mesh &mesh, double distance)
+void MeshShellTool::verticeNormarlDirectionMove(Mesh &mesh, double distance)
 {
     // 构建法向量
     mesh.request_vertex_normals();

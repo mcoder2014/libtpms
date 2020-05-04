@@ -2,10 +2,48 @@
 
 Eigen::Vector3i CustomTpmsSingleSurfaceConfig::getMatrixSize() const
 {
-    customBoundary->updateBoundingBox();
-    Eigen::AlignedBox3d boundaryBoxPhysical = customBoundary->bbox();
+    assert(customBoundary != nullptr);
 
-    return Eigen::Vector3i();
+    customBoundary->updateBoundingBox();
+    Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->bbox();
+    Vector3d relativeSize = boundingBoxPhysial.max() - boundingBoxPhysial.min();
+    Vector3i matrixSize;
+
+    matrixSize.x() = relativeSize.x() * voxelDensity.x();
+    matrixSize.y() = relativeSize.y() * voxelDensity.y();
+    matrixSize.z() = relativeSize.z() * voxelDensity.z();
+
+    return matrixSize;
+}
+
+Eigen::AlignedBox3d CustomTpmsSingleSurfaceConfig::getBoundingBoxPhysial() const
+{
+    assert(customBoundary != nullptr);
+    customBoundary->updateBoundingBox();
+    return customBoundary->bbox();
+}
+
+Eigen::AlignedBox3d CustomTpmsSingleSurfaceConfig::getBoundingBoxLogical() const
+{
+    assert(customBoundary != nullptr);
+    customBoundary->updateBoundingBox();
+    Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->bbox();
+    Vector3d minPoint = boundingBoxPhysial.min();
+    Vector3d maxPoint = boundingBoxPhysial.max();
+
+    // 缩放
+    maxPoint.x() /= periodCycleLength.x();
+    maxPoint.y() /= periodCycleLength.y();
+    maxPoint.z() /= periodCycleLength.z();
+
+    minPoint.x() /= periodCycleLength.x();
+    minPoint.y() /= periodCycleLength.y();
+    minPoint.z() /= periodCycleLength.z();
+
+    Eigen::AlignedBox3d boundingBoxLogical;
+    boundingBoxLogical.extend(minPoint);
+    boundingBoxLogical.extend(maxPoint);
+    return boundingBoxLogical;
 }
 
 std::shared_ptr<SurfaceMesh::SurfaceMeshModel> CustomTpmsSingleSurfaceConfig::getCustomBoundary() const
