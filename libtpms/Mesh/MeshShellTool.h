@@ -6,12 +6,12 @@
 class MeshShellTool
 {
 public:
-    void offset(Mesh& mesh, double depth);
+    void shell(Mesh& mesh, double depth);
 
 private:
     void duplicate(Mesh &mesh);
     void fixHole(Mesh &mesh);
-    void verticeMoveNormalDirection(Mesh &mesh, double distance);
+    void verticeNormarlDirectionMove(Mesh &mesh, double distance);
 };
 
 #endif // MESHSHELLTOOL_H

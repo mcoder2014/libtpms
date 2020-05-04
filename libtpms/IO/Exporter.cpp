@@ -1,4 +1,4 @@
-#include "exporter.h"
+#include "Exporter.h"
 
 void Exporter::writeOBJ(const std::string &filename,
                         const std::vector<glm::vec3> &vertices,

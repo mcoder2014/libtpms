@@ -27,7 +27,7 @@ class Octree
 {
 public:
 
-	Octree(){ trianglePerNode = -1; parent = NULL; mesh = NULL; }
+    Octree(){ trianglePerNode = -1; parent = NULL; mesh = NULL; }
 
     Octree( Surface_mesh * useMesh, int triPerNode = DEFAULT_OCTREE_NODE_SIZE )
     {

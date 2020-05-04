@@ -1,31 +1,33 @@
 #include "BoxTpmsSingleSurfaceConfig.h"
 
-TpmsType BoxTpmsSingleSurfaceConfig::getTpmsType() const
+Eigen::AlignedBox3d BoxTpmsSingleSurfaceConfig::getBoundingBoxPhysial() const
 {
-    return tpmsType;
+    return boundingBoxPhysial;
 }
 
-void BoxTpmsSingleSurfaceConfig::setTpmsType(const TpmsType &value)
+void BoxTpmsSingleSurfaceConfig::setBoundingBoxPhysial(const Eigen::AlignedBox3d &value)
 {
-    tpmsType = value;
+    boundingBoxPhysial = value;
 }
 
-float BoxTpmsSingleSurfaceConfig::getIsoLevel() const
+Eigen::AlignedBox3d BoxTpmsSingleSurfaceConfig::getBoundingBoxLogical() const
 {
-    return isoLevel;
+    return boundingBoxLogical;
 }
 
-void BoxTpmsSingleSurfaceConfig::setIsoLevel(float value)
+void BoxTpmsSingleSurfaceConfig::setBoundingBoxLogical(const Eigen::AlignedBox3d &value)
 {
-    isoLevel = value;
+    boundingBoxLogical = value;
 }
 
-bool BoxTpmsSingleSurfaceConfig::getReverse() const
+Eigen::Vector3i BoxTpmsSingleSurfaceConfig::getMatrixSize() const
 {
-    return reverse;
-}
+    Eigen::Vector3d relativeSize = boundingBoxPhysial.max() - boundingBoxPhysial.min();
+    Eigen::Vector3i matrixSize;
 
-void BoxTpmsSingleSurfaceConfig::setReverse(bool value)
-{
-    reverse = value;
+    matrixSize.x() = relativeSize.x() * voxelDensity.x();
+    matrixSize.y() = relativeSize.y() * voxelDensity.y();
+    matrixSize.z() = relativeSize.z() * voxelDensity.z();
+
+    return matrixSize;
 }

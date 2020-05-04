@@ -1,7 +1,7 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-#    BoxFilling2D \    
+    BoxFilling2D \
     libtpms \
     examples \
 #    Model2TPMS \
