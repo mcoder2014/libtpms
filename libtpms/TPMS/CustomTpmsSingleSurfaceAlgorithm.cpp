@@ -121,13 +121,13 @@ vector<Eigen::Vector3d> CustomTpmsSingleSurfaceAlgorithm::getBoundary(Eigen::Vec
 {
     // 任意一个射线方向
     Eigen::Vector3d direction(0.0,0.0,1.0);
-    point.z() = INT_MIN;
+    point.z() = -DBL_MAX;
     Ray ray(point, direction);
     QSet<int> intersectResult = boundary.intersectRay(ray, 0.00001, false);
     HitResult hitResult;
     vector<Vector3d> boundaryPoints(2);
-    boundaryPoints[0].z() = INT_MAX;    // 下边界
-    boundaryPoints[1].z() = INT_MIN;    // 上边界
+    boundaryPoints[0].z() = DBL_MAX;    // 下边界
+    boundaryPoints[1].z() = -DBL_MAX;    // 上边界
 
     int intersectCount = 0;
     for(int i : intersectResult) {

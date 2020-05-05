@@ -23,6 +23,7 @@ SOURCES += \
     TPMS/MarchBoxTable.cpp \
     TPMS/MarchBoxUtil.cpp \
     TPMS/TpmsImplicitFunction.cpp \
+    Voxel/VoxelConvertor.cpp \
     Voxel/VoxelModel.cpp \
     Voxel/VoxelNode.cpp \
     Voxel/VoxelOctree.cpp \
@@ -53,6 +54,7 @@ HEADERS += \
     TPMS/MarchBoxUtil.h \
     TPMS/SamplePoint.h \
     TPMS/TpmsImplicitFunction.h \
+    Voxel/VoxelConvertor.h \
     Voxel/VoxelModel.h \
     Voxel/VoxelNode.h \
     Voxel/VoxelOctree.h \
