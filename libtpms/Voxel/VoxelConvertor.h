@@ -20,13 +20,14 @@ using Eigen::Vector3i;
 class VoxelConvertor
 {
 public:
-    std::vector<VoxelNode> toVoxels(
+    std::vector<std::shared_ptr<VoxelNode>> toVoxels(
             std::shared_ptr<SurfaceMesh::SurfaceMeshModel> surfaceMesh,
-            Vector3i voxelMatrixSize);
-
+            double voxelSize);
 
 private:
-    std::vector<Vector3d> intersectPoints(Octree& octree,)
+    std::vector<Vector3d> intersectPoints(
+            Octree& octree,
+            Eigen::Vector3d point);
 };
 
 #endif // VOXELCONVERTOR_H

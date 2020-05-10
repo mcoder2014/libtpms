@@ -9,21 +9,52 @@
  * @param voxelMatrixSize
  * @return
  */
-std::vector<VoxelNode> VoxelConvertor::toVoxels(
+std::vector<std::shared_ptr<VoxelNode> > VoxelConvertor::toVoxels(
         std::shared_ptr<SurfaceMesh::SurfaceMeshModel> surfaceMesh,
         double voxelSize)
 {
     // 创建八叉树
     Octree octree(surfaceMesh.get());
+
+    // 确定体素化网格的尺寸
+    surfaceMesh->updateBoundingBox();
+    Vector3d relativeSize = surfaceMesh->bbox().max() - surfaceMesh->bbox().min();
+
+    Vector3d startPoint = surfaceMesh->bbox().center();
+    startPoint.x() -= relativeSize.x()/2 + voxelSize/2;
+    startPoint.y() -= relativeSize.y()/2 + voxelSize/2;
+    startPoint.z() -= relativeSize.z()/2 + voxelSize/2;
+
+    std::vector<std::shared_ptr<VoxelNode>> voxelList;
     Vector3i index;
+    Vector3d tmpRange = relativeSize / voxelSize;
+    Vector3i range;
+    range.x() = lround(tmpRange.x());
+    range.y() = lround(tmpRange.y());
+    range.z() = lround(tmpRange.z());
     Vector3d iterPoint;
 
-    surfaceMesh->updateBoundingBox();
-    Eigen::AlignedBox3d boundingBox = surfaceMesh->bbox();
+    // 迭代，将模型体素化
+    for(index.x() = 0; index.x() < range.x(); index.x()++) {
+        iterPoint.x() = startPoint.x() + voxelSize * index.x();
 
-    std::vector<VoxelNode> voxelList;
+        for(index.y() = 0; index.y() < range.y(); index.y()++) {
+            iterPoint.y() = startPoint.y() + voxelSize * index.y();
+            // 获得交点 range
+            std::vector<Eigen::Vector3d> intersects = intersectPoints(octree, iterPoint);
 
-    /// TODO: 建立好迭代的过程，将鞋垫模型体素化
+            for(index.z() = 0; index.z() < range.z(); index.z()++) {
+                iterPoint.z() = startPoint.z() + voxelSize * index.z();
+                if(iterPoint.z() < intersects[0].z()
+                        || iterPoint.z() > intersects[1].z()) {
+                    continue;
+                }
+
+                // 创建体素 加入 vector
+                voxelList.push_back(std::make_shared<VoxelNode>(iterPoint, voxelSize));
+            }
+        }
+    }
 
     return voxelList;
 }

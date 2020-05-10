@@ -14,10 +14,7 @@ using std::vector;
 class VoxelOctree
 {
 public:
-    VoxelOctree();
-
-    // 构建 VoxelOctree
-    void build();
+    VoxelOctree(vector<std::shared_ptr<VoxelNode>> voxelList);
     bool contains(const Vector3d& point);
 
     Eigen::AlignedBox3d getBoundingBox() const;
@@ -27,13 +24,19 @@ public:
     void setModel(const std::shared_ptr<SurfaceMesh::SurfaceMeshModel> &value);
 
 private:
+    void initBuild();
+    void build();
+    void newNode(double x, double y, double z);
+
+    Eigen::AlignedBox3d getBoundingBoxByVoxels();
+
     std::shared_ptr<SurfaceMesh::SurfaceMeshModel> model;
     // 包围盒
     Eigen::AlignedBox3d boundingBox;
     // 子区域
     vector<VoxelOctree> children;
     // 体素数据
-    vector<VoxelNode> voxelData;
+    vector<std::shared_ptr<VoxelNode>> voxelData;
 
     int maxVoxelCounts = 128;   // 最小节点的最大体素数量
     VoxelOctree *parent;

@@ -1,4 +1,4 @@
-# Implicit Surface
+# LibTpms
 
 This project is a test project about how to create a (Triply Periodic Minimal Surfaces, TPMS) porosus structure model and how to convert it into a traditional triangle mesh. 
 
@@ -22,39 +22,21 @@ This project create some type of Triply Periodic Minimal Surfaces, such as:
 - Tubular G
 
 # Example
+Just some simple codes could generate TPMS shell model.
 
 ```cpp
-Mesh* createCubeTPMS(
-        string type, Eigen::Vector3i sample, Eigen::Vector3i density,
-        Eigen::Vector3d rangeMin, Eigen::Vector3d rangeMax,
-        float isoLevel, float depth, int smooth_times = 10)
-{
-    ImplicitSurface implicit_surface;
-    MarchBox march_box;
-    SmoothTool  smoothTool;
+    BoxTpmsSingeSurfaceAlgorithm boxTpmsSingeSurfaceAlgorithm;
+    boxTpmsSingeSurfaceAlgorithm.setConfig(boxTpmsSingleSurfaceConfig);
+    Mesh mesh = boxTpmsSingeSurfaceAlgorithm.process();
 
-    // Setting
-    implicit_surface.setType(type);
+    MeshSmoothTool smoothTool;
+    smoothTool.basicSmooth(mesh, 10);
 
-    march_box.setRange(rangeMin, rangeMax);
-    march_box.setDensity(density);
-    march_box.setSampleSize(sample);
-    march_box.setReverse(false);
+    MeshShellTool meshShellTool;
+    meshShellTool.shell(mesh, 0.03);
 
-    // 1. marchbox
-    march_box.marching_cubes(implicit_surface, isoLevel);
-
-    // 2. smooth
-    smoothTool.createMesh(march_box.m_vertices, march_box.m_faces);
-    smoothTool.basicSmooth(smooth_times);
-
-    // 3. offset
-    Mesh *result = new Mesh();
-    result->assign(*(smoothTool.getMesh()));
-    result = smoothTool.meshOffset(result, depth);
-
-    return result;
-}
+    Exporter expoter;
+    expoter.writeOBJ(savePath, mesh);
 ```
 
 You can create many different type of TMPS porous structure using the code like the example upon.
@@ -67,11 +49,14 @@ The below is to use a insole model to create a TPMS porosus model.
 ![](imgs/insole.png)
 
 
-# Environment
+# Dependency
 1. greater than Qt 5
-2. glm library
+2. ~~glm library~~ *Will be replaced by Eigen3*
 3. [Starlab](https://github.com/OpenGP/starlab)
 4. openmesh 8.0
+5. Eigen 3
+6. opencv *Will be included*
+7. Assimp
 
 # Reference
 1. [Marching Cubes](http://paulbourke.net/geometry/polygonise/)
