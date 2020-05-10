@@ -32,6 +32,9 @@ void initMatrix(
         Eigen::AlignedBox3d boundingBoxPhysial,
         Eigen::AlignedBox3d boundingBoxLogical);
 
+// 计算采样矩阵每隔的间距
+Vector3d getStepSize(Eigen::AlignedBox3d boundingBox, Vector3i size);
+
 void calcTpmsFunction(vector<vector<vector<SamplePoint>>>& matrix,
         TpmsImplicitFunction tpmsFunction);
 
