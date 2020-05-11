@@ -3,7 +3,6 @@
 VoxelOctree::VoxelOctree(vector<std::shared_ptr<VoxelNode> > voxelList)
 {
     this->voxelData = voxelList;
-    initBuild();
 }
 
 
@@ -22,11 +21,6 @@ bool VoxelOctree::contains(const Eigen::Vector3d &point)
 Eigen::AlignedBox3d VoxelOctree::getBoundingBox() const
 {
     return boundingBox;
-}
-
-void VoxelOctree::setBoundingBox(const Eigen::AlignedBox3d &value)
-{
-    boundingBox = value;
 }
 
 std::shared_ptr<SurfaceMesh::SurfaceMeshModel> VoxelOctree::getModel() const
@@ -69,22 +63,26 @@ void VoxelOctree::newNode(double x, double y, double z)
     /// TODO: 往指定方向拓展节点
 }
 
-Eigen::AlignedBox3d VoxelOctree::getBoundingBoxByVoxels()
+/**
+ * @brief VoxelOctree::getBoundingBoxByVoxels
+ * 从一堆体素中获得包围盒，做倍率放大，参考输入 1.1
+ * @return
+ */
+Eigen::AlignedBox3d VoxelOctree::getBoundingBoxByVoxels(double factor)
 {
     Eigen::AlignedBox3d boundingBox;
 
-    // 寻找 center
+    // 构造包围盒(略小于真实情况
     for(std::shared_ptr<VoxelNode> node:this->voxelData) {
         boundingBox.extend(node->getCenter());
     }
 
-    // 适当扩大包围盒到 立方体
+    // 扩大包围盒尺寸：立方体、放大到 factor 倍率
     Vector3d relativeSize = boundingBox.max() - boundingBox.min();
     double longestEdge = std::max(relativeSize.x(),
         std::max(relativeSize.y(), relativeSize.z()));
-    longestEdge = longestEdge * 1.1;
+    longestEdge = longestEdge * factor;
     Vector3d center = boundingBox.center();
-
 
     Vector3d minPoint;
     minPoint.x() = center.x() - longestEdge/2;
@@ -102,4 +100,14 @@ Eigen::AlignedBox3d VoxelOctree::getBoundingBoxByVoxels()
     boundingBox.extend(maxPoint);
 
     return boundingBox;
+}
+
+int VoxelOctree::getMaxVoxelCounts() const
+{
+    return maxVoxelCounts;
+}
+
+void VoxelOctree::setMaxVoxelCounts(int value)
+{
+    maxVoxelCounts = value;
 }

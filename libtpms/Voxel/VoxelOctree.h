@@ -15,20 +15,27 @@ class VoxelOctree
 {
 public:
     VoxelOctree(vector<std::shared_ptr<VoxelNode>> voxelList);
+
+    // 构造八叉树
+    void initBuild();
+
+    // 判断空间点 point 是否在模型内部
     bool contains(const Vector3d& point);
 
     Eigen::AlignedBox3d getBoundingBox() const;
-    void setBoundingBox(const Eigen::AlignedBox3d &value);
 
     std::shared_ptr<SurfaceMesh::SurfaceMeshModel> getModel() const;
     void setModel(const std::shared_ptr<SurfaceMesh::SurfaceMeshModel> &value);
 
+    int getMaxVoxelCounts() const;
+    void setMaxVoxelCounts(int value);
+
 private:
-    void initBuild();
+
     void build();
     void newNode(double x, double y, double z);
 
-    Eigen::AlignedBox3d getBoundingBoxByVoxels();
+    Eigen::AlignedBox3d getBoundingBoxByVoxels(double factor = 1.1);
 
     std::shared_ptr<SurfaceMesh::SurfaceMeshModel> model;
     // 包围盒
