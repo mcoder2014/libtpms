@@ -1,6 +1,7 @@
 #include "VoxelConvertor.h"
 
 #include "TPMS/MarchBoxUtil.h"
+#include "Math/EigenUtil.h"
 
 /**
  * @brief VoxelConvertor::toVoxels
@@ -20,18 +21,16 @@ std::vector<std::shared_ptr<VoxelNode> > VoxelConvertor::toVoxels(
     surfaceMesh->updateBoundingBox();
     Vector3d relativeSize = surfaceMesh->bbox().max() - surfaceMesh->bbox().min();
 
-    Vector3d startPoint = surfaceMesh->bbox().center();
-    startPoint.x() -= relativeSize.x()/2 + voxelSize/2;
-    startPoint.y() -= relativeSize.y()/2 + voxelSize/2;
-    startPoint.z() -= relativeSize.z()/2 + voxelSize/2;
+    Vector3d startPoint = surfaceMesh->bbox().min();
+    add(startPoint, voxelSize/2);
 
     std::vector<std::shared_ptr<VoxelNode>> voxelList;
     Vector3i index;
     Vector3d tmpRange = relativeSize / voxelSize;
-    Vector3i range;
-    range.x() = lround(tmpRange.x());
-    range.y() = lround(tmpRange.y());
-    range.z() = lround(tmpRange.z());
+    Vector3i range = vector3dToVector3i(tmpRange, [](double value)->int{
+       return lround(value);
+    });
+
     Vector3d iterPoint;
 
     // 迭代，将模型体素化

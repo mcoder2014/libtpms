@@ -23,12 +23,16 @@ public:
     Vector3d getPeriodCycleLength() const;
     void setPeriodCycleLength(const Vector3d &value);
 
+    double getCustomBoundaryVoxelSize() const;
+    void setCustomBoundaryVoxelSize(double value);
+
 protected:
     // Boundary
     std::shared_ptr<SurfaceMesh::SurfaceMeshModel> customBoundary;
 
     // Tpms 的周期长度
     Vector3d periodCycleLength;
+    double customBoundaryVoxelSize;
 };
 
 #endif // CUSTOMTPMSSINGLESURFACECONFIG_H

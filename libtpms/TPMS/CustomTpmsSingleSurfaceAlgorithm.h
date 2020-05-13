@@ -9,6 +9,7 @@
 #include "BaseTpmsAlgorithm.h"
 #include "CustomTpmsSingleSurfaceConfig.h"
 #include "SamplePoint.h"
+#include "Voxel/VoxelModel.h"
 
 using std::vector;
 
@@ -40,15 +41,14 @@ protected:
     Mesh::VertexHandle getVertexHandle(Vector3i index, int edgeIndex, Mesh &mesh);
 
     Mesh marchMesh();
-    // 获得某一点模型的上下边界，去掉模型以外的部分。
-    vector<Vector3d> getBoundary(Vector3d point);
 
     // 算法 config
     std::shared_ptr<CustomTpmsSingleSurfaceConfig> config;
 
     vector<vector<vector<SamplePoint> > > sampleMatrix;
     std::unordered_map<std::string, int> vertexIdMap;
-    Octree boundary;
+
+    VoxelModel voxelModel;
 };
 
 #endif // CUSTOMTPMSSINGLESURFACEALGORITHM_H
