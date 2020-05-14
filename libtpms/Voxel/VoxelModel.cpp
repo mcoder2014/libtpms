@@ -111,11 +111,10 @@ Eigen::Vector3i VoxelModel::getMatrixIndex(Eigen::Vector3d point)
     point = point / voxelSize;
 
     // 判断 index
-    Vector3i badReturn(-1,-1,-1);
     if(point.x() > voxelMatrixSize.x() || point.x() < 0
        || point.y() > voxelMatrixSize.y() || point.y() < 0
        || point.z() > voxelMatrixSize.z() || point.z() < 0) {
-        return badReturn;
+        return Vector3i(-1,-1,-1);
     }
 
     // 转换浮点数为整型
@@ -160,13 +159,11 @@ Eigen::Vector3i VoxelModel::createMatrixSize()
  */
 void VoxelModel::generateVoxelModelFromOctree(VoxelData &voxelData, Octree &octree)
 {
-    /// TODO
     Vector3d minPoint = boundingBox.min();
-    add(minPoint, voxelSize/2);
-
     Vector3i index;
     Vector3d point;
-    point.z() = minPoint.z() - voxelSize;
+    point.z() = minPoint.z();
+
     for(index.x() = 0; index.x() < voxelMatrixSize.x(); index.x()++) {
         point.x() = minPoint.x() + index.x() * voxelSize;
         for(index.y() = 0; index.y() < voxelMatrixSize.y(); index.y()++) {
@@ -211,7 +208,8 @@ void VoxelModel::updateVoxelFromIntersects(
 
     updateBoundary();
 
-    for(int i = 0; i < countZ; i++) {
+    // loop
+    for(int i = 0; i < countZ; i++, pos += voxelSize) {
         if(pos > lowerBoundary.z() && pos < upperBoundary.z()) {
             voxels[i] = true;
         } else if(pos > upperBoundary.z()) {
