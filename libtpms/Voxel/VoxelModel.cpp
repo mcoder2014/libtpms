@@ -227,6 +227,21 @@ Eigen::AlignedBox3d VoxelModel::getBoundingBox() const
     return boundingBox;
 }
 
+/**
+ * @brief 尝试计算射线与体素模型的交点
+ * 此处仅计算X轴、Y轴、Z轴射线的交点
+ * @param startPoint
+ * @param direction
+ * @return
+ */
+vector<Eigen::Vector3d> VoxelModel::getIntersects(const Eigen::Vector3d &startPoint, const Eigen::Vector3d &direction)
+{
+    /// TODO: 计算射线与体素模型的交点
+
+    vector<Vector3d> result;
+    return result;
+}
+
 Vector3i VoxelModel::getVoxelMatrixSize() const
 {
     return voxelMatrixSize;

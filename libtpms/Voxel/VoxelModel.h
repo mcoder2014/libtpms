@@ -37,6 +37,8 @@ public:
     Vector3i getVoxelMatrixSize() const;
     Eigen::AlignedBox3d getBoundingBox() const;
 
+    vector<Vector3d> getIntersects(const Vector3d& startPoint, const Vector3d& direction);
+
 private:
     Eigen::AlignedBox3d getBoundingBoxFromOctree(Octree& octree);
     Vector3i getMatrixIndex(Eigen::Vector3d point);

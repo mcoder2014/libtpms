@@ -22,13 +22,11 @@ SOURCES += \
     TPMS/BoxTpmsSingleSurfaceConfig.cpp \
     TPMS/CustomTpmsSingleSurfaceAlgorithm.cpp \
     TPMS/CustomTpmsSingleSurfaceConfig.cpp \
+    TPMS/Filter/CompressFilter.cpp \
     TPMS/MarchBoxTable.cpp \
     TPMS/MarchBoxUtil.cpp \
     TPMS/TpmsImplicitFunction.cpp \
-    Voxel/VoxelConvertor.cpp \
     Voxel/VoxelModel.cpp \
-    Voxel/VoxelNode.cpp \
-    Voxel/VoxelOctree.cpp \
     implicitsurface.cpp \
     isolevelgenerator.cpp \
     marchbox.cpp \
@@ -54,14 +52,13 @@ HEADERS += \
     TPMS/BoxTpmsSingleSurfaceConfig.h \
     TPMS/CustomTpmsSingleSurfaceAlgorithm.h \
     TPMS/CustomTpmsSingleSurfaceConfig.h \
+    TPMS/Filter/BaseSampleMatrixFilter.h \
+    TPMS/Filter/CompressFilter.h \
     TPMS/MarchBoxTable.h \
     TPMS/MarchBoxUtil.h \
     TPMS/SamplePoint.h \
     TPMS/TpmsImplicitFunction.h \
-    Voxel/VoxelConvertor.h \
     Voxel/VoxelModel.h \
-    Voxel/VoxelNode.h \
-    Voxel/VoxelOctree.h \
     implicitsurface.h \
     isolevelgenerator.h \
     marchbox.h \
