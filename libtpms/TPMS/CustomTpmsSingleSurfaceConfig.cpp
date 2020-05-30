@@ -4,6 +4,7 @@
 
 Eigen::Vector3i CustomTpmsSingleSurfaceConfig::getMatrixSize() const
 {
+    // TODO: 对于尺寸特别巨大模型要给 factor 约束，防止撑爆内存
     assert(customBoundary != nullptr);
     Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->getOriginBoundingBox();
     Vector3d relativeSize = boundingBoxPhysial.max() - boundingBoxPhysial.min();
