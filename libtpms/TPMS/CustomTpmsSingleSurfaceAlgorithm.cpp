@@ -33,10 +33,8 @@ void CustomTpmsSingleSurfaceAlgorithm::init()
 
     vertexIdMap.clear();
 
-    // 构建体素模型
-    Octree octree(config->getCustomBoundary().get());
-    voxelModel.setVoxelSize(config->getCustomBoundaryVoxelSize());
-    voxelModel.build(octree);
+    // 引用体素模型
+    voxelModel = config->getCustomBoundary();
 }
 
 void CustomTpmsSingleSurfaceAlgorithm::clear()
@@ -47,7 +45,8 @@ void CustomTpmsSingleSurfaceAlgorithm::clear()
     std::unordered_map<std::string, int> cleanVertexIdMap;
     vertexIdMap.swap(cleanVertexIdMap);
 
-    voxelModel.clear();
+    // 清空边界的引用
+    voxelModel.reset();
 }
 
 void CustomTpmsSingleSurfaceAlgorithm::addFaces(
@@ -102,7 +101,7 @@ Mesh CustomTpmsSingleSurfaceAlgorithm::marchMesh()
     for(index.x() = 0; index.x() < indexBoundary.x(); index.x()++ ) {
         for(index.y() = 0; index.y() < indexBoundary.y(); index.y()++) {
             for(index.z() = 0; index.z() < indexBoundary.z(); index.z()++) {
-                if(voxelModel.contains(sampleMatrix[index.x()][index.y()][index.z()].physical)){
+                if(voxelModel->contains(sampleMatrix[index.x()][index.y()][index.z()].physical)){
                     int cubeIndex = getMarchBoxCubeIndex(sampleMatrix, index, config->getIsoLevel());
                     // 根据 cubeIndex 找到拟合情况
                     int *faces = marchboxTriTable[cubeIndex];

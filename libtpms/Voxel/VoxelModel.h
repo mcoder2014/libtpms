@@ -36,8 +36,7 @@ public:
     Vector3d getCenter() const;
     Vector3i getVoxelMatrixSize() const;
     Eigen::AlignedBox3d getBoundingBox() const;
-
-    vector<Vector3d> getIntersects(const Vector3d& startPoint, const Vector3d& direction);
+    Eigen::AlignedBox3d getOriginBoundingBox() const;
 
 private:
     Eigen::AlignedBox3d getBoundingBoxFromOctree(Octree& octree);
@@ -48,13 +47,21 @@ private:
 
     // 体素矩阵
     VoxelData voxelMatrix;
-    // 体素矩阵的尺寸
+
+    // 体素矩阵的尺寸, 为了方便与体素八叉树转换，我们倾向于将体素模型设置为立方体
     Vector3i voxelMatrixSize;
 
     // 方形体素的边长
     double voxelSize;
+
+    // 体素模型的中心点
     Vector3d center;
+
+    // 体素模型的包围盒大小
     Eigen::AlignedBox3d boundingBox;
+
+    // 原始模型的包围盒大小
+    Eigen::AlignedBox3d originBoundingBox;
 };
 
 #endif // VOXELMODEL_H

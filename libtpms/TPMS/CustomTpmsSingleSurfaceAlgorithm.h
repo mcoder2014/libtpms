@@ -48,7 +48,7 @@ protected:
     vector<vector<vector<SamplePoint> > > sampleMatrix;
     std::unordered_map<std::string, int> vertexIdMap;
 
-    VoxelModel voxelModel;
+    std::shared_ptr<VoxelModel> voxelModel;
 };
 
 #endif // CUSTOMTPMSSINGLESURFACEALGORITHM_H

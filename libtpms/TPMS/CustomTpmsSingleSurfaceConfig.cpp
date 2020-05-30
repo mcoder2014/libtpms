@@ -5,9 +5,7 @@
 Eigen::Vector3i CustomTpmsSingleSurfaceConfig::getMatrixSize() const
 {
     assert(customBoundary != nullptr);
-
-    customBoundary->updateBoundingBox();
-    Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->bbox();
+    Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->getOriginBoundingBox();
     Vector3d relativeSize = boundingBoxPhysial.max() - boundingBoxPhysial.min();
     Vector3i matrixSize;
 
@@ -22,15 +20,13 @@ Eigen::Vector3i CustomTpmsSingleSurfaceConfig::getMatrixSize() const
 Eigen::AlignedBox3d CustomTpmsSingleSurfaceConfig::getBoundingBoxPhysial() const
 {
     assert(customBoundary != nullptr);
-    customBoundary->updateBoundingBox();
-    return customBoundary->bbox();
+    return customBoundary->getOriginBoundingBox();
 }
 
 Eigen::AlignedBox3d CustomTpmsSingleSurfaceConfig::getBoundingBoxLogical() const
 {
     assert(customBoundary != nullptr);
-    customBoundary->updateBoundingBox();
-    Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->bbox();
+    Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->getOriginBoundingBox();
     Vector3d minPoint = boundingBoxPhysial.min();
     Vector3d maxPoint = boundingBoxPhysial.max();
 
@@ -44,16 +40,6 @@ Eigen::AlignedBox3d CustomTpmsSingleSurfaceConfig::getBoundingBoxLogical() const
     return boundingBoxLogical;
 }
 
-std::shared_ptr<SurfaceMesh::SurfaceMeshModel> CustomTpmsSingleSurfaceConfig::getCustomBoundary() const
-{
-    return customBoundary;
-}
-
-void CustomTpmsSingleSurfaceConfig::setCustomBoundary(const std::shared_ptr<SurfaceMesh::SurfaceMeshModel> &value)
-{
-    customBoundary = value;
-}
-
 Eigen::Vector3d CustomTpmsSingleSurfaceConfig::getPeriodCycleLength() const
 {
     return periodCycleLength;
@@ -64,12 +50,13 @@ void CustomTpmsSingleSurfaceConfig::setPeriodCycleLength(const Eigen::Vector3d &
     periodCycleLength = value;
 }
 
-double CustomTpmsSingleSurfaceConfig::getCustomBoundaryVoxelSize() const
+std::shared_ptr<VoxelModel> CustomTpmsSingleSurfaceConfig::getCustomBoundary() const
 {
-    return customBoundaryVoxelSize;
+    return customBoundary;
 }
 
-void CustomTpmsSingleSurfaceConfig::setCustomBoundaryVoxelSize(double value)
+void CustomTpmsSingleSurfaceConfig::setCustomBoundary(std::shared_ptr<VoxelModel> value)
 {
-    customBoundaryVoxelSize = value;
+    assert(value->getVoxelMatrixSize().x() > 0);
+    customBoundary = value;
 }

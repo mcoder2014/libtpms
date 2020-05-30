@@ -15,8 +15,12 @@ VoxelModel::VoxelModel(double voxelSize)
  */
 void VoxelModel::build(Octree& octree)
 {
-    // 从 octree 中获得包围盒
+    // 从 octree 中获得立方体扩大包围盒
     boundingBox = getBoundingBoxFromOctree(octree);
+
+    // 获得原始包围盒
+    originBoundingBox.extend(octree.originBoundingBox.vmin);
+    originBoundingBox.extend(octree.originBoundingBox.vmax);
 
     // 计算体素矩阵的大小
     voxelMatrixSize = createMatrixSize();
@@ -30,7 +34,7 @@ void VoxelModel::build(Octree& octree)
 
 /**
  * @brief VoxelModel::contains
- * 判断某个点是否在体素模型内部
+ * 判断某个点是否在体素模型内部，相当于哈希实现，效率较高
  * @param point
  * @return
  */
@@ -62,6 +66,10 @@ bool VoxelModel::validIndex(const Eigen::Vector3i &index) const
     return true;
 }
 
+/**
+ * @brief VoxelModel::clear
+ * 清空体素模型的数据
+ */
 void VoxelModel::clear()
 {
     VoxelData emptyVoxelMatrix;
@@ -70,6 +78,7 @@ void VoxelModel::clear()
     voxelMatrixSize = Vector3i(0,0,0);
     center = Vector3d(0.0, 0.0, 0.0);
     boundingBox.setEmpty();
+    originBoundingBox.setEmpty();
 }
 
 VoxelData VoxelModel::getVoxelMatrix() const
@@ -135,10 +144,8 @@ Eigen::Vector3i VoxelModel::createMatrixSize()
     Vector3d relative = boundingBox.max() - boundingBox.min();
 
     // 进一法
-    Vector3i matrixSize;
-    matrixSize.x() = (int)(relative.x() / voxelSize) + 1;
-    matrixSize.y() = (int)(relative.y() / voxelSize) + 1;
-    matrixSize.z() = (int)(relative.z() / voxelSize) + 1;
+    int edgeSize = (int)(relative.x() / voxelSize) + 1;
+    Vector3i matrixSize(edgeSize, edgeSize, edgeSize);
 
     // 更新包围盒
     Vector3d minPoint = boundingBox.min();
@@ -222,24 +229,14 @@ void VoxelModel::updateVoxelFromIntersects(
     }
 }
 
+Eigen::AlignedBox3d VoxelModel::getOriginBoundingBox() const
+{
+    return originBoundingBox;
+}
+
 Eigen::AlignedBox3d VoxelModel::getBoundingBox() const
 {
     return boundingBox;
-}
-
-/**
- * @brief 尝试计算射线与体素模型的交点
- * 此处仅计算X轴、Y轴、Z轴射线的交点
- * @param startPoint
- * @param direction
- * @return
- */
-vector<Eigen::Vector3d> VoxelModel::getIntersects(const Eigen::Vector3d &startPoint, const Eigen::Vector3d &direction)
-{
-    /// TODO: 计算射线与体素模型的交点
-
-    vector<Vector3d> result;
-    return result;
 }
 
 Vector3i VoxelModel::getVoxelMatrixSize() const

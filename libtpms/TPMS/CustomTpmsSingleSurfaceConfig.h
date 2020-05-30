@@ -1,9 +1,11 @@
 #ifndef CUSTOMTPMSSINGLESURFACECONFIG_H
 #define CUSTOMTPMSSINGLESURFACECONFIG_H
 
+#include <SurfaceMeshModel.h>
+
 #include "BaseTpmsSingleSurfaceConfig.h"
 #include "Mesh/Mesh.h"
-#include <SurfaceMeshModel.h>
+#include "Voxel/VoxelModel.h"
 
 using Eigen::Vector3d;
 using Eigen::Vector3i;
@@ -17,22 +19,18 @@ public:
     Eigen::AlignedBox3d getBoundingBoxPhysial() const;
     Eigen::AlignedBox3d getBoundingBoxLogical() const;
 
-    std::shared_ptr<SurfaceMesh::SurfaceMeshModel> getCustomBoundary() const;
-    void setCustomBoundary(const std::shared_ptr<SurfaceMesh::SurfaceMeshModel> &value);
+    std::shared_ptr<VoxelModel> getCustomBoundary() const;
+    void setCustomBoundary(std::shared_ptr<VoxelModel> value);
 
     Vector3d getPeriodCycleLength() const;
     void setPeriodCycleLength(const Vector3d &value);
 
-    double getCustomBoundaryVoxelSize() const;
-    void setCustomBoundaryVoxelSize(double value);
-
 protected:
     // Boundary
-    std::shared_ptr<SurfaceMesh::SurfaceMeshModel> customBoundary;
+    std::shared_ptr<VoxelModel> customBoundary;
 
     // Tpms 的周期长度
     Vector3d periodCycleLength;
-    double customBoundaryVoxelSize;
 };
 
 #endif // CUSTOMTPMSSINGLESURFACECONFIG_H

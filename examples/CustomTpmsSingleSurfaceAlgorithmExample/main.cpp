@@ -4,11 +4,14 @@
 
 using namespace std;
 
+#include <Octree.h>
+
 #include <TPMS/CustomTpmsSingleSurfaceAlgorithm.h>
 #include <Mesh/MeshSmoothTool.h>
 #include <Mesh/MeshShellTool.h>
 #include <IO/Exporter.h>
 #include <IO/Importer.h>
+#include <Voxel/VoxelModel.h>
 
 void createTPMS(string savePath, shared_ptr<CustomTpmsSingleSurfaceConfig> customTpmsSingleSurfaceConfig);
 void createTpmsShell(string savePath, shared_ptr<CustomTpmsSingleSurfaceConfig> customTpmsSingleSurfaceConfig);
@@ -27,15 +30,20 @@ int main(int argc, char *argv[])
 
     Importer importer;
     std::shared_ptr<SurfaceMeshModel> boudaryMesh = importer.loadSurfaceMeshModel(boundaryMeshPath);
+    Octree octree(boudaryMesh.get());
+    std::shared_ptr<VoxelModel> voxelModel = std::make_shared<VoxelModel>();
+    voxelModel->setVoxelSize(1);
+    voxelModel->build(octree);
+
+    std::cout << "Build voxelModel finished" << endl;
 
     for(TpmsType i = TpmsType::P; i <= TpmsType::I2_Y; i = (TpmsType)(i+1) ) {
         shared_ptr<CustomTpmsSingleSurfaceConfig> customTpmsSingleSurfaceConfig = make_shared<CustomTpmsSingleSurfaceConfig>();
 
-        customTpmsSingleSurfaceConfig->setCustomBoundary(boudaryMesh);
+        customTpmsSingleSurfaceConfig->setCustomBoundary(voxelModel);
         customTpmsSingleSurfaceConfig->setTpmsType(i);
         customTpmsSingleSurfaceConfig->setReverse(false);
         customTpmsSingleSurfaceConfig->setIsoLevel(0);
-        customTpmsSingleSurfaceConfig->setCustomBoundaryVoxelSize(1);
 
         customTpmsSingleSurfaceConfig->setPeriodCycleLength(
                     Eigen::Vector3d(20,20,10));

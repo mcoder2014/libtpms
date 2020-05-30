@@ -1,5 +1,9 @@
 TEMPLATE = lib
 TARGET = tpms
+
+# Version number of the library
+VERSION = 1.1
+
 CONFIG += console c++14
 CONFIG -= app_bundle
 CONFIG -= qt
@@ -27,6 +31,7 @@ SOURCES += \
     TPMS/MarchBoxUtil.cpp \
     TPMS/TpmsImplicitFunction.cpp \
     Voxel/VoxelModel.cpp \
+    Voxel/VoxelOctree.cpp \
     implicitsurface.cpp \
     isolevelgenerator.cpp \
     marchbox.cpp \
@@ -59,6 +64,7 @@ HEADERS += \
     TPMS/SamplePoint.h \
     TPMS/TpmsImplicitFunction.h \
     Voxel/VoxelModel.h \
+    Voxel/VoxelOctree.h \
     implicitsurface.h \
     isolevelgenerator.h \
     marchbox.h \

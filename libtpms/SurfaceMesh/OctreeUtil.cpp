@@ -14,7 +14,7 @@ vector<Vector3d> getIntersectPointsDirectionZ(
     // 固定 Z 轴方向
     Eigen::Vector3d direction(0.0,0.0,1.0);
     Ray ray(point, direction);
-    QSet<int> intersectResult = octree.intersectRay(ray, 0.00001, false);
+    QSet<int> intersectResult = octree.intersectRay(ray, 0.00001, true);
     HitResult hitResult;
     std::vector<Vector3d> intersectPoints;
 
