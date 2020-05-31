@@ -73,6 +73,10 @@ void CustomTpmsSingleSurfaceAlgorithm::clear()
 void CustomTpmsSingleSurfaceAlgorithm::addFaces(
         int *faces, Eigen::Vector3i index, Mesh &mesh)
 {
+    if(!validVoxel(index)) {
+        return;
+    }
+
     while(*faces != -1) {
         vector<int> edgeIndex(3);
         edgeIndex[0] = *(faces++);
@@ -117,6 +121,11 @@ Mesh::VertexHandle CustomTpmsSingleSurfaceAlgorithm::getVertexHandle(
     return vertexHandle;
 }
 
+/**
+ * @brief CustomTpmsSingleSurfaceAlgorithm::marchMesh
+ * MarchBox 生成网格算法
+ * @return
+ */
 Mesh CustomTpmsSingleSurfaceAlgorithm::marchMesh()
 {
     // 提前 -1 约束边界
@@ -130,8 +139,14 @@ Mesh CustomTpmsSingleSurfaceAlgorithm::marchMesh()
     for(index.x() = 0; index.x() < indexBoundary.x(); index.x()++ ) {
         for(index.y() = 0; index.y() < indexBoundary.y(); index.y()++) {
             for(index.z() = 0; index.z() < indexBoundary.z(); index.z()++) {
-                if(voxelModel->contains(sampleMatrix[index.x()][index.y()][index.z()].physical)){
-                    int cubeIndex = getMarchBoxCubeIndex(sampleMatrix, index, config->getIsoLevel());
+
+                // 边界模型内部的方可构建模型
+                if(voxelModel->contains(
+                       sampleMatrix[index.x()][index.y()][index.z()].physical)){
+
+                    int cubeIndex = getMarchBoxCubeIndex(
+                                sampleMatrix, index, config->getIsoLevel());
+
                     // 根据 cubeIndex 找到拟合情况
                     int *faces = marchboxTriTable[cubeIndex];
                     addFaces(faces, index, mesh);
@@ -141,4 +156,24 @@ Mesh CustomTpmsSingleSurfaceAlgorithm::marchMesh()
     }
 
     return mesh;
+}
+
+/**
+ * @brief CustomTpmsSingleSurfaceAlgorithm::validVoxel
+ * 获得体素的八个顶点，如果八个顶点均在合法值区域，则返回 true；
+ * 如果有失效值，则返回 false
+ * @param index
+ * @param mesh
+ * @return
+ */
+bool CustomTpmsSingleSurfaceAlgorithm::validVoxel(Eigen::Vector3i index)
+{
+    return sampleMatrix[index.x()  ][index.y()  ][index.z()  ].valid
+            && sampleMatrix[index.x()+1][index.y()  ][index.z()  ].valid
+            && sampleMatrix[index.x()+1][index.y()  ][index.z()+1].valid
+            && sampleMatrix[index.x()  ][index.y()  ][index.z()+1].valid
+            && sampleMatrix[index.x()  ][index.y()+1][index.z()  ].valid
+            && sampleMatrix[index.x()+1][index.y()+1][index.z()  ].valid
+            && sampleMatrix[index.x()+1][index.y()+1][index.z()+1].valid
+            && sampleMatrix[index.x()  ][index.y()+1][index.z()+1].valid;
 }

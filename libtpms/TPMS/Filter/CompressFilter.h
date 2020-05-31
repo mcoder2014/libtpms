@@ -24,6 +24,8 @@ private:
     // 将 Z 轴方向的采样点均匀分布在两个边界点之间
     void uniformDistribute(vector<SamplePoint>& samplePoints, const vector<Vector3d>& boundary);
 
+    void setInvalid(vector<SamplePoint>& samplePoints);
+
 };
 
 #endif // COMPRESSFILTER_H

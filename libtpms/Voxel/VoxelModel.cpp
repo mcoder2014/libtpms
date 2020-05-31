@@ -52,6 +52,7 @@ bool VoxelModel::contains(Eigen::Vector3d &point) {
  * @return [min, max]
  */
 vector<Eigen::Vector3d> VoxelModel::getOuterBoundaryZ(const Eigen::Vector3d &point) {
+
     Vector3d minPoint = boundingBox.min();
     Vector3d tmpPoint = point;
     tmpPoint = tmpPoint - minPoint;  // 根据情况

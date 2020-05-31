@@ -20,11 +20,12 @@ void CompressFilter::process(vector<vector<vector<SamplePoint> > >& sampleMatrix
     Vector3i range(sampleMatrix.size(), sampleMatrix[0].size(), sampleMatrix[0][0].size());
     for(index.x() = 0; index.x() < range.x(); index.x() ++) {
         for(index.y() = 0; index.y() < range.y(); index.y() ++) {
-            /// BUG: 模型边缘突变毛边问题
             // 压缩每一个区域
             Vector3d point = sampleMatrix[index.x()][index.y()][0].physical;
             vector<Vector3d> outerBoundary = boundary->getOuterBoundaryZ(point);
             if(outerBoundary.size() < 2) {
+                // 标记为在边界以外
+                setInvalid(sampleMatrix[index.x()][index.y()]);
                 continue;
             }
 
@@ -60,5 +61,16 @@ void CompressFilter::uniformDistribute(vector<SamplePoint> &samplePoints, const 
     for(SamplePoint& samplePoint:samplePoints) {
         samplePoint.physical.z() = zCoordinate;
         zCoordinate += step;
+    }
+}
+
+/**
+ * @brief CompressFilter::setInvalid
+ * @param samplePoints
+ */
+void CompressFilter::setInvalid(vector<SamplePoint> &samplePoints)
+{
+    for(SamplePoint& samplePoint:samplePoints) {
+        samplePoint.valid = false;
     }
 }
