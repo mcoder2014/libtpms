@@ -19,8 +19,8 @@ using SurfaceMesh::SurfaceMeshModel;
 class Importer
 {
 public:
-    std::shared_ptr<SurfaceMeshModel> loadSurfaceMeshModel(const std::string path);
-    Mesh loadMesh(const std::string path);
+    std::shared_ptr<SurfaceMeshModel> loadSurfaceMeshModel(const std::string& path);
+    Mesh loadMesh(const std::string &path);
 };
 
 #endif // IMPORTER_H

@@ -90,7 +90,7 @@ void MeshShellTool::verticeNormarlDirectionMove(Mesh &mesh, double distance)
     mesh.request_vertex_normals();
     mesh.update_normals();
 
-    Mesh::VertexIter vit, vend = mesh.vertices_end();
+    Mesh::VertexIter vit, vend;
     // init iterator
     vit = mesh.vertices_begin();
     vend = mesh.vertices_end();

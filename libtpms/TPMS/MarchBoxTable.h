@@ -16,6 +16,6 @@ using Eigen::Vector3i;
 extern int marchboxTriTable[256][16];
 
 vector<Vector3i> edgeToIndex(Vector3i index, int edgeIndex);
-Vector3i vertexToIndex(Vector3i &index, int vertexId);
+Vector3i vertexToIndex(const Eigen::Vector3i &index, int vertexId);
 
 #endif // MARCHBOXTABLE_H

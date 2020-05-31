@@ -6,7 +6,7 @@
 #include <OpenMesh/Tools/Decimater/ModQuadricT.hh>
 
 Simplification::Simplification()
-    :m_object(nullptr)
+    :m_object(nullptr), m_srcVecCount(0), m_dstVecCount(0)
 {
 
 }
@@ -124,8 +124,7 @@ Mesh *Simplification::decimater_to(int n_target)
     if(m_object == nullptr || n_target <= 0)
         return nullptr;
 
-    if(m_dstVecCount != n_target)
-        m_dstVecCount = n_target;
+    m_dstVecCount = n_target;
 
     // if no needs to reduce vectices
     if(m_srcVecCount < m_dstVecCount)

@@ -312,7 +312,7 @@ vector<int> edgeToVertex(int edgeIndex) {
  * @param vertexId
  * @return
  */
-Vector3i vertexToIndex(Vector3i &index, int vertexId)
+Vector3i vertexToIndex(const Vector3i &index, int vertexId)
 {
     assert(vertexId >= 0 && vertexId < 8);
     static std::unordered_map<int, Vector3i> vertex2Index{

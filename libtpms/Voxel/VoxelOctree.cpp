@@ -1,6 +1,7 @@
 #include "VoxelOctree.h"
 
 VoxelOctree::VoxelOctree()
+    :depth(8)
 {
 
 }

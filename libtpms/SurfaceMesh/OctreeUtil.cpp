@@ -18,7 +18,7 @@ vector<Vector3d> getIntersectPointsDirectionZ(
     HitResult hitResult;
     std::vector<Vector3d> intersectPoints;
 
-    for(int i : intersectResult) {
+    for(int i : qAsConst(intersectResult)) {
         octree.rayTriangleIntersectionTest(SurfaceMesh::Model::Face(i), ray, hitResult);
         if(hitResult.hit) {
             Eigen::Vector3d intersectPoint = ray.origin + (ray.direction * hitResult.distance);

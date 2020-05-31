@@ -10,7 +10,7 @@ class BaseTpmsSingleSurfaceConfig
 public:
     BaseTpmsSingleSurfaceConfig();
     virtual ~BaseTpmsSingleSurfaceConfig(){};
-    virtual Eigen::Vector3i getMatrixSize() const = 0;
+    virtual Eigen::Vector3i getMatrixSize()  const override = 0;
 
     TpmsType getTpmsType() const;
     void setTpmsType(const TpmsType &value);

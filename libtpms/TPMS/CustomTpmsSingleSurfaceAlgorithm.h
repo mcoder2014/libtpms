@@ -34,6 +34,10 @@ public:
 protected:
     // 初始化算法的相关数据
     void init();
+
+    // 执行滤波函数
+    void doFilters();
+
     // 清除算法临时数据
     void clear();
 

@@ -3,6 +3,7 @@
 #include <iostream>
 
 QualityInspection::QualityInspection()
+    :m_mesh(nullptr)
 {
 
 }

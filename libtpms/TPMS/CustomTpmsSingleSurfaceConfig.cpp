@@ -51,6 +51,26 @@ void CustomTpmsSingleSurfaceConfig::setPeriodCycleLength(const Eigen::Vector3d &
     periodCycleLength = value;
 }
 
+std::vector<std::shared_ptr<BaseSampleMatrixFilter> > CustomTpmsSingleSurfaceConfig::getSampleMatrixFilterVector() const
+{
+    return sampleMatrixFilterVector;
+}
+
+void CustomTpmsSingleSurfaceConfig::setSampleMatrixFilterVector(const std::vector<std::shared_ptr<BaseSampleMatrixFilter> > &value)
+{
+    sampleMatrixFilterVector = value;
+}
+
+/**
+ * @brief CustomTpmsSingleSurfaceConfig::addSampleMatrixFilter
+ * 增加滤波器，在算法执行前对采样点进行滤波
+ * @param baseFilter
+ */
+void CustomTpmsSingleSurfaceConfig::addSampleMatrixFilter(std::shared_ptr<BaseSampleMatrixFilter> baseFilter)
+{
+    this->sampleMatrixFilterVector.push_back(baseFilter);
+}
+
 std::shared_ptr<VoxelModel> CustomTpmsSingleSurfaceConfig::getCustomBoundary() const
 {
     return customBoundary;

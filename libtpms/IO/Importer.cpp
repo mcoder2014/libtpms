@@ -1,8 +1,7 @@
 #include "Importer.h"
 
-std::shared_ptr<SurfaceMesh::SurfaceMeshModel> Importer::loadSurfaceMeshModel(const std::string path)
+std::shared_ptr<SurfaceMesh::SurfaceMeshModel> Importer::loadSurfaceMeshModel(const std::string &path)
 {
-    std::shared_ptr<SurfaceMeshModel> model = std::make_shared<SurfaceMeshModel>();
 
     // Import new model using Assimp
     Assimp::Importer importer;
@@ -11,13 +10,15 @@ std::shared_ptr<SurfaceMesh::SurfaceMeshModel> Importer::loadSurfaceMeshModel(co
     if(scene == nullptr)
     {
         std::cout << "Model file " << path << " failed.\n";
-        return model;
+        return std::shared_ptr<SurfaceMeshModel>();
     }
     if(scene->mNumMeshes == 0)
     {
         std::cout << "Model counts < 0\n";
-        return model;
+        return std::shared_ptr<SurfaceMeshModel>();
     }
+
+    std::shared_ptr<SurfaceMeshModel> model = std::make_shared<SurfaceMeshModel>();
 
     // Read mesh
     aiMesh ** meshes = scene->mMeshes;      // meshes数组
@@ -69,7 +70,7 @@ std::shared_ptr<SurfaceMesh::SurfaceMeshModel> Importer::loadSurfaceMeshModel(co
 
 }
 
-Mesh Importer::loadMesh(const std::string path)
+Mesh Importer::loadMesh(const std::string& path)
 {
     // Import new model using Assimp
     Assimp::Importer importer;

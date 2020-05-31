@@ -40,8 +40,7 @@ void calcTpmsFunction(vector<vector<vector<SamplePoint>>>& matrix,
 
 std::string hashKey(Vector3i index, int edgeIdx);
 
-int getMarchBoxCubeIndex(
-        vector<vector<vector<SamplePoint> > > &matrix,
+int getMarchBoxCubeIndex(const vector<vector<vector<SamplePoint> > > &matrix,
         Vector3i& index,
         double isoLevel);
 

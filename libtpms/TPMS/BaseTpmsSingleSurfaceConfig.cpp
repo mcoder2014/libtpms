@@ -1,6 +1,7 @@
 #include "BaseTpmsSingleSurfaceConfig.h"
 
 BaseTpmsSingleSurfaceConfig::BaseTpmsSingleSurfaceConfig()
+    :tpmsType(D), isoLevel(0), reverse(false)
 {
 
 }

@@ -49,7 +49,7 @@ void MainWindow::dialog_open_insole_file()
 
     if(fileDialog->exec() == QDialog::Accepted)
     {
-        QString path = fileDialog->selectedFiles()[0];      // 用户选择文件名
+        QString path = fileDialog->selectedFiles().first();      // 用户选择文件名
         qDebug() << "QFileDialog selected filepath: " <<path;
 
         // 调用打开文件

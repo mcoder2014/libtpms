@@ -14,6 +14,8 @@ Mesh CustomTpmsSingleSurfaceAlgorithm::process()
 {
     init();
 
+    doFilters();
+
     calcTpmsFunction(sampleMatrix, TpmsImplicitFunction(config->getTpmsType()));
 
     Mesh mesh = marchMesh();
@@ -23,6 +25,13 @@ Mesh CustomTpmsSingleSurfaceAlgorithm::process()
     return mesh;
 }
 
+/**
+ * @brief CustomTpmsSingleSurfaceAlgorithm::init
+ * 初始化算法必要数据结构：
+ * 1. 采样矩阵
+ * 2. Map
+ * 3. 体素模型
+ */
 void CustomTpmsSingleSurfaceAlgorithm::init()
 {
     Vector3i sampleMatrixSize = config->getMatrixSize();
@@ -35,6 +44,18 @@ void CustomTpmsSingleSurfaceAlgorithm::init()
 
     // 引用体素模型
     voxelModel = config->getCustomBoundary();
+}
+
+/**
+ * @brief CustomTpmsSingleSurfaceAlgorithm::doFilters
+ * 如果有附加滤波函数，在此处执行
+ */
+void CustomTpmsSingleSurfaceAlgorithm::doFilters()
+{
+    for(std::shared_ptr<BaseSampleMatrixFilter> filter
+            : config->getSampleMatrixFilterVector()) {
+        filter->process(sampleMatrix);
+    }
 }
 
 void CustomTpmsSingleSurfaceAlgorithm::clear()
@@ -69,7 +90,16 @@ void CustomTpmsSingleSurfaceAlgorithm::addFaces(
     }
 }
 
-Mesh::VertexHandle CustomTpmsSingleSurfaceAlgorithm::getVertexHandle(Eigen::Vector3i index, int edgeIndex, Mesh &mesh)
+/**
+ * @brief CustomTpmsSingleSurfaceAlgorithm::getVertexHandle
+ * 根据 体素点 Index、 边 index，添加顶点到 mesh
+ * @param index
+ * @param edgeIndex
+ * @param mesh
+ * @return 顶点的 handle
+ */
+Mesh::VertexHandle CustomTpmsSingleSurfaceAlgorithm::getVertexHandle(
+        Eigen::Vector3i index, int edgeIndex, Mesh &mesh)
 {
     std::string hash = hashKey(index, edgeIndex);
     if(vertexIdMap.find(hash) != vertexIdMap.end()) {
@@ -97,7 +127,6 @@ Mesh CustomTpmsSingleSurfaceAlgorithm::marchMesh()
 
     Vector3i index(0,0,0);
     Mesh mesh;  // 预备生成的 mesh
-    std::unordered_map<std::string, int> vertexIdMap;
     for(index.x() = 0; index.x() < indexBoundary.x(); index.x()++ ) {
         for(index.y() = 0; index.y() < indexBoundary.y(); index.y()++) {
             for(index.z() = 0; index.z() < indexBoundary.z(); index.z()++) {

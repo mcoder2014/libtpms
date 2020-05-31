@@ -143,7 +143,7 @@ std::string hashKey(Vector3i index, int edgeIdx)
  * @return
  */
 int getMarchBoxCubeIndex(
-        vector<vector<vector<SamplePoint> > > &matrix,
+        const vector<vector<vector<SamplePoint> > > &matrix,
         Vector3i& index,
         double isoLevel)
 {
