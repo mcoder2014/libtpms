@@ -9,6 +9,7 @@ using namespace std;
 #include <TPMS/CustomTpmsSingleSurfaceAlgorithm.h>
 #include <Mesh/MeshSmoothTool.h>
 #include <Mesh/MeshShellTool.h>
+#include <Mesh/MeshCleaningTool.h>
 #include <IO/Exporter.h>
 #include <IO/Importer.h>
 #include <Voxel/VoxelModel.h>
@@ -83,6 +84,9 @@ void createTPMS(string savePath, shared_ptr<CustomTpmsSingleSurfaceConfig> custo
     customTpmsSingleSurfaceAlgorithm.setConfig(customTpmsSingleSurfaceConfig);
     Mesh mesh = customTpmsSingleSurfaceAlgorithm.process();
 
+    MeshCleaningTool meshCleaningTool;
+    meshCleaningTool.cleanRedundantTriangles(mesh);
+
     MeshSmoothTool smoothTool;
     smoothTool.basicSmooth(mesh, 10);
 
@@ -95,6 +99,9 @@ void createTpmsShell(string savePath, shared_ptr<CustomTpmsSingleSurfaceConfig> 
     CustomTpmsSingleSurfaceAlgorithm customTpmsSingleSurfaceAlgorithm;
     customTpmsSingleSurfaceAlgorithm.setConfig(customTpmsSingleSurfaceConfig);
     Mesh mesh = customTpmsSingleSurfaceAlgorithm.process();
+
+    MeshCleaningTool meshCleaningTool;
+    meshCleaningTool.cleanRedundantTriangles(mesh);
 
     MeshSmoothTool smoothTool;
     smoothTool.basicSmooth(mesh, 10);

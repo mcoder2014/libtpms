@@ -16,6 +16,7 @@ SOURCES += \
     IO/Importer.cpp \
     Math/EigenUtil.cpp \
     Mesh/Mesh.cpp \
+    Mesh/MeshCleaningTool.cpp \
     Mesh/MeshShellTool.cpp \
     Mesh/MeshSmoothTool.cpp \
     Mesh/PorosityCalculator.cpp \
@@ -46,6 +47,7 @@ HEADERS += \
     IO/Importer.h \
     Math/EigenUtil.h \
     Mesh/Mesh.h \
+    Mesh/MeshCleaningTool.h \
     Mesh/MeshShellTool.h \
     Mesh/MeshSmoothTool.h \
     Mesh/PorosityCalculator.h \
