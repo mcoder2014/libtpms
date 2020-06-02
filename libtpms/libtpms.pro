@@ -33,12 +33,7 @@ SOURCES += \
     TPMS/TpmsImplicitFunction.cpp \
     Voxel/VoxelModel.cpp \
     Voxel/VoxelOctree.cpp \
-    implicitsurface.cpp \
-    isolevelgenerator.cpp \
-    marchbox.cpp \
     qualityinspection.cpp \
-    simplification.cpp \
-    smoothtool.cpp \
     generalporositycalculator.cpp \
 
 HEADERS += \
@@ -67,12 +62,7 @@ HEADERS += \
     TPMS/TpmsImplicitFunction.h \
     Voxel/VoxelModel.h \
     Voxel/VoxelOctree.h \
-    implicitsurface.h \
-    isolevelgenerator.h \
-    marchbox.h \
     qualityinspection.h \
-    simplification.h \
-    smoothtool.h \
     generalporositycalculator.h \
 
 unix {

@@ -7,21 +7,10 @@
 #include <QFile>
 #include <QDir>
 
-#include <SurfaceMeshModel.h>
-
-#include <marchbox.h>
-#include <smoothtool.h>
-#include <IO/importer.h>
-#include <IO/exporter.h>
-#include <generalporositycalculator.h>
 
 void setOptions(QList<QCommandLineOption>& options);
 
-///
-/// 将鞋垫模型转换成 TPMS 结构
-/// 未完成
-///
-
+/// TODO: 命令行工具，将网格模型转换为 TPMS 多孔结构
 int main(int argc, char *argv[])
 {
     // 设置程序相关信息
@@ -56,6 +45,5 @@ int main(int argc, char *argv[])
     // type
 
     parser.process(a);
-
 
 }
