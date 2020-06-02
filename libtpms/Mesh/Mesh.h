@@ -8,7 +8,6 @@
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 
-
 /*
  #define VertexTraits \
    template <class Base, class Refs> struct VertexT : public Base
@@ -51,9 +50,5 @@ public:
 };
 
 using Mesh = OpenMesh::TriMesh_ArrayKernelT<Traits>;
-
-extern Mesh* to2Mesh(
-        std::vector<glm::vec3> &vertices,
-        std::vector<glm::ivec3> &faces);
 
 #endif // MESH_H

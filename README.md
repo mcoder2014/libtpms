@@ -1,4 +1,4 @@
-# LibTpms
+# libtpms
 
 This project is a test project about how to create a (Triply Periodic Minimal Surfaces, TPMS) porosus structure model and how to convert it into a traditional triangle mesh. 
 
@@ -12,7 +12,7 @@ This project can alse convert some fixed triangle mesh into TPMS porosus structu
 
 This project create some type of Triply Periodic Minimal Surfaces, such as:
 
-- P type
+- P 
 - D
 - G
 - I-WP
@@ -51,12 +51,10 @@ The below is to use a insole model to create a TPMS porosus model.
 
 # Dependency
 1. greater than Qt 5
-2. ~~glm library~~ *Will be replaced by Eigen3*
-3. [Starlab](https://github.com/OpenGP/starlab)
-4. openmesh 8.0
-5. Eigen 3
-6. opencv *Will be included*
-7. Assimp
+2. [Starlab](https://github.com/OpenGP/starlab)
+3. openmesh 8.0
+4. Eigen 3
+5. Assimp
 
 # Reference
 1. [Marching Cubes](http://paulbourke.net/geometry/polygonise/)
