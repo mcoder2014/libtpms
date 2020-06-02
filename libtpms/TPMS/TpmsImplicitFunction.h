@@ -24,7 +24,7 @@ class TpmsImplicitFunction
 {
 public:
     TpmsImplicitFunction(){};
-    TpmsImplicitFunction(TpmsType tpmsType){
+    explicit TpmsImplicitFunction(TpmsType tpmsType){
         this->type = tpmsType;
     }
 

@@ -17,7 +17,7 @@ public:
 
     virtual Eigen::Vector3i getMatrixSize() const = 0;
 protected:
-    // 物理尺度上的采样体素密度 voxel density
+    // 物理尺度上的采样体素密度 1 mm 对应的采样数量
     // [x][y][z] in one period
     Eigen::Vector3i voxelDensity;
 

@@ -99,7 +99,7 @@ int test_cube_porosity(int argc, char* argv[])
     int depthTimes = 50;
     float depthStep = (depth_end-depth_start)/depthTimes;
 
-    for(string type: types)
+    for(const string& type: types)
     {
         for(int iter_depth = 0; iter_depth <= depthTimes; iter_depth++)
         {
@@ -165,7 +165,7 @@ int test_part_tpms(int argc, char* argv[])
     float isoLevel = 0;
     float depth = 0.2;
 
-    for(string type: types)
+    for(const string& type: types)
     {
 
         std::cout << "Type: " << type << endl;
@@ -181,7 +181,7 @@ int test_part_tpms(int argc, char* argv[])
 
         exporter.writeOBJ(filename, *mesh);
 
-        float porosity = porosityCalc.getPorosity(*mesh);
+        porosityCalc.getPorosity(*mesh);
 
         delete mesh;
     }

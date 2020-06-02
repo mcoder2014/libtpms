@@ -14,6 +14,8 @@ Mesh CustomTpmsSingleSurfaceAlgorithm::process()
 {
     init();
 
+    doFilters();
+
     calcTpmsFunction(sampleMatrix, TpmsImplicitFunction(config->getTpmsType()));
 
     Mesh mesh = marchMesh();
@@ -23,6 +25,13 @@ Mesh CustomTpmsSingleSurfaceAlgorithm::process()
     return mesh;
 }
 
+/**
+ * @brief CustomTpmsSingleSurfaceAlgorithm::init
+ * 初始化算法必要数据结构：
+ * 1. 采样矩阵
+ * 2. Map
+ * 3. 体素模型
+ */
 void CustomTpmsSingleSurfaceAlgorithm::init()
 {
     Vector3i sampleMatrixSize = config->getMatrixSize();
@@ -33,8 +42,20 @@ void CustomTpmsSingleSurfaceAlgorithm::init()
 
     vertexIdMap.clear();
 
-    // 构建 八叉树
-    boundary = Octree(config->getCustomBoundary().get());
+    // 引用体素模型
+    voxelModel = config->getCustomBoundary();
+}
+
+/**
+ * @brief CustomTpmsSingleSurfaceAlgorithm::doFilters
+ * 如果有附加滤波函数，在此处执行
+ */
+void CustomTpmsSingleSurfaceAlgorithm::doFilters()
+{
+    for(std::shared_ptr<BaseSampleMatrixFilter> filter
+            : config->getSampleMatrixFilterVector()) {
+        filter->process(sampleMatrix);
+    }
 }
 
 void CustomTpmsSingleSurfaceAlgorithm::clear()
@@ -45,12 +66,17 @@ void CustomTpmsSingleSurfaceAlgorithm::clear()
     std::unordered_map<std::string, int> cleanVertexIdMap;
     vertexIdMap.swap(cleanVertexIdMap);
 
-    boundary = Octree();
+    // 清空边界的引用
+    voxelModel.reset();
 }
 
 void CustomTpmsSingleSurfaceAlgorithm::addFaces(
         int *faces, Eigen::Vector3i index, Mesh &mesh)
 {
+    if(!validVoxel(index)) {
+        return;
+    }
+
     while(*faces != -1) {
         vector<int> edgeIndex(3);
         edgeIndex[0] = *(faces++);
@@ -68,7 +94,16 @@ void CustomTpmsSingleSurfaceAlgorithm::addFaces(
     }
 }
 
-Mesh::VertexHandle CustomTpmsSingleSurfaceAlgorithm::getVertexHandle(Eigen::Vector3i index, int edgeIndex, Mesh &mesh)
+/**
+ * @brief CustomTpmsSingleSurfaceAlgorithm::getVertexHandle
+ * 根据 体素点 Index、 边 index，添加顶点到 mesh
+ * @param index
+ * @param edgeIndex
+ * @param mesh
+ * @return 顶点的 handle
+ */
+Mesh::VertexHandle CustomTpmsSingleSurfaceAlgorithm::getVertexHandle(
+        Eigen::Vector3i index, int edgeIndex, Mesh &mesh)
 {
     std::string hash = hashKey(index, edgeIndex);
     if(vertexIdMap.find(hash) != vertexIdMap.end()) {
@@ -86,6 +121,11 @@ Mesh::VertexHandle CustomTpmsSingleSurfaceAlgorithm::getVertexHandle(Eigen::Vect
     return vertexHandle;
 }
 
+/**
+ * @brief CustomTpmsSingleSurfaceAlgorithm::marchMesh
+ * MarchBox 生成网格算法
+ * @return
+ */
 Mesh CustomTpmsSingleSurfaceAlgorithm::marchMesh()
 {
     // 提前 -1 约束边界
@@ -96,20 +136,21 @@ Mesh CustomTpmsSingleSurfaceAlgorithm::marchMesh()
 
     Vector3i index(0,0,0);
     Mesh mesh;  // 预备生成的 mesh
-    std::unordered_map<std::string, int> vertexIdMap;
     for(index.x() = 0; index.x() < indexBoundary.x(); index.x()++ ) {
         for(index.y() = 0; index.y() < indexBoundary.y(); index.y()++) {
-            vector<Vector3d> boundary = getBoundary(
-                sampleMatrix[index.x()][index.y()][0].physical);
             for(index.z() = 0; index.z() < indexBoundary.z(); index.z()++) {
-                if(sampleMatrix[index.x()][index.y()][index.z()].physical.z() < boundary[0].z()
-                        || sampleMatrix[index.x()][index.y()][index.z()].physical.z() > boundary[1].z()) {
-                    continue;
+
+                // 边界模型内部的方可构建模型
+                if(voxelModel->contains(
+                       sampleMatrix[index.x()][index.y()][index.z()].physical)){
+
+                    int cubeIndex = getMarchBoxCubeIndex(
+                                sampleMatrix, index, config->getIsoLevel());
+
+                    // 根据 cubeIndex 找到拟合情况
+                    int *faces = marchboxTriTable[cubeIndex];
+                    addFaces(faces, index, mesh);
                 }
-                int cubeIndex = getMarchBoxCubeIndex(sampleMatrix, index, config->getIsoLevel());
-                // 根据 cubeIndex 找到拟合情况
-                int *faces = marchboxTriTable[cubeIndex];
-                addFaces(faces, index, mesh);
             }
         }
     }
@@ -117,35 +158,22 @@ Mesh CustomTpmsSingleSurfaceAlgorithm::marchMesh()
     return mesh;
 }
 
-vector<Eigen::Vector3d> CustomTpmsSingleSurfaceAlgorithm::getBoundary(Eigen::Vector3d point)
+/**
+ * @brief CustomTpmsSingleSurfaceAlgorithm::validVoxel
+ * 获得体素的八个顶点，如果八个顶点均在合法值区域，则返回 true；
+ * 如果有失效值，则返回 false
+ * @param index
+ * @param mesh
+ * @return
+ */
+bool CustomTpmsSingleSurfaceAlgorithm::validVoxel(Eigen::Vector3i index)
 {
-    // 任意一个射线方向
-    Eigen::Vector3d direction(0.0,0.0,1.0);
-    point.z() = -DBL_MAX;
-    Ray ray(point, direction);
-    QSet<int> intersectResult = boundary.intersectRay(ray, 0.00001, false);
-    HitResult hitResult;
-    vector<Vector3d> boundaryPoints(2);
-    boundaryPoints[0].z() = DBL_MAX;    // 下边界
-    boundaryPoints[1].z() = -DBL_MAX;    // 上边界
-
-    int intersectCount = 0;
-    for(int i : intersectResult) {
-        boundary.rayTriangleIntersectionTest(SurfaceMesh::Model::Face(i), ray, hitResult);
-        if(hitResult.hit) {
-            intersectCount++;
-
-            Eigen::Vector3d intersectPoint = ray.origin + (ray.direction * hitResult.distance);
-
-            if(intersectPoint.z() < boundaryPoints[0].z()) {
-                boundaryPoints[0] = intersectPoint;
-            }
-            if(intersectPoint.z() > boundaryPoints[1].z()) {
-                boundaryPoints[1] = intersectPoint;
-            }
-        }
-    }
-
-    // 奇数次相交认为在模型内部
-    return boundaryPoints;
+    return sampleMatrix[index.x()  ][index.y()  ][index.z()  ].valid
+            && sampleMatrix[index.x()+1][index.y()  ][index.z()  ].valid
+            && sampleMatrix[index.x()+1][index.y()  ][index.z()+1].valid
+            && sampleMatrix[index.x()  ][index.y()  ][index.z()+1].valid
+            && sampleMatrix[index.x()  ][index.y()+1][index.z()  ].valid
+            && sampleMatrix[index.x()+1][index.y()+1][index.z()  ].valid
+            && sampleMatrix[index.x()+1][index.y()+1][index.z()+1].valid
+            && sampleMatrix[index.x()  ][index.y()+1][index.z()+1].valid;
 }

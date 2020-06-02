@@ -1,17 +1,19 @@
 #include "CustomTpmsSingleSurfaceConfig.h"
 
+#include <Math/EigenUtil.h>
+
 Eigen::Vector3i CustomTpmsSingleSurfaceConfig::getMatrixSize() const
 {
+    // TODO: 对于尺寸特别巨大模型要给 factor 约束，防止撑爆内存
     assert(customBoundary != nullptr);
-
-    customBoundary->updateBoundingBox();
-    Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->bbox();
+    Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->getOriginBoundingBox();
     Vector3d relativeSize = boundingBoxPhysial.max() - boundingBoxPhysial.min();
     Vector3i matrixSize;
 
-    matrixSize.x() = relativeSize.x() * voxelDensity.x();
-    matrixSize.y() = relativeSize.y() * voxelDensity.y();
-    matrixSize.z() = relativeSize.z() * voxelDensity.z();
+    // 进一法
+    matrixSize.x() = (int)(relativeSize.x() * voxelDensity.x()) + 1;
+    matrixSize.y() = (int)(relativeSize.y() * voxelDensity.y()) + 1;
+    matrixSize.z() = (int)(relativeSize.z() * voxelDensity.z()) + 1;
 
     return matrixSize;
 }
@@ -19,41 +21,24 @@ Eigen::Vector3i CustomTpmsSingleSurfaceConfig::getMatrixSize() const
 Eigen::AlignedBox3d CustomTpmsSingleSurfaceConfig::getBoundingBoxPhysial() const
 {
     assert(customBoundary != nullptr);
-    customBoundary->updateBoundingBox();
-    return customBoundary->bbox();
+    return customBoundary->getOriginBoundingBox();
 }
 
 Eigen::AlignedBox3d CustomTpmsSingleSurfaceConfig::getBoundingBoxLogical() const
 {
     assert(customBoundary != nullptr);
-    customBoundary->updateBoundingBox();
-    Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->bbox();
+    Eigen::AlignedBox3d boundingBoxPhysial = customBoundary->getOriginBoundingBox();
     Vector3d minPoint = boundingBoxPhysial.min();
     Vector3d maxPoint = boundingBoxPhysial.max();
 
     // 缩放
-    maxPoint.x() /= periodCycleLength.x();
-    maxPoint.y() /= periodCycleLength.y();
-    maxPoint.z() /= periodCycleLength.z();
-
-    minPoint.x() /= periodCycleLength.x();
-    minPoint.y() /= periodCycleLength.y();
-    minPoint.z() /= periodCycleLength.z();
+    divide(maxPoint, periodCycleLength);
+    divide(minPoint, periodCycleLength);
 
     Eigen::AlignedBox3d boundingBoxLogical;
     boundingBoxLogical.extend(minPoint);
     boundingBoxLogical.extend(maxPoint);
     return boundingBoxLogical;
-}
-
-std::shared_ptr<SurfaceMesh::SurfaceMeshModel> CustomTpmsSingleSurfaceConfig::getCustomBoundary() const
-{
-    return customBoundary;
-}
-
-void CustomTpmsSingleSurfaceConfig::setCustomBoundary(const std::shared_ptr<SurfaceMesh::SurfaceMeshModel> &value)
-{
-    customBoundary = value;
 }
 
 Eigen::Vector3d CustomTpmsSingleSurfaceConfig::getPeriodCycleLength() const
@@ -64,4 +49,35 @@ Eigen::Vector3d CustomTpmsSingleSurfaceConfig::getPeriodCycleLength() const
 void CustomTpmsSingleSurfaceConfig::setPeriodCycleLength(const Eigen::Vector3d &value)
 {
     periodCycleLength = value;
+}
+
+std::vector<std::shared_ptr<BaseSampleMatrixFilter> > CustomTpmsSingleSurfaceConfig::getSampleMatrixFilterVector() const
+{
+    return sampleMatrixFilterVector;
+}
+
+void CustomTpmsSingleSurfaceConfig::setSampleMatrixFilterVector(const std::vector<std::shared_ptr<BaseSampleMatrixFilter> > &value)
+{
+    sampleMatrixFilterVector = value;
+}
+
+/**
+ * @brief CustomTpmsSingleSurfaceConfig::addSampleMatrixFilter
+ * 增加滤波器，在算法执行前对采样点进行滤波
+ * @param baseFilter
+ */
+void CustomTpmsSingleSurfaceConfig::addSampleMatrixFilter(std::shared_ptr<BaseSampleMatrixFilter> baseFilter)
+{
+    this->sampleMatrixFilterVector.push_back(baseFilter);
+}
+
+std::shared_ptr<VoxelModel> CustomTpmsSingleSurfaceConfig::getCustomBoundary() const
+{
+    return customBoundary;
+}
+
+void CustomTpmsSingleSurfaceConfig::setCustomBoundary(std::shared_ptr<VoxelModel> value)
+{
+    assert(value->getVoxelMatrixSize().x() > 0);
+    customBoundary = value;
 }

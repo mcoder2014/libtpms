@@ -67,7 +67,6 @@ Mesh BoxTpmsSingeSurfaceAlgorithm::marchMesh( vector<vector<vector<SamplePoint>>
 
     Vector3i index(0,0,0);
     Mesh mesh;  // 预备生成的 mesh
-    std::unordered_map<std::string, int> vertexIdMap;
     for(index.x() = 0; index.x() < indexBoundary.x(); index.x()++ ) {
         for(index.y() = 0; index.y() < indexBoundary.y(); index.y()++) {
             for(index.z() = 0; index.z() < indexBoundary.z(); index.z()++) {

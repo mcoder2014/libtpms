@@ -15,7 +15,7 @@ public:
     Eigen::AlignedBox3d getBoundingBoxLogical() const;
     void setBoundingBoxLogical(const Eigen::AlignedBox3d &value);
 
-    virtual Eigen::Vector3i getMatrixSize() const;
+    virtual Eigen::Vector3i getMatrixSize() const override;
 
 protected:
     // 生成模型的物理尺寸大小 physical size

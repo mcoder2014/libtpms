@@ -1,5 +1,7 @@
 #include "MeshShellTool.h"
 
+#include <iostream>
+
 void MeshShellTool::shell(Mesh &mesh, double depth)
 {
 
@@ -40,6 +42,7 @@ void MeshShellTool::duplicate(Mesh &mesh)
             vface.push_back(mesh.vertex_handle(vh.idx() + verticesSize));
         }
 
+        // 颠倒顶点顺序，使面方向相反
         std::reverse(vface.begin(), vface.end());
         mesh.add_face(vface);
     }
@@ -49,36 +52,37 @@ void MeshShellTool::fixHole(Mesh &mesh)
 {
     // 记录当前顶点数目
     int verticeSize = mesh.n_vertices() / 2;
-    Mesh::HalfedgeIter heit, heend(mesh.halfedges_end());
-    for(heit = mesh.halfedges_begin(); heit != heend; heit++)
+
+    Mesh::HalfedgeIter halfEdgeIter, halfEdgeIterEnd(mesh.halfedges_end());
+    for(halfEdgeIter = mesh.halfedges_begin(); halfEdgeIter != halfEdgeIterEnd; halfEdgeIter++)
     {
         // if boundary, add two face
-        if(mesh.is_boundary(*heit))
+        if(mesh.is_boundary(*halfEdgeIter))
         {
-            Mesh::HalfedgeHandle heh = *heit;
+            Mesh::HalfedgeHandle heh = *halfEdgeIter;
 
-            Mesh::VertexHandle vfrom = mesh.from_vertex_handle(heh);
-            Mesh::VertexHandle vto = mesh.to_vertex_handle(heh);
+            Mesh::VertexHandle vHandleFrom = mesh.from_vertex_handle(heh);
+            Mesh::VertexHandle vHandleTo = mesh.to_vertex_handle(heh);
 
             int offset = verticeSize;
-            if(vfrom.idx() >= verticeSize)
+            if(vHandleFrom.idx() >= verticeSize)
                 offset = -verticeSize;
 
-            Mesh::VertexHandle c_vfrom = mesh.vertex_handle(vfrom.idx() + offset);
-            Mesh::VertexHandle c_vto = mesh.vertex_handle(vto.idx() + offset);
+            Mesh::VertexHandle cvHandleFrom = mesh.vertex_handle(vHandleFrom.idx() + offset);
+            Mesh::VertexHandle cvHandleTo = mesh.vertex_handle(vHandleTo.idx() + offset);
 
-            // add face
-            std::vector<Mesh::VertexHandle> face_vhandles;
-            face_vhandles.push_back(vfrom);
-            face_vhandles.push_back(vto);
-            face_vhandles.push_back(c_vfrom);
-            mesh.add_face(face_vhandles);
+            // add faces
+            std::vector<Mesh::VertexHandle> vertexHandles;
+            vertexHandles.push_back(vHandleFrom);
+            vertexHandles.push_back(vHandleTo);
+            vertexHandles.push_back(cvHandleFrom);
+            mesh.add_face(vertexHandles);
 
-            face_vhandles.clear();
-            face_vhandles.push_back(c_vto);
-            face_vhandles.push_back(c_vfrom);
-            face_vhandles.push_back(vto);
-            mesh.add_face(face_vhandles);
+            vertexHandles.clear();
+            vertexHandles.push_back(cvHandleTo);
+            vertexHandles.push_back(cvHandleFrom);
+            vertexHandles.push_back(vHandleTo);
+            mesh.add_face(vertexHandles);
         }
     }
 
@@ -90,7 +94,7 @@ void MeshShellTool::verticeNormarlDirectionMove(Mesh &mesh, double distance)
     mesh.request_vertex_normals();
     mesh.update_normals();
 
-    Mesh::VertexIter vit, vend = mesh.vertices_end();
+    Mesh::VertexIter vit, vend;
     // init iterator
     vit = mesh.vertices_begin();
     vend = mesh.vertices_end();

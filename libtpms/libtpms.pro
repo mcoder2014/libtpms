@@ -1,5 +1,9 @@
 TEMPLATE = lib
 TARGET = tpms
+
+# Version number of the library
+VERSION = 1.1
+
 CONFIG += console c++14
 CONFIG -= app_bundle
 CONFIG -= qt
@@ -10,22 +14,24 @@ SOURCES += \
     IO/Convertor.cpp \
     IO/Exporter.cpp \
     IO/Importer.cpp \
+    Math/EigenUtil.cpp \
     Mesh/Mesh.cpp \
+    Mesh/MeshCleaningTool.cpp \
     Mesh/MeshShellTool.cpp \
     Mesh/MeshSmoothTool.cpp \
     Mesh/PorosityCalculator.cpp \
+    SurfaceMesh/OctreeUtil.cpp \
     TPMS/BaseTpmsConfig.cpp \
     TPMS/BaseTpmsSingleSurfaceConfig.cpp \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.cpp \
     TPMS/BoxTpmsSingleSurfaceConfig.cpp \
     TPMS/CustomTpmsSingleSurfaceAlgorithm.cpp \
     TPMS/CustomTpmsSingleSurfaceConfig.cpp \
+    TPMS/Filter/CompressFilter.cpp \
     TPMS/MarchBoxTable.cpp \
     TPMS/MarchBoxUtil.cpp \
     TPMS/TpmsImplicitFunction.cpp \
-    Voxel/VoxelConvertor.cpp \
     Voxel/VoxelModel.cpp \
-    Voxel/VoxelNode.cpp \
     Voxel/VoxelOctree.cpp \
     implicitsurface.cpp \
     isolevelgenerator.cpp \
@@ -39,10 +45,13 @@ HEADERS += \
     IO/Convertor.h \
     IO/Exporter.h \
     IO/Importer.h \
+    Math/EigenUtil.h \
     Mesh/Mesh.h \
+    Mesh/MeshCleaningTool.h \
     Mesh/MeshShellTool.h \
     Mesh/MeshSmoothTool.h \
     Mesh/PorosityCalculator.h \
+    SurfaceMesh/OctreeUtil.h \
     TPMS/BaseTpmsAlgorithm.h \
     TPMS/BaseTpmsConfig.h \
     TPMS/BaseTpmsSingleSurfaceConfig.h \
@@ -50,13 +59,13 @@ HEADERS += \
     TPMS/BoxTpmsSingleSurfaceConfig.h \
     TPMS/CustomTpmsSingleSurfaceAlgorithm.h \
     TPMS/CustomTpmsSingleSurfaceConfig.h \
+    TPMS/Filter/BaseSampleMatrixFilter.h \
+    TPMS/Filter/CompressFilter.h \
     TPMS/MarchBoxTable.h \
     TPMS/MarchBoxUtil.h \
     TPMS/SamplePoint.h \
     TPMS/TpmsImplicitFunction.h \
-    Voxel/VoxelConvertor.h \
     Voxel/VoxelModel.h \
-    Voxel/VoxelNode.h \
     Voxel/VoxelOctree.h \
     implicitsurface.h \
     isolevelgenerator.h \
