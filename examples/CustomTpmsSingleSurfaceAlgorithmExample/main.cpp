@@ -7,8 +7,7 @@ using namespace std;
 #include <Octree.h>
 
 #include <TPMS/CustomTpmsSingleSurfaceAlgorithm.h>
-#include <Mesh/MeshSmoothTool.h>
-#include <Mesh/MeshShellTool.h>
+#include <Mesh/Mesh>
 #include <IO/Exporter.h>
 #include <IO/Importer.h>
 #include <Voxel/VoxelModel.h>

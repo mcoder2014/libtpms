@@ -5,8 +5,7 @@
 using namespace std;
 
 #include <TPMS/BoxTpmsSingeSurfaceAlgorithm.h>
-#include <Mesh/MeshSmoothTool.h>
-#include <Mesh/MeshShellTool.h>
+#include <Mesh/Mesh>
 #include <IO/Exporter.h>
 
 void createTPMS(string savePath, shared_ptr<BoxTpmsSingleSurfaceConfig> boxTpmsSingleSurfaceConfig);

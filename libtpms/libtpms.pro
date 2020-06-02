@@ -17,6 +17,7 @@ SOURCES += \
     Math/EigenUtil.cpp \
     Mesh/Mesh.cpp \
     Mesh/MeshCleaningTool.cpp \
+    Mesh/MeshInfoChecker.cpp \
     Mesh/MeshShellTool.cpp \
     Mesh/MeshSmoothTool.cpp \
     Mesh/PorosityCalculator.cpp \
@@ -33,16 +34,16 @@ SOURCES += \
     TPMS/TpmsImplicitFunction.cpp \
     Voxel/VoxelModel.cpp \
     Voxel/VoxelOctree.cpp \
-    qualityinspection.cpp \
-    generalporositycalculator.cpp \
 
 HEADERS += \
     IO/Convertor.h \
     IO/Exporter.h \
     IO/Importer.h \
     Math/EigenUtil.h \
+    Mesh/Mesh \
     Mesh/Mesh.h \
     Mesh/MeshCleaningTool.h \
+    Mesh/MeshInfoChecker.h \
     Mesh/MeshShellTool.h \
     Mesh/MeshSmoothTool.h \
     Mesh/PorosityCalculator.h \
@@ -62,8 +63,6 @@ HEADERS += \
     TPMS/TpmsImplicitFunction.h \
     Voxel/VoxelModel.h \
     Voxel/VoxelOctree.h \
-    qualityinspection.h \
-    generalporositycalculator.h \
 
 unix {
     DEFINES += USING_SURFACEMESH
@@ -110,3 +109,5 @@ unix {
         -lopencv_core -lopencv_imgproc \ # opencv
         -lQt5Core -lQt5Gui -lQt5Core -lQt5OpenGL -lQt5Widgets \    # Qt
 }
+
+
