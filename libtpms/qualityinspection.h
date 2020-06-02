@@ -1,7 +1,7 @@
 #ifndef QUALITYINSPECTION_H
 #define QUALITYINSPECTION_H
 
-#include "smoothtool.h"
+#include "Mesh/Mesh.h"
 
 class QualityInspection
 {
