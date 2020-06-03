@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
         customTpmsSingleSurfaceConfig->setIsoLevel(0);
 
         customTpmsSingleSurfaceConfig->setPeriodCycleLength(
-                    Eigen::Vector3d(20,20,10));
+                    Eigen::Vector3d(40,40,10));
         customTpmsSingleSurfaceConfig->setVoxelDensity(
                     Vector3i(2,2,2));
 
