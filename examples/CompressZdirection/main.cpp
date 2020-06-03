@@ -7,9 +7,7 @@ using namespace std;
 #include <Octree.h>
 
 #include <TPMS/CustomTpmsSingleSurfaceAlgorithm.h>
-#include <Mesh/MeshSmoothTool.h>
-#include <Mesh/MeshShellTool.h>
-#include <Mesh/MeshCleaningTool.h>
+#include <Mesh/Mesh>
 #include <IO/Exporter.h>
 #include <IO/Importer.h>
 #include <Voxel/VoxelModel.h>
@@ -57,11 +55,11 @@ int main(int argc, char *argv[])
         customTpmsSingleSurfaceConfig->setIsoLevel(0);
 
         customTpmsSingleSurfaceConfig->setPeriodCycleLength(
-                    Eigen::Vector3d(20,20,10));
+                    Eigen::Vector3d(40,40,10));
         customTpmsSingleSurfaceConfig->setVoxelDensity(
                     Vector3i(2,2,2));
 
-        // 添加压缩滤波qi
+        // 添加压缩滤波器
         customTpmsSingleSurfaceConfig->addSampleMatrixFilter(compressFilter);
 
         string path = saveFolder + "/" + tpmsTypeToString(i) + ".ply";
@@ -100,14 +98,24 @@ void createTpmsShell(string savePath, shared_ptr<CustomTpmsSingleSurfaceConfig> 
     customTpmsSingleSurfaceAlgorithm.setConfig(customTpmsSingleSurfaceConfig);
     Mesh mesh = customTpmsSingleSurfaceAlgorithm.process();
 
+    std::cout << "Before cleaning redundent face\n";
+    MeshInfoChecker meshInfoChecker;
+    meshInfoChecker.check(mesh)->print();
+
     MeshCleaningTool meshCleaningTool;
     meshCleaningTool.cleanRedundantTriangles(mesh);
+
+    std::cout << "After cleaning redundent face\n";
+    meshInfoChecker.check(mesh)->print();
 
     MeshSmoothTool smoothTool;
     smoothTool.basicSmooth(mesh, 10);
 
     MeshShellTool meshShellTool;
     meshShellTool.shell(mesh, 0.03);
+
+    std::cout << "After shell\n";
+    meshInfoChecker.check(mesh)->print();
 
     Exporter expoter;
     expoter.writeOBJ(savePath, mesh);

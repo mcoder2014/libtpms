@@ -4,6 +4,7 @@
 
 void MeshShellTool::shell(Mesh &mesh, double depth)
 {
+    this->vertexMap.clear();
 
     /// 将曲面复制一份，追加到 mesh 中，面法相相反
     duplicate(mesh);
@@ -26,7 +27,10 @@ void MeshShellTool::duplicate(Mesh &mesh)
     for(vit = mesh.vertices_begin(); vit != vend; vit++)
     {
         OpenMesh::Vec3f point = mesh.point(*vit);
-        mesh.add_vertex(point);
+        Mesh::VertexHandle vertexHandle = mesh.add_vertex(point);
+
+        // 存下对应的 vertexHandle
+        this->vertexMap[vit->idx()] = vertexHandle.idx();
     }
 
     // 复制网格面片
@@ -48,11 +52,13 @@ void MeshShellTool::duplicate(Mesh &mesh)
     }
 }
 
+/**
+ * @brief MeshShellTool::fixHole
+ * 填补由于 复制移动 导致的空洞
+ * @param mesh
+ */
 void MeshShellTool::fixHole(Mesh &mesh)
 {
-    // 记录当前顶点数目
-    int verticeSize = mesh.n_vertices() / 2;
-
     Mesh::HalfedgeIter halfEdgeIter, halfEdgeIterEnd(mesh.halfedges_end());
     for(halfEdgeIter = mesh.halfedges_begin(); halfEdgeIter != halfEdgeIterEnd; halfEdgeIter++)
     {
@@ -64,12 +70,14 @@ void MeshShellTool::fixHole(Mesh &mesh)
             Mesh::VertexHandle vHandleFrom = mesh.from_vertex_handle(heh);
             Mesh::VertexHandle vHandleTo = mesh.to_vertex_handle(heh);
 
-            int offset = verticeSize;
-            if(vHandleFrom.idx() >= verticeSize)
-                offset = -verticeSize;
+            // 要求两个顶点都在 source Vertex 中才可以修补
+            if(vertexMap.find(vHandleFrom.idx()) == vertexMap.end()
+                    || vertexMap.find(vHandleTo.idx()) == vertexMap.end()) {
+                continue;
+            }
 
-            Mesh::VertexHandle cvHandleFrom = mesh.vertex_handle(vHandleFrom.idx() + offset);
-            Mesh::VertexHandle cvHandleTo = mesh.vertex_handle(vHandleTo.idx() + offset);
+            Mesh::VertexHandle cvHandleFrom(vertexMap[vHandleFrom.idx()]);
+            Mesh::VertexHandle cvHandleTo(vertexMap[vHandleTo.idx()]);
 
             // add faces
             std::vector<Mesh::VertexHandle> vertexHandles;
@@ -88,6 +96,12 @@ void MeshShellTool::fixHole(Mesh &mesh)
 
 }
 
+/**
+ * @brief MeshShellTool::verticeNormarlDirectionMove
+ * 让每个顶点向法向量方向平移一定的距离，让 shell 具有处处相等的厚度
+ * @param mesh
+ * @param distance
+ */
 void MeshShellTool::verticeNormarlDirectionMove(Mesh &mesh, double distance)
 {
     // 构建法向量
