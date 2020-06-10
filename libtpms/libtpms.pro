@@ -11,6 +11,12 @@ CONFIG -= qt
 DESTDIR = ../bin/
 
 SOURCES += \
+    Hex/GridHexAlgorithm.cpp \
+    Hex/HexSamplePoint.cpp \
+    Hex/HexUtil.cpp \
+    Hex/HexahedralMesh.cpp \
+    Hex/HexahedralMeshDebugger.cpp \
+    Hex/Hexahedron.cpp \
     IO/Convertor.cpp \
     IO/Exporter.cpp \
     IO/Importer.cpp \
@@ -36,6 +42,12 @@ SOURCES += \
     Voxel/VoxelOctree.cpp \
 
 HEADERS += \
+    Hex/GridHexAlgorithm.h \
+    Hex/HexSamplePoint.h \
+    Hex/HexUtil.h \
+    Hex/HexahedralMesh.h \
+    Hex/HexahedralMeshDebugger.h \
+    Hex/Hexahedron.h \
     IO/Convertor.h \
     IO/Exporter.h \
     IO/Importer.h \
