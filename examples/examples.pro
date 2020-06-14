@@ -3,6 +3,7 @@ TEMPLATE = subdirs
 SUBDIRS += \
     BoxTpmsSingeSurfaceAlgorithmExample \
     CompressZdirection \
-    CustomTpmsSingleSurfaceAlgorithmExample
+    CustomTpmsSingleSurfaceAlgorithmExample \
+    GridHexAlgorithmExample
 
 CONFIG += ordered

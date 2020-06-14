@@ -26,6 +26,7 @@ SOURCES += \
     Mesh/MeshInfoChecker.cpp \
     Mesh/MeshShellTool.cpp \
     Mesh/MeshSmoothTool.cpp \
+    Mesh/MeshUtils.cpp \
     Mesh/PorosityCalculator.cpp \
     SurfaceMesh/OctreeUtil.cpp \
     TPMS/BaseTpmsConfig.cpp \
@@ -58,6 +59,7 @@ HEADERS += \
     Mesh/MeshInfoChecker.h \
     Mesh/MeshShellTool.h \
     Mesh/MeshSmoothTool.h \
+    Mesh/MeshUtils.h \
     Mesh/PorosityCalculator.h \
     SurfaceMesh/OctreeUtil.h \
     TPMS/BaseTpmsAlgorithm.h \

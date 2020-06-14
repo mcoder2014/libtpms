@@ -27,7 +27,10 @@ public:
     bool contains(Vector3d &point);
 
     // 找到直线和模型相交的最两端的焦点(Z轴方向的直线)
+    vector<Vector3d> getOuterBoundaryX(const Eigen::Vector3d &point);
+    vector<Vector3d> getOuterBoundaryY(const Eigen::Vector3d &point);
     vector<Vector3d> getOuterBoundaryZ(const Eigen::Vector3d &point);
+
 
     // 设置体素的尺寸，体素过小会导致效率低、占内存，提速过大会速度缓慢
     void setVoxelSize(double value);

@@ -44,6 +44,72 @@ bool VoxelModel::contains(Eigen::Vector3d &point) {
     return voxelMatrix[index->x()][index->y()][index->z()];
 }
 
+vector<Eigen::Vector3d> VoxelModel::getOuterBoundaryX(const Eigen::Vector3d &point)
+{
+    Vector3d minPoint = boundingBox.min();
+    Vector3d tmpPoint = point;
+    tmpPoint = tmpPoint - minPoint;  // 根据情况
+    tmpPoint = tmpPoint / voxelSize;
+    Vector3i index;
+    index.x() = lround(tmpPoint.x());
+    index.y() = lround(tmpPoint.y());
+
+    vector<Eigen::Vector3d> returnValue;
+
+    const vector<bool>& voxel = voxelMatrix[index.x()][index.y()];
+    for(int i = 0; i < voxelMatrixSize.z(); i++) {
+        if(voxel[i]) {
+            // 第一个节点
+            returnValue.push_back(
+                        Vector3d(point.x(), point.y(), minPoint.z() + i * voxelSize));
+            break;
+        }
+    }
+
+    for(int i = voxelMatrixSize.z()-1; i >=0; i--) {
+        if(voxel[i]) {
+            returnValue.push_back(
+                        Vector3d(point.x(), point.y(), minPoint.z() + (i+1) * voxelSize));
+            break;
+        }
+    }
+
+    return returnValue;
+}
+
+vector<Eigen::Vector3d> VoxelModel::getOuterBoundaryY(const Eigen::Vector3d &point)
+{
+    Vector3d minPoint = boundingBox.min();
+    Vector3d tmpPoint = point;
+    tmpPoint = tmpPoint - minPoint;  // 根据情况
+    tmpPoint = tmpPoint / voxelSize;
+    Vector3i index;
+    index.x() = lround(tmpPoint.x());
+    index.y() = lround(tmpPoint.y());
+
+    vector<Eigen::Vector3d> returnValue;
+
+    const vector<bool>& voxel = voxelMatrix[index.x()][index.y()];
+    for(int i = 0; i < voxelMatrixSize.z(); i++) {
+        if(voxel[i]) {
+            // 第一个节点
+            returnValue.push_back(
+                        Vector3d(point.x(), point.y(), minPoint.z() + i * voxelSize));
+            break;
+        }
+    }
+
+    for(int i = voxelMatrixSize.z()-1; i >=0; i--) {
+        if(voxel[i]) {
+            returnValue.push_back(
+                        Vector3d(point.x(), point.y(), minPoint.z() + (i+1) * voxelSize));
+            break;
+        }
+    }
+
+    return returnValue;
+}
+
 /**
  * @brief VoxelModel::getOuterBoundaryZ
  * 找到直线和模型相交的最两端的焦点

@@ -21,9 +21,10 @@ using Eigen::Vector3d;
 template<class T>
 vector<vector<vector<T> > >  create3DMatrix(Vector3i size, T initValue)
 {
-    return vector<vector<vector<T>>>(size.x(),
-        vector<vector<T>>(size.y(),
-            vector<T>(size.z(), initValue)));
+    return vector<vector<vector<T>>>(
+               size.x(),vector<vector<T>>(
+                   size.y(), vector<T>(
+                       size.z(), initValue)));
 }
 
 // 初始化物理坐标三维矩阵
@@ -36,12 +37,12 @@ void initMatrix(
 Vector3d getStepSize(Eigen::AlignedBox3d boundingBox, Vector3i size);
 
 void calcTpmsFunction(vector<vector<vector<SamplePoint>>>& matrix,
-        TpmsImplicitFunction tpmsFunction);
+                      TpmsImplicitFunction tpmsFunction);
 
 std::string hashKey(Vector3i index, int edgeIdx);
 
 int getMarchBoxCubeIndex(const vector<vector<vector<SamplePoint> > > &matrix,
-        Vector3i& index,
-        double isoLevel);
+                         Vector3i& index,
+                         double isoLevel);
 
 #endif // MARCHBOXUTIL_H

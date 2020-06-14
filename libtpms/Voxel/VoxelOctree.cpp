@@ -29,5 +29,8 @@ void VoxelOctree::build(const VoxelModel &voxelModel)
  */
 vector<Eigen::Vector3d> VoxelOctree::getIntersects(const Eigen::Vector3d &startPoint, const Eigen::Vector3d &direction)
 {
-
+    startPoint.x();
+    startPoint.x();
+    direction.x();
+    return vector<Eigen::Vector3d>();
 }
