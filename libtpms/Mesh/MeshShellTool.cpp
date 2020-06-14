@@ -26,7 +26,11 @@ void MeshShellTool::duplicate(Mesh &mesh)
     Mesh::VertexIter vit, vend = mesh.vertices_end();
     for(vit = mesh.vertices_begin(); vit != vend; vit++)
     {
+<<<<<<< HEAD
         Mesh::Point point = mesh.point(*vit);
+=======
+        Eigen::Vector3d point = mesh.point(*vit);
+>>>>>>> 90ff547... 更换 mesh 的顶点为 Eigen::Vector3d
         Mesh::VertexHandle vertexHandle = mesh.add_vertex(point);
 
         // 存下对应的 vertexHandle

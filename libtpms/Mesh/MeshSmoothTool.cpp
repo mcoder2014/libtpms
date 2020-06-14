@@ -1,6 +1,7 @@
 #include "MeshSmoothTool.h"
 
 #include <iostream>
+#include <Eigen/Dense>
 
 void MeshSmoothTool::basicSmooth(Mesh &mesh, int rounds)
 {
@@ -24,6 +25,7 @@ void MeshSmoothTool::basicSmooth(Mesh &mesh, int rounds)
         Mesh::VertexVertexIter vvIt;
         Mesh::VertexFaceIter vfIt;
         Mesh::Point cog;        // To record the gravity of the point
+
         int valance = 0;            // Record the degree of the point
         int pointsCount = 0;
 
