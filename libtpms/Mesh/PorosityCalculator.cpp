@@ -29,9 +29,9 @@ double PorosityCalculator::getVolume(Mesh &mesh)
     // 体积之和的绝对值是总体的体积
 
     auto signedVolumeOfTriangle = [](
-            OpenMesh::Vec3f& p1,
-            OpenMesh::Vec3f& p2,
-            OpenMesh::Vec3f& p3) -> float
+            Mesh::Point& p1,
+            Mesh::Point& p2,
+            Mesh::Point& p3) -> float
     {
         float v321 = p3[0] * p2[1] * p1[2];
         float v231 = p2[0] * p3[1] * p1[2];
@@ -46,7 +46,7 @@ double PorosityCalculator::getVolume(Mesh &mesh)
     double volume = 0.0;    // 最终的体积
 
     Mesh::FaceIter fit, fend = mesh.faces_end();
-    std::vector<OpenMesh::Vec3f> vface;
+    std::vector<Mesh::Point> vface;
     for(fit = mesh.faces_begin(); fit != fend; fit++)
     {
         // 找到三个顶点

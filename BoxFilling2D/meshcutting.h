@@ -9,7 +9,7 @@
 #include <OpenMesh/Core/IO/MeshIO.hh>
 
 // OpenMesh Traits
-struct Traits: public OpenMesh::DefaultTraits
+struct EigenTraits: public OpenMesh::DefaultTraits
 {
 public:
     VertexTraits
@@ -26,7 +26,7 @@ public:
     };
 };
 
-using Mesh = OpenMesh::PolyMesh_ArrayKernelT<Traits>;
+using Mesh = OpenMesh::PolyMesh_ArrayKernelT<EigenTraits>;
 
 class MeshCutting
 {

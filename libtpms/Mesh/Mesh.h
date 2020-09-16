@@ -3,10 +3,9 @@
 
 #include <vector>
 
-#include <glm/glm.hpp>
-
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
+#include <OpenMesh/Core/Geometry/EigenVectorT.hh>
 
 /*
  #define VertexTraits \
@@ -24,12 +23,16 @@
 
 
 // OpenMesh Traits
-struct Traits: public OpenMesh::DefaultTraits
+struct EigenTraits: public OpenMesh::DefaultTraits
 {
+    using Point = Eigen::Vector3d;
+    using Normal = Eigen::Vector3d;
+    using TexCoord2D = Eigen::Vector2d;
+
 public:
     VertexTraits
     {
-        OpenMesh::Vec3f cog;    // center of gravity
+        Point cog;    // center of gravity
     };
     HalfedgeTraits  {};
     EdgeTraits      {};
@@ -49,6 +52,6 @@ public:
     EdgeAttributes     (OpenMesh::Attributes::Status);
 };
 
-using Mesh = OpenMesh::TriMesh_ArrayKernelT<Traits>;
+using Mesh = OpenMesh::TriMesh_ArrayKernelT<EigenTraits>;
 
 #endif // MESH_H
