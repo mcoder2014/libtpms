@@ -23,7 +23,7 @@ void MeshSmoothTool::basicSmooth(Mesh &mesh, int rounds)
 
         Mesh::VertexVertexIter vvIt;
         Mesh::VertexFaceIter vfIt;
-        OpenMesh::Vec3f cog;        // To record the gravity of the point
+        Mesh::Point cog;        // To record the gravity of the point
         int valance = 0;            // Record the degree of the point
         int pointsCount = 0;
 
@@ -34,13 +34,13 @@ void MeshSmoothTool::basicSmooth(Mesh &mesh, int rounds)
             if(!resultMesh->is_boundary(*vIt))
             {
                 // Don't change the position of boundary vertex
-                cog = OpenMesh::Vec3f(0.0); // Init it into origin point
+                cog = Mesh::Point(0.0, 0.0, 0.0); // Init it into origin point
                 valance = 0;
 
                 for (vfIt = resultMesh->vf_begin(*vIt);
                      vfIt.is_valid();vfIt++)
                 {
-                    OpenMesh::Vec3f gravity(0.0);
+                    Mesh::Point gravity(0.0, 0.0, 0.0);
                     Mesh::FaceVertexIter fvIt;
 
                     for (fvIt = resultMesh->fv_begin(*vfIt);
@@ -61,7 +61,7 @@ void MeshSmoothTool::basicSmooth(Mesh &mesh, int rounds)
 
             } else {
                 // 对于边界点，只和相邻边界点进行平滑
-                cog = OpenMesh::Vec3f(0.0); // Init it into origin point
+                cog = Mesh::Point(0.0, 0.0, 0.0); // Init it into origin point
                 valance = 0;
                 for(vvIt = resultMesh->vv_begin(*vIt); vvIt.is_valid(); ++vvIt) {
                     if(resultMesh->is_boundary(*vvIt)) {

@@ -1,11 +1,10 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    BoxFilling2D \
-    Tools \
     libtpms \
     examples \
-
+    BoxFilling2D \
+    Tools \
 
 CONFIG += ordered
 

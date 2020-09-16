@@ -111,7 +111,7 @@ Mesh Importer::loadMesh(const std::string& path)
     for (size_t i=0; i < length_vertices; ++i)
     {
 
-        OpenMesh::Vec3f vi(static_cast<double>(aivertices[i].x),
+        Mesh::Point vi(static_cast<double>(aivertices[i].x),
                            static_cast<double>(aivertices[i].y),
                            static_cast<double>(aivertices[i].z));
         model.add_vertex(vi);

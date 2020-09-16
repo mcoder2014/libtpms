@@ -20,13 +20,13 @@ void MeshShellTool::shell(Mesh &mesh, double depth)
 void MeshShellTool::duplicate(Mesh &mesh)
 {
     /// 将曲面复制一份，追加到 mesh 中，面法相相反
-    int verticesSize = mesh.n_vertices();
+    size_t verticesSize = mesh.n_vertices();
 
     // 复制网格顶点
     Mesh::VertexIter vit, vend = mesh.vertices_end();
     for(vit = mesh.vertices_begin(); vit != vend; vit++)
     {
-        OpenMesh::Vec3f point = mesh.point(*vit);
+        Mesh::Point point = mesh.point(*vit);
         Mesh::VertexHandle vertexHandle = mesh.add_vertex(point);
 
         // 存下对应的 vertexHandle
@@ -115,18 +115,18 @@ void MeshShellTool::verticeNormarlDirectionMove(Mesh &mesh, double distance)
 
     for( ; vit!=vend ; ++vit)
     {
-        OpenMesh::Vec3f vpos = mesh.point(*vit);
+        Mesh::Point vpos = mesh.point(*vit);
         if(!mesh.is_boundary(*vit))
         {
             // 内部点向顶点法向量移动 distance 距离
-            OpenMesh::Vec3f vnormal = mesh.normal(*vit);
+            Mesh::Normal vnormal = mesh.normal(*vit);
             vpos += vnormal.normalized() * distance;
             mesh.set_point(*vit, vpos);
         }
         else
         {
             // 边界点向临界面法相平均值移动 distance 距离
-            OpenMesh::Vec3f fnoraml(0.0, 0.0, 0.0);
+            Mesh::Normal fnoraml(0.0, 0.0, 0.0);
             Mesh::VertexFaceIter vfit = mesh.vf_begin(*vit);
             for(; vfit.is_valid(); vfit++)
             {

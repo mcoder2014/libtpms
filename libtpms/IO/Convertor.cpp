@@ -7,7 +7,7 @@ std::shared_ptr<SurfaceMeshModel> Convertor::mesh2SurfaceMeshModel(const Mesh &m
     Mesh::VertexIter vit, vend = mesh.vertices_end();
     for(vit = mesh.vertices_begin(); vit != vend; vit++)
     {
-        OpenMesh::Vec3f point = mesh.point(*vit);
+        Mesh::Point point = mesh.point(*vit);
         model->add_vertex(
             Eigen::Vector3d(point[0], point[1], point[2]));
     }
@@ -41,7 +41,7 @@ Mesh Convertor::surfaceMeshModel2mesh(SurfaceMesh::SurfaceMeshModel &model)
 
     for(SurfaceMesh::Vertex vit: model.vertices())
     {
-        OpenMesh::Vec3f point(vecs[vit][0],vecs[vit][1],vecs[vit][2]);
+        Mesh::Point point(vecs[vit][0],vecs[vit][1],vecs[vit][2]);
         mesh.add_vertex(point);
     }
 
