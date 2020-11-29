@@ -33,7 +33,8 @@ SOURCES += \
     TPMS/MarchBoxUtil.cpp \
     TPMS/TpmsImplicitFunction.cpp \
     Voxel/VoxelModel.cpp \
-    Voxel/VoxelOctree.cpp \
+    Voxel/VoxelOctree.cpp \ \
+    Voxel/VoxelTools.cpp
 
 HEADERS += \
     IO/Convertor.h \
@@ -62,7 +63,8 @@ HEADERS += \
     TPMS/SamplePoint.h \
     TPMS/TpmsImplicitFunction.h \
     Voxel/VoxelModel.h \
-    Voxel/VoxelOctree.h \
+    Voxel/VoxelOctree.h \ \
+    Voxel/VoxelTools.h
 
 unix {
     DEFINES += USING_SURFACEMESH
