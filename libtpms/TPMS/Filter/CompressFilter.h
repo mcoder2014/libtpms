@@ -1,7 +1,7 @@
 #ifndef COMPRESSFILTER_H
 #define COMPRESSFILTER_H
 
-#include "BaseSampleMatrixFilter.h"
+#include "BaseFilter.h"
 
 #include "Voxel/VoxelModel.h"
 

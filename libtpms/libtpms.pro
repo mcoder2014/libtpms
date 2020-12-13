@@ -24,16 +24,21 @@ SOURCES += \
     SurfaceMesh/OctreeUtil.cpp \
     TPMS/BaseTpmsConfig.cpp \
     TPMS/BaseTpmsSingleSurfaceConfig.cpp \
+    TPMS/BlendMarchCubeAlgorithm.cpp \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.cpp \
     TPMS/BoxTpmsSingleSurfaceConfig.cpp \
+    TPMS/CommonImplicitFunction.cpp \
     TPMS/CustomTpmsSingleSurfaceAlgorithm.cpp \
     TPMS/CustomTpmsSingleSurfaceConfig.cpp \
     TPMS/Filter/CompressFilter.cpp \
+    TPMS/ImplicitFunction.cpp \
+    TPMS/ImplicitFunctionUtil.cpp \
     TPMS/MarchBoxTable.cpp \
     TPMS/MarchBoxUtil.cpp \
+    TPMS/SamplePointGroup.cpp \
     TPMS/TpmsImplicitFunction.cpp \
     Voxel/VoxelModel.cpp \
-    Voxel/VoxelOctree.cpp \ \
+    Voxel/VoxelOctree.cpp \
     Voxel/VoxelTools.cpp
 
 HEADERS += \
@@ -52,18 +57,23 @@ HEADERS += \
     TPMS/BaseTpmsAlgorithm.h \
     TPMS/BaseTpmsConfig.h \
     TPMS/BaseTpmsSingleSurfaceConfig.h \
+    TPMS/BlendMarchCubeAlgorithm.h \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.h \
     TPMS/BoxTpmsSingleSurfaceConfig.h \
+    TPMS/CommonImplicitFunction.h \
     TPMS/CustomTpmsSingleSurfaceAlgorithm.h \
     TPMS/CustomTpmsSingleSurfaceConfig.h \
-    TPMS/Filter/BaseSampleMatrixFilter.h \
+    TPMS/Filter/BaseFilter.h \
     TPMS/Filter/CompressFilter.h \
+    TPMS/ImplicitFunction.h \
+    TPMS/ImplicitFunctionUtil.h \
     TPMS/MarchBoxTable.h \
     TPMS/MarchBoxUtil.h \
     TPMS/SamplePoint.h \
+    TPMS/SamplePointGroup.h \
     TPMS/TpmsImplicitFunction.h \
     Voxel/VoxelModel.h \
-    Voxel/VoxelOctree.h \ \
+    Voxel/VoxelOctree.h \
     Voxel/VoxelTools.h
 
 unix {

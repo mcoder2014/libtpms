@@ -6,7 +6,7 @@
 #include "BaseTpmsSingleSurfaceConfig.h"
 #include "Mesh/Mesh.h"
 #include "Voxel/VoxelModel.h"
-#include "Filter/BaseSampleMatrixFilter.h"
+#include "Filter/BaseFilter.h"
 
 using Eigen::Vector3d;
 using Eigen::Vector3i;

@@ -35,11 +35,14 @@ void initMatrix(
 // 计算采样矩阵每隔的间距
 Vector3d getStepSize(Eigen::AlignedBox3d boundingBox, Vector3i size);
 
+// 计算每个采样点的 Tpms 隐函数值
 void calcTpmsFunction(vector<vector<vector<SamplePoint>>>& matrix,
         TpmsImplicitFunction tpmsFunction);
 
+// March box 拟合网格时，用于独立标示每个顶点
 std::string hashKey(Vector3i index, int edgeIdx);
 
+// 根据体素 8 个顶点的 tpms 隐函数值，拟合面片情况。
 int getMarchBoxCubeIndex(const vector<vector<vector<SamplePoint> > > &matrix,
         Vector3i& index,
         double isoLevel);
