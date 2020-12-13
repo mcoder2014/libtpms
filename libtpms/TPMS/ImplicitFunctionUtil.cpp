@@ -42,6 +42,24 @@ void ImplicitFunciton::calculateSamplePointGroup(ImplicitFunciton::SamplePointGr
 }
 
 /**
+ * @brief getImplicitNeededPoint
+ * 用来给隐式函数传递合适的坐标
+ * @param samplePoint
+ * @param function
+ * @return
+ */
+Vector3d& ImplicitFunciton::getImplicitNeededPoint(SamplePoint& samplePoint, ImplicitFunciton::ImplicitFunction &function)
+{
+    if(function.implicitCoorType == PHYSICAL) {
+        return samplePoint.physical;
+    } else if (function.implicitCoorType == TPMS) {
+        return samplePoint.tpms;
+    }
+
+    return samplePoint.physical;
+}
+
+/**
  * @brief ImplicitFunciton::defaultImplicitFunctionOperation
  * 默认隐函数操作
  * @param samplePoint
@@ -60,9 +78,11 @@ void ImplicitFunciton::defaultImplicitFunctionOperation(SamplePoint& samplePoint
  */
 void ImplicitFunciton::addImplicitFunctionOperation(SamplePoint& samplePoint, ImplicitFunciton::ImplicitFunction &function)
 {
-    Vector3d& pos = samplePoint.tpms;
-    samplePoint.implicitValue = samplePoint.implicitValue
-            + function.weightFunction(pos.x(), pos.y(), pos.z()) * function.implicitFunction(pos.x(), pos.z(), pos.z());
+    Vector3d& impPos = getImplicitNeededPoint(samplePoint, function);
+    Vector3d& weiPos = getWeightNeededPoint(samplePoint, function);
+
+    samplePoint.implicitValue += function.weightFunction(weiPos.x(), weiPos.y(), weiPos.z())
+              * function.implicitFunction(impPos.x(), impPos.z(), impPos.z());
 }
 
 /**
@@ -73,9 +93,12 @@ void ImplicitFunciton::addImplicitFunctionOperation(SamplePoint& samplePoint, Im
  */
 void ImplicitFunciton::andImplicitFunctionOperation(SamplePoint& samplePoint, ImplicitFunciton::ImplicitFunction &function)
 {
-    Vector3d& pos = samplePoint.tpms;
+    Vector3d& impPos = getImplicitNeededPoint(samplePoint, function);
+    Vector3d& weiPos = getWeightNeededPoint(samplePoint, function);
+
     double oldValue = samplePoint.implicitValue;
-    double newValue = function.weightFunction(pos.x(), pos.y(), pos.z()) * function.implicitFunction(pos.x(), pos.y(), pos.z());
+    double newValue = function.weightFunction(weiPos.x(), weiPos.y(), weiPos.z())
+            * function.implicitFunction(impPos.x(), impPos.z(), impPos.z());
 
     bool bOld = oldValue > 0;
     bool bNew = newValue > 0;
@@ -96,9 +119,12 @@ void ImplicitFunciton::andImplicitFunctionOperation(SamplePoint& samplePoint, Im
  */
 void ImplicitFunciton::orImplicitFunctionOperation(SamplePoint& samplePoint, ImplicitFunciton::ImplicitFunction &function)
 {
-    Vector3d& pos = samplePoint.tpms;
+    Vector3d& impPos = getImplicitNeededPoint(samplePoint, function);
+    Vector3d& weiPos = getWeightNeededPoint(samplePoint, function);
+
     double oldValue = samplePoint.implicitValue;
-    double newValue = function.weightFunction(pos.x(), pos.y(), pos.z()) * function.implicitFunction(pos.x(), pos.y(), pos.z());
+    double newValue = function.weightFunction(weiPos.x(), weiPos.y(), weiPos.z())
+            * function.implicitFunction(impPos.x(), impPos.z(), impPos.z());
 
     bool bOld = oldValue > 0;
     bool bNew = newValue > 0;
@@ -133,9 +159,12 @@ void ImplicitFunciton::notImplicitFunctionOperation(SamplePoint& samplePoint, Im
  */
 void ImplicitFunciton::xorImplicitFunctionOperation(SamplePoint& samplePoint, ImplicitFunciton::ImplicitFunction &function)
 {
-    Vector3d& pos = samplePoint.tpms;
+    Vector3d& impPos = getImplicitNeededPoint(samplePoint, function);
+    Vector3d& weiPos = getWeightNeededPoint(samplePoint, function);
+
     double oldValue = samplePoint.implicitValue;
-    double newValue = function.weightFunction(pos.x(), pos.y(), pos.z()) * function.implicitFunction(pos.x(), pos.y(), pos.z());
+    double newValue = function.weightFunction(weiPos.x(), weiPos.y(), weiPos.z())
+            * function.implicitFunction(impPos.x(), impPos.z(), impPos.z());
 
     bool bOld = oldValue > 0;
     bool bNew = newValue > 0;
@@ -145,4 +174,21 @@ void ImplicitFunciton::xorImplicitFunctionOperation(SamplePoint& samplePoint, Im
     } else {
         samplePoint.implicitValue = std::numeric_limits<float>::lowest();
     }
+}
+
+/**
+ * @brief ImplicitFunciton::getWeightNeededPoint
+ * 用来给权重函数返回合适的输入坐标
+ * @param samplePoint
+ * @param function
+ * @return
+ */
+Eigen::Vector3d &ImplicitFunciton::getWeightNeededPoint(SamplePoint &samplePoint, ImplicitFunciton::ImplicitFunction &function)
+{
+    if(function.weightCoorType == PHYSICAL) {
+        return samplePoint.physical;
+    } else if(function.weightCoorType == TPMS) {
+        return samplePoint.tpms;
+    }
+     return samplePoint.physical;
 }

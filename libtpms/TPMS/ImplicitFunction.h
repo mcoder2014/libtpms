@@ -30,6 +30,17 @@ enum OperationType
 };
 
 /**
+ * @brief The CoordinateType enum
+ * 传入的采样点坐标的类型
+ */
+enum CoordinateType {
+    // 物理坐标
+    PHYSICAL,
+    // TPMS 采样点坐标
+    TPMS
+};
+
+/**
  * @brief The ImplicitFunction class
  * 隐函数
  * std::function 支持如下的函数类型：
@@ -49,8 +60,14 @@ public:
     // 隐函数
     std::function<double(double, double, double)> implicitFunction;
 
+    // 隐函数的传入坐标
+    CoordinateType implicitCoorType;
+
     // 权重函数
     std::function<double(double, double, double)> weightFunction;
+
+    // 权重函数的传入参数
+    CoordinateType weightCoorType;
 
     // 操作
     OperationType operation;
