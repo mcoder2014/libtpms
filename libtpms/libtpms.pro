@@ -82,24 +82,7 @@ unix {
 }
 
 contains(DEFINES,USING_SURFACEMESH) {
-    unix {
-        INCLUDEPATH += \
-            $$PWD/../extern/surfacemesh \
-            $$PWD/../extern/surfacemesh/helpers \
-            $$PWD/../extern/surfacemesh/parameters \
-            $$PWD/../extern/starlib \
-            $$PWD/../extern/octree
-
-        DEPENDPATH += \
-            $$PWD/../extern/surfacemesh \
-            $$PWD/../extern/surfacemesh/helpers \
-            $$PWD/../extern/surfacemesh/parameters \
-            $$PWD/../extern/starlib
-
-        LIBS += \
-            -L$$OUT_PWD/../bin -lsurfacemesh -lstarlib
-    }
-
+    include($$PWD/../extern/lydialab.pri)
 } else {
     message('Not DEFINE USING_SURFACEMESH')
 }

@@ -18,8 +18,14 @@ namespace Starlab{
 #define GL_MULTISAMPLE  0x809D
 #endif
 
-/// @ingroup starcore
-/// @brief The QGLViewer based visualization window
+/**
+ * @brief The DrawArea class
+ * The QGLViewer based visualization window
+ * 基于 QGLViewer 的会话窗口
+ *
+ * - 调用 OpenGL 刷新一帧，使用 updateGL();
+ * - 更新模型的 renderer，修改模型的顶点等行为，使用 update();
+ */
 class STARLIB_EXPORT DrawArea : public QGLViewer{
     Q_OBJECT
     
@@ -41,7 +47,7 @@ public:
     ~DrawArea();
 private:
     MainWindow* const _mainWindow;
-	bool isBackgroundEffects;
+    bool isBackgroundEffects;
 
 public:
     MainWindow* mainWindow(){ return _mainWindow; }
@@ -60,20 +66,20 @@ public slots:
     void setPerspectiveProjection();
     void setOrthoProjection();
     void setIsoProjection();
-	void toggleBackgroundEffect();
+    void toggleBackgroundEffect();
 private:
-    void init();              ///< Initializes the scene (qGLViewer)
+    void init() override;              ///< Initializes the scene (qGLViewer)
 public:
-    void draw();              ///< Draws the whole scene
+    void draw() override;              ///< Draws the whole scene
     void draw_models();       ///< Draws ONLY the models in the scene (no decorators, no plugins, etc...) 
 /// @}
 
 /// @{ Selection / Picking
 private:
-    void drawWithNames();     ///< Draws to the symbols buffer
+    void drawWithNames() override;     ///< Draws to the symbols buffer
 private:
-    void endSelection(const QPoint&);
-    void postSelection(const QPoint&);
+    void endSelection(const QPoint&) override;
+    void postSelection(const QPoint&) override;
 /// @}
     
 public:
@@ -82,12 +88,12 @@ public:
 
 /// @{ ModePlugin management
 private:
-    bool eventFilter(QObject *object, QEvent *event);
+    bool eventFilter(QObject *object, QEvent *event) override;
 /// @}
 
 /// @{ Default mouse & keyboard management
-    void mouseDoubleClickEvent( QMouseEvent * e );
-    void wheelEvent( QWheelEvent * e );
+    void mouseDoubleClickEvent( QMouseEvent * e ) override;
+    void wheelEvent( QWheelEvent * e ) override;
 /// @}
         
 /// @{ Scene-wide rendering elements (i.e. used for debug)

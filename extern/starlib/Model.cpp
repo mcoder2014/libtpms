@@ -6,6 +6,8 @@
 #include <QAction>          /// Plugins define actions for toolbar buttons and such
 #include <QFileInfo>        /// To automatically determine basename
 
+#include <Eigen/Geometry>
+
 #include "StarlabException.h"
 #include "RenderPlugin.h"
 #include "DecoratePlugin.h"
@@ -18,9 +20,33 @@ Model::Model(QString path, QString name){
     this->color = Qt::gray;
     this->isVisible = true;
     this->isModified = false;
-    this->_renderer = NULL;
+    this->_renderer = nullptr;
     this->path = path;
-    this->name = name.isEmpty() ? QFileInfo(path).baseName() : name;    
+    this->name = name.isEmpty() ? QFileInfo(path).baseName() : name;
+
+    // 初始化坐标信息
+    position = Vector3d::Zero();
+    rotation = Vector3d::Zero();
+    scale = Vector3d::Ones();
+}
+
+/**
+ * @brief Model::assign
+ * Model 部分的拷贝
+ * not copy renderer, cause render is default shadow copy
+ * @param model
+ */
+void Model::assign(const Model &model)
+{
+    this->path = model.path;
+    this->name = model.name;
+    this->color = model.color;
+    this->isVisible = model.isVisible;
+    this->isModified = model.isModified;
+    this->_renderer = nullptr;
+    this->position = model.position;
+    this->rotation = model.rotation;
+    this->scale = model.scale;
 }
 
 Model::~Model(){
@@ -36,17 +62,25 @@ void Model::decorateLayersWidgedItem(QTreeWidgetItem* parent){
     // updateColumnNumber(fileItem);
 }
 
-Renderer *Model::renderer(){
-    return _renderer;
-}
-
+/**
+ * @brief Model::setRenderer
+ * 设置一个渲染插件
+ * @param plugin
+ */
 void Model::setRenderer(RenderPlugin* plugin){
+    if( nullptr == plugin) {
+        // 用来清空render
+        _renderer = nullptr;
+        return;
+    }
     Q_ASSERT(plugin->isApplicable(this));
-    if(_renderer != NULL){
+    if(_renderer != nullptr){
+        // 如果有旧的渲染器，先停止并释放旧的渲染器
         _renderer->finalize();
         _renderer->deleteLater();
-        _renderer = NULL;
+        _renderer = nullptr;
     }
+
     /// Get your own renderer instance
     _renderer = plugin->instance();   
     /// This deletes renderer upon model deletion
@@ -61,6 +95,68 @@ void Model::setRenderer(RenderPlugin* plugin){
 
 bool Model::hasDecoratePlugin(DecoratePlugin *plugin){
     return _decoratePlugins.contains(plugin);
+}
+
+/**
+ * @brief Model::getTransformationMatrix
+ * 快速获得转移矩阵
+ * the translation is backward ordered
+ * @return
+ */
+Eigen::Matrix4d Model::getTransformationMatrix()
+{
+    Eigen::Projective3d T = Eigen::Isometry3d::Identity();
+
+    // 3. translate
+    T.translate(position);
+
+    // 2. rotate
+    T.rotate(Eigen::AngleAxisd(rotation.x(), Vector3d(1, 0, 0)));
+    T.rotate(Eigen::AngleAxisd(rotation.y(), Vector3d(0, 1, 0)));
+    T.rotate(Eigen::AngleAxisd(rotation.z(), Vector3d(0, 0, 1)));
+
+    // 1. scale
+    T.scale(scale);
+
+    return T.matrix();
+}
+
+/**
+ * @brief Model::toWorldCoordinate
+ * give a local coordinate point, turn it to world coordinate
+ * @param point
+ * @return
+ */
+Eigen::Vector3d Model::toWorldCoordinate(const Eigen::Vector3d &point)
+{
+    Eigen::Matrix4d transMat = getTransformationMatrix();
+    return coordinateTrans(point, transMat);
+}
+
+/**
+ * @brief Model::toLocalCoordinate
+ * @param point
+ * @return 
+ */
+Eigen::Vector3d Model::toLocalCoordinate(const Eigen::Vector3d &point)
+{
+    Eigen::Matrix4d transMat = getTransformationMatrix().inverse();
+    return coordinateTrans(point, transMat);
+}
+
+/**
+ * @brief Model::coordinateTrans
+ * give a point and a transmat, do coordinate translation
+ * @param point
+ * @param transMat
+ * @return
+ */\
+Eigen::Vector3d Model::coordinateTrans(const Eigen::Vector3d &point, const Eigen::Matrix4d &transMat)
+{
+    Eigen::Vector4d target;
+    target << point, 1;
+    target = transMat * target;
+    return target.segment(0, 3);
 }
 
 

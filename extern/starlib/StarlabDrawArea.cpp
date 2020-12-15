@@ -14,22 +14,31 @@
 using namespace Starlab;
 using namespace qglviewer;
 
-/// By default the static instance is NULL
-DrawArea* DrawArea::_staticInstance = NULL;
+/// By default the static instance is nullptr
+DrawArea* DrawArea::_staticInstance = nullptr;
 
+/**
+ * @brief DrawArea::update
+ * 最大规模的刷新，与 updateGL 不同
+ * 它会将所有的 render 重新设置
+ * 1. 渲染所有模型
+ *  a. 为没有渲染器的模型创建渲染器
+ *  b. 调用渲染器工作
+ * 2. updateGL()
+ */
 void DrawArea::update(){
-    // qDebug() << "StarlabDrawArea::update()";
+
+    qDebug() << __FILE__ << __PRETTY_FUNCTION__;
 
     /// Don't update on a busy document
-    if(document()->isBusy())
+    if(document()->isBusy()) {
         return;
+    }
 
-    /// @internal Initialization can act on busy document
-    /// Update the metadata needed by the renderer
-    /// e.g. stick data in vertex buffer.. etc..
-    foreach(Model* model, document()->models()){
+    for(Model* model : document()->models()){
+
         /// Create instance if renderer missing
-        if(model->renderer()==NULL){
+        if(model->renderer() == nullptr) {
             QString name = pluginManager()->getPreferredRenderer(model);
             RenderPlugin* plugin = pluginManager()->getRenderPlugin(name);
             model->setRenderer( plugin );
@@ -39,7 +48,6 @@ void DrawArea::update(){
         }
     }
 
-    /// This will force a "paint" of the GL window
     updateGL();
 }
 
@@ -47,10 +55,12 @@ DrawArea::DrawArea(MainWindow* parent)
     : QGLViewer(parent), _mainWindow(parent){
 
     /// When document changes, refresh the rendering
-    connect(document(), SIGNAL(hasChanged()), this, SLOT(update()));
+    /// 当有模型发生改变时调用 update 函数
+    connect(document(), SIGNAL(hasChanged()),
+            this, SLOT(update()));
     /// Determines whether events are forwarded to Mode plugins
     installEventFilter(this);
-        
+
     /// @todo restore trackball
     // settings()->setDefault("StarlabDrawArea/showtrackball",false);
 
@@ -76,8 +86,8 @@ DrawArea::DrawArea(MainWindow* parent)
     /// Disables all default qglviewer predefined keyboard shortcuts
     {
         //setShortcut(DRAW_GRID,0);
-		//setShortcut(DISPLAY_FPS, 0);
-		setShortcut(DRAW_AXIS, 0);
+        //setShortcut(DISPLAY_FPS, 0);
+        setShortcut(DRAW_AXIS, 0);
         setShortcut(STEREO,0);
         setShortcut(HELP,0);
         setShortcut(EXIT_VIEWER,0);
@@ -97,6 +107,10 @@ DrawArea::DrawArea(MainWindow* parent)
     /// Saves a static instance
     Q_ASSERT(DrawArea::_staticInstance==NULL);
     DrawArea::_staticInstance = this;
+
+    this->setAxisIsDrawn(true);
+    this->setGridIsDrawn(true);
+    this->setFPSIsDisplayed(true);
 }
 
 DrawArea::~DrawArea(){
@@ -141,12 +155,12 @@ void DrawArea::setIsoProjection(){
 
 void DrawArea::toggleBackgroundEffect()
 {
-	this->isBackgroundEffects = !this->isBackgroundEffects;
+    this->isBackgroundEffects = !this->isBackgroundEffects;
 
-	/// Save it in the settings
-	QString key = "EnableBackgroundEffect";
-	settings()->set(key, isBackgroundEffects);
-	settings()->sync();
+    /// Save it in the settings
+    QString key = "EnableBackgroundEffect";
+    settings()->set(key, isBackgroundEffects);
+    settings()->sync();
 }
 
 void DrawArea::viewFrom(QAction * a){
@@ -199,72 +213,91 @@ void DrawArea::init(){
     QString backColorKey = "DefaultBackgroundColor";
 
     QColor white_transp(136,157,179,255);
-	settings()->setDefault(backColorKey, QVariant(white_transp));
-	setBackgroundColor(settings()->getQColor(backColorKey));
+    settings()->setDefault(backColorKey, QVariant(white_transp));
+    setBackgroundColor(settings()->getQColor(backColorKey));
     camera()->setUpVector(Vec(0,1,0));
 
-	/// Simple background shading effect
-	QString backEffects = "EnableBackgroundEffect";
-	settings()->setDefault(backEffects, true);
-	this->isBackgroundEffects = settings()->getBool(backEffects);
+    /// Simple background shading effect
+    QString backEffects = "EnableBackgroundEffect";
+    settings()->setDefault(backEffects, true);
+    this->isBackgroundEffects = settings()->getBool(backEffects);
 
     resetViewport();
+
+    qDebug("OpenGL Version: %s", glGetString(GL_VERSION));
+
 }
 
+/**
+ * @brief DrawArea::draw_models
+ * 绘制模型
+ */
 void DrawArea::draw_models(){
     /// Render each Model
     /// @todo use plugin rendering if one is specified
     glPushMatrix();
-        // glMultMatrixd( document()->transform.data() );
-        foreach(Model* model, document()->models())
-            if(model->isVisible && model->renderer()!=NULL ){ 
-                qglColor(model->color);
-                model->renderer()->render();
-            }
+    // glMultMatrixd( document()->transform.data() );
+    for(Model* model : document()->models())
+    {
+        if(model->isVisible && model->renderer()!=nullptr ){
+            qglColor(model->color);
+            model->renderer()->render();
+        }
+    }
     glPopMatrix();
 }
 
+/**
+ * @brief DrawArea::draw
+ * 绘制整个场景
+ */
 void DrawArea::draw(){
+
     glEnable(GL_MULTISAMPLE); ///< Enables anti-aliasing
 
-	/// Background effect
-	if (isBackgroundEffects){
-		startScreenCoordinatesSystem();
-		glDisable(GL_LIGHTING);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_BLEND);
-		glBegin(GL_QUADS);
-		glColor4d(0, 0, 0, 0); glVertex2d(0, 0); glVertex2d(width(), 0);
-		glColor4d(0, 0, 0, 0.8); glVertex2d(width(), height()); glVertex2d(0, height());
-		glEnd();
-		glEnable(GL_LIGHTING);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		stopScreenCoordinatesSystem();
-	}
+    /// Background effect
+    /// 绘制背景
+    if (isBackgroundEffects){
+        startScreenCoordinatesSystem();
+        glDisable(GL_LIGHTING);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+        glBegin(GL_QUADS);
+        glColor4d(0, 0, 0, 0); glVertex2d(0, 0); glVertex2d(width(), 0);
+        glColor4d(0, 0, 0, 0.8); glVertex2d(width(), height()); glVertex2d(0, height());
+        glEnd();
+        glEnable(GL_LIGHTING);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        stopScreenCoordinatesSystem();
+    }
 
     /// Draw the models
+    /// 绘制模型
     draw_models();
     
     /// @todo Render decoration plugins
+    /// 利用 ModePlugin 渲染额外装饰
     glPushMatrix();
-        // glMultMatrixd( document()->transform.data() );
+    // glMultMatrixd( document()->transform.data() );
 
-        /// @todo use the plugin decorators
-        if(mainWindow()->hasModePlugin() && !mainWindow()->isModePluginSuspended())
-            mainWindow()->getModePlugin()->decorate();            
+    /// @todo use the plugin decorators
+    if(mainWindow()->hasModePlugin() && !mainWindow()->isModePluginSuspended()){
+        mainWindow()->getModePlugin()->decorate();
         
         /// @todo use the standard decorators
-        else{
-            foreach(Model* model, document()->models()){
-                if(model->isVisible) 
-                    foreach(DecoratePlugin* decorator, model->decoratePlugins())
-                        decorator->decorate();
-            }
+    } else {
+        for(Model* model : document()->models()){
+            if(model->isVisible)
+                for(DecoratePlugin* decorator : model->decoratePlugins()) {
+                    decorator->decorate();
+                }
         }
-    glPopMatrix();        
+    }
+    glPopMatrix();
 
-        
+
     /// Render mode decoration
+    /// 渲染模型的装饰器
     if( mainWindow()->hasModePlugin() )
         mainWindow()->getModePlugin()->decorate();
     
@@ -286,7 +319,7 @@ void DrawArea::endSelection(const QPoint & p){
     if(mainWindow()->hasModePlugin()){
         bool filtered = mainWindow()->getModePlugin()->endSelection(p);
         if(filtered) return;
-    } 
+    }
     QGLViewer::endSelection(p);
 }
 
@@ -303,8 +336,8 @@ void DrawArea::postSelection(const QPoint & p){
 void DrawArea::setRenderer(Model *model, QString name){
     // qDebug("StarlabDrawArea::setRenderer(%s,%s)",qPrintable(model->name), qPrintable(pluginName));
     document()->pushBusy();
-        RenderPlugin* plugin = pluginManager()->getRenderPlugin(name);
-        model->setRenderer( plugin );
+    RenderPlugin* plugin = pluginManager()->getRenderPlugin(name);
+    model->setRenderer( plugin );
     document()->popBusy();
 }
 
@@ -315,7 +348,7 @@ void DrawArea::clear(){
 }
 
 void DrawArea::drawAllRenderObjects(){
-    foreach(RenderObject::Base* obj, renderObjectList)
+    for(RenderObject::Base* obj : renderObjectList)
         obj->draw(*this);
 }
 
@@ -328,7 +361,7 @@ void DrawArea::addRenderObject(RenderObject::Base * obj)
 /// @todo add polygon drawing?
 #if 0
 for(uint i=0; i<poly.size()-2; i++){
-    Point_2 p0 = poly[0]; // pivot 
+    Point_2 p0 = poly[0]; // pivot
     Point_2 p1 = poly[(i+1)%poly.size()];
     Point_2 p2 = poly[(i+2)%poly.size()];
     StarlabDrawArea::instance()->drawTriangle( toQt(p0), toQt(p1), toQt(p2) );
@@ -375,14 +408,14 @@ bool DrawArea::eventFilter(QObject*, QEvent* event){
     /// If it is open, pass it to the handlers
     ModePlugin* mode = mainWindow()->getModePlugin();
     switch(event->type()){
-        case QEvent::MouseButtonRelease: return mode->mouseReleaseEvent((QMouseEvent*)event); break;
-        case QEvent::MouseButtonPress:   return mode->mousePressEvent((QMouseEvent*)event); break;
-        case QEvent::MouseMove:          return mode->mouseMoveEvent((QMouseEvent*)event); break;
-        case QEvent::KeyPress:           return mode->keyPressEvent((QKeyEvent*)event); break;
-        case QEvent::KeyRelease:         return mode->keyReleaseEvent((QKeyEvent*)event); break;
-        case QEvent::Wheel:              return mode->wheelEvent((QWheelEvent*)event); break;
-        case QEvent::MouseButtonDblClick:return mode->mouseDoubleClickEvent((QMouseEvent *)event); break;
-        default: return false;
+    case QEvent::MouseButtonRelease: return mode->mouseReleaseEvent((QMouseEvent*)event); break;
+    case QEvent::MouseButtonPress:   return mode->mousePressEvent((QMouseEvent*)event); break;
+    case QEvent::MouseMove:          return mode->mouseMoveEvent((QMouseEvent*)event); break;
+    case QEvent::KeyPress:           return mode->keyPressEvent((QKeyEvent*)event); break;
+    case QEvent::KeyRelease:         return mode->keyReleaseEvent((QKeyEvent*)event); break;
+    case QEvent::Wheel:              return mode->wheelEvent((QWheelEvent*)event); break;
+    case QEvent::MouseButtonDblClick:return mode->mouseDoubleClickEvent((QMouseEvent *)event); break;
+    default: return false;
     }
 }
 
@@ -397,14 +430,14 @@ void DrawArea::mouseDoubleClickEvent(QMouseEvent *e)
         camera()->lookAt(p);
         // Log the position
         mainWindow()->setStatusBarMessage(QString("Arcball centered at x = %1 | y = %2 | z = %3").arg(p.x).arg(p.y).arg(p.z));
-    } 
+    }
     
 #if 0 
     // Regaular behavior when clicking background
     else {
         QGLViewer::mouseDoubleClickEvent(e);
         camera()->setRevolveAroundPoint(this->sceneCenter());
-        camera()->showEntireScene();        
+        camera()->showEntireScene();
     }
 #endif
 }
@@ -423,7 +456,7 @@ void DrawArea::wheelEvent(QWheelEvent *e)
 }
 
 void DrawArea::deleteRenderObject(RenderObject* /*object*/){
-    /// @todo 
+    /// @todo
     throw StarlabException("TODO: StarlabDrawArea::deleteRenderObject");
 }
 

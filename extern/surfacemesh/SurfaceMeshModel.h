@@ -33,12 +33,12 @@ namespace SurfaceMesh{
 /// @{
     // these are to avoid problems from conversion from Surface_mesh::Vector
     template <class T> Scalar dot(const T& a, const T&b){ return a.dot(b); }
-	template <class T> T cross(const T& a, const T&b){ return a.cross(b); }
+    template <class T> T cross(const T& a, const T&b){ return a.cross(b); }
     typedef Eigen::Vector3d Vec3d;
-	typedef Eigen::Vector4d Vec4d;
-	typedef Eigen::Vector3i Vec3i;
-	typedef Eigen::Vector3f Vec3f;
-	typedef Eigen::Vector2f Vec2f;
+    typedef Eigen::Vector4d Vec4d;
+    typedef Eigen::Vector3i Vec3i;
+    typedef Eigen::Vector3f Vec3f;
+    typedef Eigen::Vector2f Vec2f;
 /// @}
 
 /// @defgroup surfacemesh_property_names Default property names
@@ -103,14 +103,21 @@ class DYNAMIC_SURFACEMESH_EXPORT SurfaceMeshModel : public StarlabModel, public 
 /// @{ Basic Model Implementation
 public:
     SurfaceMeshModel(QString path=QString(), QString name=QString());
+    SurfaceMeshModel(const SurfaceMeshModel& model);
+    SurfaceMeshModel operator=(const SurfaceMeshModel& model);
+
     void updateBoundingBox();
     void decorateLayersWidgedItem(QTreeWidgetItem* parent);
 /// @}
 
 /// @{ Cloning operations
+/// 注意：clone 函数会改变 Vertex Id 的顺序，请谨慎使用
+/// 如需保持 Vertex id 和 face id 顺序，可以使用深拷贝、assign 等函数
     SurfaceMeshModel * clone();
     SurfaceMeshModel * clone(std::vector<Surface_mesh::Vertex> subset);
     SurfaceMeshModel * clone(std::vector<Surface_mesh::Face> subset);
+
+    void assign(const SurfaceMeshModel& model);
 /// @}
 
 /// @{ Qt foreach helpers
@@ -156,6 +163,10 @@ public:
 /// @{ Extra exposed functionality
     /// @brief Removes vertex
     void remove_vertex(Vertex v);
+    /// @brief Remove face
+    void remove_face(Face face);
+    /// @brief remove edge
+    void remove_edge(Edge edge);
 /// @}
 };
 

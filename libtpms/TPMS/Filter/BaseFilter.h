@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include <Mesh/Mesh>
+
 #include <TPMS/SamplePoint.h>
 #include <TPMS/SamplePointGroup.h>
 #include <TPMS/MarchBoxUtil.h>
@@ -51,6 +53,17 @@ class BaseSamplePointGroupFilter
 {
 public:
     virtual vector<SamplePointGroup> operator() (vector<vector<vector<SamplePoint>>>& sampleMatrix) = 0;
+};
+
+/**
+ * @brief The MarchCubeFilter class
+ * 抽象类、仿函数
+ * 用途，用来从采样矩阵中重建 Mesh
+ */
+class MarchCubeFilter
+{
+public:
+    virtual Mesh operator() (vector<vector<vector<SamplePoint>>>& sampleMatrix) = 0;
 };
 
 #endif // BASESAMPLEMATRIXFILTER_H

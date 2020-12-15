@@ -26,6 +26,9 @@ using SamplePointFilter = function<void(vector<vector<vector<SamplePoint>>>&)>;
 // 重命名采样点区域划分回调函数
 using SamplePointGroupFilter = function<vector<SamplePointGroup>(vector<vector<vector<SamplePoint>>>&)>;
 
+// 重命名重建 Mesh 的回调函数
+using MarchCubeFilter = function<Mesh(vector<vector<vector<SamplePoint>>>&)>;
+
 /**
  * @brief The BlendMarchCubeAlgorithm class
  * 混合多种 Implicit Function 的 Marching Cube 的方法
@@ -126,6 +129,9 @@ private:
 
     // 依赖翻转，用来初始化采样点矩阵
     SamplePointGroupFilter samplePointGroupFilter;
+
+    // 依赖翻转
+    MarchCubeFilter marchCubeFilter;
 
     // 作为网格位置的水平值
     double isoLevel;
