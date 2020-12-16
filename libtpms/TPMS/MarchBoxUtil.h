@@ -10,7 +10,7 @@
 
 #include "SamplePoint.h"
 #include "TpmsImplicitFunction.h"
-#include "mesh.h"
+#include "Mesh/Mesh.h"
 
 using std::vector;
 using Eigen::Vector3d;
