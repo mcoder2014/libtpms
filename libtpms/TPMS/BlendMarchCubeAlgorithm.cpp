@@ -52,19 +52,20 @@ void BlendMarchCubeAlgorithm::calculateImplicitValue()
  * 清空生成的中间数据
  * 1. sampleMatrix
  * 2. samplePointGroup
- * 3. map
- * 4. filters
+ * 3. filters
  */
 void BlendMarchCubeAlgorithm::clear()
 {
     sampleMatrix.clear();
     samplePointGroups.clear();
-    vertexIdMap.clear();
 
     samplePointFilters.clear();
     {
-        SamplePointGroupFilter tmpFilter;
-        samplePointGroupFilter.swap(tmpFilter);
+        SamplePointGroupFilter tmpSamplePorintGroupFilter;
+        samplePointGroupFilter.swap(tmpSamplePorintGroupFilter);
+
+        MarchCubeFilter tmpMarchCubeFilter;
+        marchCubeFilter.swap(tmpMarchCubeFilter);
     }
 }
 
@@ -75,83 +76,13 @@ void BlendMarchCubeAlgorithm::clear()
  */
 Mesh BlendMarchCubeAlgorithm::marchMesh()
 {
-    // 提前 -1 约束边界
-    Vector3i indexBoundary;
-    indexBoundary.x() = sampleMatrix.size() -1;
-    indexBoundary.y() = sampleMatrix[0].size() -1;
-    indexBoundary.z() = sampleMatrix[0][0].size() -1;
-
-    Vector3i index(0,0,0);
-    Mesh mesh;  // 预备生成的 mesh
-    for(index.x() = 0; index.x() < indexBoundary.x(); index.x()++ ) {
-        for(index.y() = 0; index.y() < indexBoundary.y(); index.y()++) {
-            for(index.z() = 0; index.z() < indexBoundary.z(); index.z()++) {
-
-                    int cubeIndex = getMarchBoxCubeIndex(
-                                sampleMatrix, index, isoLevel);
-
-                    // 根据 cubeIndex 找到拟合情况
-                    int *faces = marchboxTriTable[cubeIndex];
-                    addFaces(faces, index, mesh);
-
-            }
-        }
+    if(!marchCubeFilter) {
+        std::cerr << "Not Set marchCubeFilter" << std::endl;
+        Mesh tmp;
+        return tmp;
     }
 
-    return mesh;
-}
-
-/**
- * @brief BlendMarchCubeAlgorithm::addFaces
- * marchMesh 的中间函数，用来添加拟合的面片到模型中
- * @param faces
- * @param index
- * @param mesh
- */
-void BlendMarchCubeAlgorithm::addFaces(int *faces, Eigen::Vector3i index, Mesh &mesh)
-{
-
-    while(*faces != -1) {
-        vector<int> edgeIndex(3);
-        edgeIndex[0] = *(faces++);
-        edgeIndex[1] = *(faces++);
-        edgeIndex[2] = *(faces++);
-
-        vector<Mesh::VertexHandle> face(3);
-        for(int i = 0; i <3; i ++) {
-            // 添加点，获得点 Id
-            face[i] = getVertexHandle(index, edgeIndex[i], mesh);
-        }
-
-        // 添加面
-        mesh.add_face(face);
-    }
-}
-
-/**
- * @brief BlendMarchCubeAlgorithm::getVertexHandle
- * marchMesh 的中间函数，用来添加顶点到网格模型中
- * @param index
- * @param edgeIndex
- * @param mesh
- * @return
- */
-Mesh::VertexHandle BlendMarchCubeAlgorithm::getVertexHandle(Eigen::Vector3i index, int edgeIndex, Mesh &mesh)
-{
-    std::string hash = hashKey(index, edgeIndex);
-    if(vertexIdMap.find(hash) != vertexIdMap.end()) {
-        return Mesh::VertexHandle(vertexIdMap[hash]);
-    }
-
-    // 添加点到 mesh
-    vector<Vector3i> vectexList = edgeToIndex(index, edgeIndex);
-    Vector3i first = vectexList[0];
-    Vector3i second = vectexList[1];
-    Vector3d midPoint = (sampleMatrix[first.x()][first.y()][first.z()].physical
-            + sampleMatrix[second.x()][second.y()][second.z()].physical) / 2;
-    Mesh::VertexHandle vertexHandle = mesh.add_vertex(Mesh::Point(midPoint.x(), midPoint.y(), midPoint.z()));
-    vertexIdMap[hash] = vertexHandle.idx();
-    return vertexHandle;
+    return marchCubeFilter(sampleMatrix);
 }
 
 /**
@@ -163,6 +94,11 @@ Mesh::VertexHandle BlendMarchCubeAlgorithm::getVertexHandle(Eigen::Vector3i inde
  * 2. 根据 samplePoints 的值 构造 Mesh
  * @return
  */
+BlendMarchCubeAlgorithm::BlendMarchCubeAlgorithm()
+{
+
+}
+
 Mesh BlendMarchCubeAlgorithm::process()
 {
     // 先初始化采样矩阵

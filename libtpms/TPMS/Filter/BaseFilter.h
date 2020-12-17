@@ -12,6 +12,19 @@
 using std::vector;
 using ImplicitFunciton::SamplePointGroup;
 
+// 重命名采样点处理回调函数为 SamplePointFilter
+using SamplePointFilter = function<void(vector<vector<vector<SamplePoint>>>&)>;
+
+// 重命名采样点区域划分回调函数
+using SamplePointGroupFilter = function<vector<SamplePointGroup>(vector<vector<vector<SamplePoint>>>&)>;
+
+// 重命名重建 Mesh 的回调函数
+using MarchCubeFilter = function<Mesh(vector<vector<vector<SamplePoint>>>&)>;
+
+/**
+ * @brief The BaseSampleMatrixFilter class
+ * old 适配 CustomTpmsSingleSurfaceAlgorithm
+ */
 class BaseSampleMatrixFilter
 {
 public:
@@ -60,7 +73,7 @@ public:
  * 抽象类、仿函数
  * 用途，用来从采样矩阵中重建 Mesh
  */
-class MarchCubeFilter
+class BaseMarchCubeFilter
 {
 public:
     virtual Mesh operator() (vector<vector<vector<SamplePoint>>>& sampleMatrix) = 0;

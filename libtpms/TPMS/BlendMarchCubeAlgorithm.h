@@ -10,6 +10,7 @@
 #include "Mesh/Mesh"
 #include "SamplePoint.h"
 #include "SamplePointGroup.h"
+#include "Filter/BaseFilter.h"
 
 using std::vector;
 using std::function;
@@ -19,15 +20,6 @@ using Eigen::Vector3d;
 using Eigen::AlignedBox3d;
 
 using ImplicitFunciton::SamplePointGroup;
-
-// 重命名采样点处理回调函数为 SamplePointFilter
-using SamplePointFilter = function<void(vector<vector<vector<SamplePoint>>>&)>;
-
-// 重命名采样点区域划分回调函数
-using SamplePointGroupFilter = function<vector<SamplePointGroup>(vector<vector<vector<SamplePoint>>>&)>;
-
-// 重命名重建 Mesh 的回调函数
-using MarchCubeFilter = function<Mesh(vector<vector<vector<SamplePoint>>>&)>;
 
 /**
  * @brief The BlendMarchCubeAlgorithm class
@@ -39,6 +31,7 @@ using MarchCubeFilter = function<Mesh(vector<vector<vector<SamplePoint>>>&)>;
 class BlendMarchCubeAlgorithm
 {
 public:
+    BlendMarchCubeAlgorithm();
 
     // 执行处理算法
     Mesh process();
@@ -57,12 +50,6 @@ public:
 
     // March Cube 方法拟合网格模型
     Mesh marchMesh();
-
-    // March Mesh 的中间函数，用来添加拟合面片
-    void addFaces(int *faces, Vector3i index, Mesh& mesh);
-
-    // March Mesh 的中间函数，用来添加拟合顶点
-    Mesh::VertexHandle getVertexHandle(Vector3i index, int edgeIndex, Mesh &mesh);
 
 public:
     /// getter setter
@@ -100,6 +87,15 @@ public:
 
     inline void setSamplePointGroupFilter(const SamplePointGroupFilter &filters) {
         this->samplePointGroupFilter = filters;
+    }
+
+    // MarchCubeFilter
+    inline MarchCubeFilter &getMarchCubeFilter() {
+        return marchCubeFilter;
+    }
+
+    inline void setMarchCubeFilter(const MarchCubeFilter &filter) {
+        this->marchCubeFilter = filter;
     }
 
     /// 中间变量
@@ -146,9 +142,6 @@ private:
     // 将采样点划分为不同的组，每个组的采样点共用隐式函数组
     // NOTE:划分交由其他算法负责
     vector<SamplePointGroup> samplePointGroups;
-
-    // March Cube 方法所需要的顶点去重用途
-    std::unordered_map<std::string, int> vertexIdMap;
 
 };
 
