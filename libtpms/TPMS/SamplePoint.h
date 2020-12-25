@@ -16,7 +16,7 @@ public:
     SamplePoint()
         :physical(0.0,0.0,0.0),
          tpms(0.0,0.0,0.0),
-         implicitValue(0.0),
+         implicitValue(0),
          valid(true){}
 
     // physical coordinate

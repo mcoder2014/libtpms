@@ -26,6 +26,17 @@ vector<vector<vector<T> > >  create3DMatrix(Vector3i size, T initValue)
             vector<T>(size.z(), initValue)));
 }
 
+// 计算需要的采样点尺寸
+Vector3i calcMatrixSize(const Eigen::AlignedBox3d& boundingBox, const Vector3d& interval);
+
+// 从采样矩阵获得采样矩阵的 index 尺寸
+Vector3i getSampleMatrixSize(vector<vector<vector<SamplePoint>>>& matrix);
+
+// 从采样矩阵中获得 step
+Vector3d getPhysicalStep(vector<vector<vector<SamplePoint>>>& matrix);
+Vector3d getLogicalStep(vector<vector<vector<SamplePoint>>>& matrix);
+
+
 // 初始化物理坐标三维矩阵
 void initMatrix(
         vector<vector<vector<SamplePoint>>>& matrix,

@@ -82,12 +82,18 @@ void ImplicitFunciton::addImplicitFunctionOperation(SamplePoint& samplePoint, Im
     Vector3d& weiPos = getWeightNeededPoint(samplePoint, function);
 
     samplePoint.implicitValue += function.weightFunction(weiPos.x(), weiPos.y(), weiPos.z())
-              * function.implicitFunction(impPos.x(), impPos.z(), impPos.z());
+              * function.implicitFunction(impPos.x(), impPos.y(), impPos.z());
 }
 
 /**
  * @brief ImplicitFunciton::andImplicitFunctionOperation
- * 并操作
+ * 求交操作，将 "> 0" 视为 "True < 0" 视为 False
+ * samplevalue functionvalue result
+ * 0 0 False min
+ * 0 1 False min
+ * 1 0 False min
+ * 1 1 True  ---
+ * 求交操作保留两个函数的最小值
  * @param samplePoint
  * @param function
  */
@@ -98,22 +104,29 @@ void ImplicitFunciton::andImplicitFunctionOperation(SamplePoint& samplePoint, Im
 
     double oldValue = samplePoint.implicitValue;
     double newValue = function.weightFunction(weiPos.x(), weiPos.y(), weiPos.z())
-            * function.implicitFunction(impPos.x(), impPos.z(), impPos.z());
+            * function.implicitFunction(impPos.x(), impPos.y(), impPos.z());
 
-    bool bOld = oldValue > 0;
-    bool bNew = newValue > 0;
+    samplePoint.implicitValue = std::min(oldValue, newValue);
 
-    if(bOld && bNew) {
-        samplePoint.implicitValue = std::numeric_limits<float>::max();
-    } else {
-        samplePoint.implicitValue = std::numeric_limits<float>::lowest();
-    }
+//    bool bOld = oldValue > 0;
+//    bool bNew = newValue > 0;
 
+//    if(bOld && bNew) {
+//        samplePoint.implicitValue = std::numeric_limits<float>::max();
+//    } else {
+//        samplePoint.implicitValue = std::numeric_limits<float>::lowest();
+//    }
 }
 
 /**
  * @brief ImplicitFunciton::orImplicitFunctionOperation
- * 或操作
+ * 求并操作，将 "> 0" 视为 "True < 0" 视为 False
+ * samplevalue functionvalue result
+ * 0 0 False ---
+ * 0 1 True  max
+ * 1 0 True  max
+ * 1 1 True  max
+ * 求并操作保留两个函数的最大值
  * @param samplePoint
  * @param function
  */
@@ -124,36 +137,54 @@ void ImplicitFunciton::orImplicitFunctionOperation(SamplePoint& samplePoint, Imp
 
     double oldValue = samplePoint.implicitValue;
     double newValue = function.weightFunction(weiPos.x(), weiPos.y(), weiPos.z())
-            * function.implicitFunction(impPos.x(), impPos.z(), impPos.z());
+            * function.implicitFunction(impPos.x(), impPos.y(), impPos.z());
 
-    bool bOld = oldValue > 0;
-    bool bNew = newValue > 0;
+    samplePoint.implicitValue = std::max(oldValue, newValue);
 
-    if(bOld || bNew) {
-        samplePoint.implicitValue = std::numeric_limits<float>::max();
-    } else {
-        samplePoint.implicitValue = std::numeric_limits<float>::lowest();
-    }
+//    bool bOld = oldValue > 0;
+//    bool bNew = newValue > 0;
+
+//    if(bOld || bNew) {
+//        samplePoint.implicitValue = std::numeric_limits<float>::max();
+//    } else {
+//        samplePoint.implicitValue = std::numeric_limits<float>::lowest();
+//    }
 }
 
 /**
  * @brief ImplicitFunciton::notImplicitFunctionOperation
- * 非操作 认为 是对采样点的数据取非
+ * 非操作 认为是加上当前的隐函数的反向值
+ * implicit function
+ * 0 1
+ * 1 0
  * @param samplePoint
  * @param function
  */
 void ImplicitFunciton::notImplicitFunctionOperation(SamplePoint& samplePoint, ImplicitFunciton::ImplicitFunction &function)
 {
-    bool bValue = (samplePoint.implicitValue) > 0;
-    if(!bValue) {
-        samplePoint.implicitValue = std::numeric_limits<float>::max();
-    } else {
-        samplePoint.implicitValue = std::numeric_limits<float>::lowest();
-    }
+    Vector3d& impPos = getImplicitNeededPoint(samplePoint, function);
+    Vector3d& weiPos = getWeightNeededPoint(samplePoint, function);
+
+    samplePoint.implicitValue -= function.weightFunction(weiPos.x(), weiPos.y(), weiPos.z())
+              * function.implicitFunction(impPos.x(), impPos.y(), impPos.z());
+
+//    bool bValue = (samplePoint.implicitValue) > 0;
+//    if(!bValue) {
+//        samplePoint.implicitValue = std::numeric_limits<float>::max();
+//    } else {
+//        samplePoint.implicitValue = std::numeric_limits<float>::lowest();
+//    }
 }
 
 /**
  * @brief ImplicitFunciton::xorImplicitFunctionOperation
+ * 异或操作操作，将 "> 0" 视为 "True < 0" 视为 False
+ * samplevalue functionvalue result
+ * 0 0 False 1 将最小值取反
+ * 0 1 True  max
+ * 1 0 True  max
+ * 1 1 False 0 将最大值取反
+ * 求并操作保留两个函数的最大值
  * @param samplePoint
  * @param function
  */
@@ -164,16 +195,25 @@ void ImplicitFunciton::xorImplicitFunctionOperation(SamplePoint& samplePoint, Im
 
     double oldValue = samplePoint.implicitValue;
     double newValue = function.weightFunction(weiPos.x(), weiPos.y(), weiPos.z())
-            * function.implicitFunction(impPos.x(), impPos.z(), impPos.z());
+            * function.implicitFunction(impPos.x(), impPos.y(), impPos.z());
 
-    bool bOld = oldValue > 0;
-    bool bNew = newValue > 0;
-
-    if(bOld ^ bNew) {
-        samplePoint.implicitValue = std::numeric_limits<float>::max();
+    if((oldValue < 0 && newValue > 0)
+            || (oldValue > 0 && newValue < 0)) {
+        samplePoint.implicitValue = std::max(oldValue, newValue);
+    } else if(oldValue < 0 && newValue < 0) {
+        samplePoint.implicitValue = - std::min(oldValue, newValue);
     } else {
-        samplePoint.implicitValue = std::numeric_limits<float>::lowest();
+        samplePoint.implicitValue = - std::max(oldValue, newValue);
     }
+
+//    bool bOld = oldValue > 0;
+//    bool bNew = newValue > 0;
+
+//    if(bOld ^ bNew) {
+//        samplePoint.implicitValue = std::numeric_limits<float>::max();
+//    } else {
+//        samplePoint.implicitValue = std::numeric_limits<float>::lowest();
+//    }
 }
 
 /**

@@ -13,13 +13,13 @@ using std::vector;
 using ImplicitFunciton::SamplePointGroup;
 
 // 重命名采样点处理回调函数为 SamplePointFilter
-using SamplePointFilter = function<void(vector<vector<vector<SamplePoint>>>&)>;
+using SamplePointFilterCallback = function<void(vector<vector<vector<SamplePoint>>>&)>;
 
 // 重命名采样点区域划分回调函数
-using SamplePointGroupFilter = function<vector<SamplePointGroup>(vector<vector<vector<SamplePoint>>>&)>;
+using SamplePointGroupFilterCallback = function<vector<SamplePointGroup>(vector<vector<vector<SamplePoint>>>&)>;
 
 // 重命名重建 Mesh 的回调函数
-using MarchCubeFilter = function<Mesh(vector<vector<vector<SamplePoint>>>&)>;
+using MarchCubeFilterCallback = function<Mesh(vector<vector<vector<SamplePoint>>>&)>;
 
 /**
  * @brief The BaseSampleMatrixFilter class
@@ -28,6 +28,7 @@ using MarchCubeFilter = function<Mesh(vector<vector<vector<SamplePoint>>>&)>;
 class BaseSampleMatrixFilter
 {
 public:
+    ~BaseSampleMatrixFilter(){}
     /**
      * @brief 对采样矩阵进行一些处理，
      * 使采样矩阵可以根据需求调整部分属性。
@@ -52,6 +53,7 @@ public:
 class BaseSamplePointFilter
 {
 public:
+    virtual ~BaseSamplePointFilter() {}
     virtual void operator() (vector<vector<vector<SamplePoint>>>& sampleMatrix) = 0;
 };
 
@@ -65,6 +67,7 @@ public:
 class BaseSamplePointGroupFilter
 {
 public:
+    virtual ~BaseSamplePointGroupFilter(){}
     virtual vector<SamplePointGroup> operator() (vector<vector<vector<SamplePoint>>>& sampleMatrix) = 0;
 };
 
@@ -76,6 +79,7 @@ public:
 class BaseMarchCubeFilter
 {
 public:
+    virtual ~BaseMarchCubeFilter(){}
     virtual Mesh operator() (vector<vector<vector<SamplePoint>>>& sampleMatrix) = 0;
 };
 

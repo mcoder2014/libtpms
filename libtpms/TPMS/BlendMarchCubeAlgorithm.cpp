@@ -42,9 +42,29 @@ void BlendMarchCubeAlgorithm::initSamplePointGroup()
 void BlendMarchCubeAlgorithm::calculateImplicitValue()
 {
     for(size_t index = 0; index < samplePointGroups.size(); index ++) {
-        std::cout << __FUNCTION__ << " Group " << index+1 << " / " << samplePointGroups.size() << std::endl;
+        std::cout << __FUNCTION__ << " Group " << index+1 << " / " << samplePointGroups.size()
+                  << "Group Size: " << samplePointGroups[index].size() << std::endl;
         ImplicitFunciton::calculateSamplePointGroup(samplePointGroups[index]);
     }
+
+    /// Debug
+    int countIn = 0;
+    int countOut = 0;
+    Vector3i matrixSize = getSampleMatrixSize(sampleMatrix);
+
+    for(int i = 0; i < matrixSize.x(); i++) {
+        for(int j = 0; j < matrixSize.y(); j++) {
+            for(int k = 0; k < matrixSize.z(); k++) {
+                if(sampleMatrix[i][j][k].implicitValue < isoLevel) {
+                    countIn++;
+                } else {
+                    countOut++;
+                }
+            }
+        }
+    }
+
+    std::cout << "Count In: " << countIn << "\t Count Out: " << countOut << std::endl;
 }
 
 /**
@@ -61,10 +81,10 @@ void BlendMarchCubeAlgorithm::clear()
 
     samplePointFilters.clear();
     {
-        SamplePointGroupFilter tmpSamplePorintGroupFilter;
+        SamplePointGroupFilterCallback tmpSamplePorintGroupFilter;
         samplePointGroupFilter.swap(tmpSamplePorintGroupFilter);
 
-        MarchCubeFilter tmpMarchCubeFilter;
+        MarchCubeFilterCallback tmpMarchCubeFilter;
         marchCubeFilter.swap(tmpMarchCubeFilter);
     }
 }

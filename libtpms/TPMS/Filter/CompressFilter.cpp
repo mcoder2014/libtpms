@@ -74,3 +74,9 @@ void CompressFilter::setInvalid(vector<SamplePoint> &samplePoints)
         samplePoint.valid = false;
     }
 }
+
+
+void CompressFilter::operator ()(vector<vector<vector<SamplePoint> > > &sampleMatrix)
+{
+    process(sampleMatrix);
+}

@@ -68,45 +68,37 @@ public:
     }
 
     // samplePointFilters
-    inline vector<SamplePointFilter>& getSamplePointFilters(){
+    inline vector<SamplePointFilterCallback>& getSamplePointFilters(){
         return samplePointFilters;
     }
 
-    inline void setSamplePointFilters(const vector<SamplePointFilter>& filters) {
+    inline void setSamplePointFilters(const vector<SamplePointFilterCallback>& filters) {
         this->samplePointFilters = filters;
     }
 
-    inline void pushBackSamplePointFilter(const SamplePointFilter& filter) {
+    inline void pushBackSamplePointFilter(const SamplePointFilterCallback& filter) {
         this->samplePointFilters.push_back(filter);
     }
 
     // samplePointGroupFilter
-    inline SamplePointGroupFilter &getSamplePointGroupFilter(){
+    inline SamplePointGroupFilterCallback &getSamplePointGroupFilter(){
         return samplePointGroupFilter;
     }
 
-    inline void setSamplePointGroupFilter(const SamplePointGroupFilter &filters) {
+    inline void setSamplePointGroupFilter(const SamplePointGroupFilterCallback &filters) {
         this->samplePointGroupFilter = filters;
     }
 
     // MarchCubeFilter
-    inline MarchCubeFilter &getMarchCubeFilter() {
+    inline MarchCubeFilterCallback &getMarchCubeFilter() {
         return marchCubeFilter;
     }
 
-    inline void setMarchCubeFilter(const MarchCubeFilter &filter) {
+    inline void setMarchCubeFilter(const MarchCubeFilterCallback &filter) {
         this->marchCubeFilter = filter;
     }
 
     /// 中间变量
-    inline Vector3i getSampleMatrixSize() {
-        return sampleMatrixSize;
-    }
-
-    inline vector<vector<vector<SamplePoint> > >& getSampleMatrix() {
-        return sampleMatrix;
-    }
-
     inline vector<SamplePointGroup> & getSamplePointGroups() {
         return samplePointGroups;
     }
@@ -121,20 +113,18 @@ private:
     AlignedBox3d logicalBoundingBox;
 
     // 依赖翻转，调整 SamplePoints 物理坐标或者逻辑坐标
-    vector<SamplePointFilter> samplePointFilters;
+    vector<SamplePointFilterCallback> samplePointFilters;
 
     // 依赖翻转，用来初始化采样点矩阵
-    SamplePointGroupFilter samplePointGroupFilter;
+    SamplePointGroupFilterCallback samplePointGroupFilter;
 
     // 依赖翻转
-    MarchCubeFilter marchCubeFilter;
+    MarchCubeFilterCallback marchCubeFilter;
 
     // 作为网格位置的水平值
     double isoLevel;
 
     /// 算法运行中生成的中间数据
-    // 算法的采样点矩阵大小
-    Vector3i sampleMatrixSize;
 
     // 算法的采样点
     vector<vector<vector<SamplePoint> > > sampleMatrix;

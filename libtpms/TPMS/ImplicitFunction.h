@@ -3,7 +3,9 @@
 
 #include <functional>
 #include <vector>
+#include <memory>
 
+using std::shared_ptr;
 using std::function;
 using std::bind;
 
@@ -41,6 +43,20 @@ enum CoordinateType {
 };
 
 /**
+ * @brief The BaseFunction class
+ * 隐式函数的基本仿函数原型
+ */
+class BaseFunction
+{
+public:
+    BaseFunction(){}
+    virtual ~BaseFunction(){}
+    virtual double operator() (double x, double y, double z) = 0;
+};
+
+using FunctionCallback = std::function<double(double, double, double)>;
+
+/**
  * @brief The ImplicitFunction class
  * 隐函数
  * std::function 支持如下的函数类型：
@@ -56,15 +72,24 @@ public:
     // 默认构造函数
     ImplicitFunction();
 
+    // 拷贝构造函数
+    ImplicitFunction(const ImplicitFunction& value);
+
+    // 析构函数
+    ~ImplicitFunction(){}
+
+    // 重载等于号
+    ImplicitFunction& operator=(const ImplicitFunction& value);
+
     /// 描述一个隐函数使用的数据
     // 隐函数
-    std::function<double(double, double, double)> implicitFunction;
+    FunctionCallback implicitFunction;
 
     // 隐函数的传入坐标
     CoordinateType implicitCoorType;
 
     // 权重函数
-    std::function<double(double, double, double)> weightFunction;
+    FunctionCallback weightFunction;
 
     // 权重函数的传入参数
     CoordinateType weightCoorType;

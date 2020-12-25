@@ -22,14 +22,20 @@ SOURCES += \
     Mesh/MeshSmoothTool.cpp \
     Mesh/PorosityCalculator.cpp \
     SurfaceMesh/OctreeUtil.cpp \
+    TPMS/AirHoleImplicitFunction.cpp \
     TPMS/BaseTpmsConfig.cpp \
     TPMS/BaseTpmsSingleSurfaceConfig.cpp \
     TPMS/BlendMarchCubeAlgorithm.cpp \
+    TPMS/BoundaryImplicitFunction.cpp \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.cpp \
     TPMS/BoxTpmsSingleSurfaceConfig.cpp \
     TPMS/CommonImplicitFunction.cpp \
     TPMS/CustomTpmsSingleSurfaceAlgorithm.cpp \
     TPMS/CustomTpmsSingleSurfaceConfig.cpp \
+    TPMS/Filter/AirHoleSamplePointGroupFilter.cpp \
+    TPMS/Filter/BoundaryMarchCubeFilter.cpp \
+    TPMS/Filter/CommonMarchCubeFilter.cpp \
+    TPMS/Filter/CommonSamplePointFilter.cpp \
     TPMS/Filter/CompressFilter.cpp \
     TPMS/ImplicitFunction.cpp \
     TPMS/ImplicitFunctionUtil.cpp \
@@ -54,16 +60,22 @@ HEADERS += \
     Mesh/MeshSmoothTool.h \
     Mesh/PorosityCalculator.h \
     SurfaceMesh/OctreeUtil.h \
+    TPMS/AirHoleImplicitFunction.h \
     TPMS/BaseTpmsAlgorithm.h \
     TPMS/BaseTpmsConfig.h \
     TPMS/BaseTpmsSingleSurfaceConfig.h \
     TPMS/BlendMarchCubeAlgorithm.h \
+    TPMS/BoundaryImplicitFunction.h \
     TPMS/BoxTpmsSingeSurfaceAlgorithm.h \
     TPMS/BoxTpmsSingleSurfaceConfig.h \
     TPMS/CommonImplicitFunction.h \
     TPMS/CustomTpmsSingleSurfaceAlgorithm.h \
     TPMS/CustomTpmsSingleSurfaceConfig.h \
+    TPMS/Filter/AirHoleSamplePointGroupFilter.h \
     TPMS/Filter/BaseFilter.h \
+    TPMS/Filter/BoundaryMarchCubeFilter.h \
+    TPMS/Filter/CommonMarchCubeFilter.h \
+    TPMS/Filter/CommonSamplePointFilter.h \
     TPMS/Filter/CompressFilter.h \
     TPMS/ImplicitFunction.h \
     TPMS/ImplicitFunctionUtil.h \

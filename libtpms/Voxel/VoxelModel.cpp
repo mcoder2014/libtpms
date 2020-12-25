@@ -44,6 +44,12 @@ bool VoxelModel::contains(Eigen::Vector3d &point) {
     return voxelMatrix[index->x()][index->y()][index->z()];
 }
 
+bool VoxelModel::contains(double x, double y, double z)
+{
+    Vector3d point(x, y, z);
+    return contains(point);
+}
+
 /**
  * @brief VoxelModel::getOuterBoundaryZ
  * 找到直线和模型相交的最两端的焦点
