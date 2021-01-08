@@ -37,6 +37,7 @@ SOURCES += \
     TPMS/Filter/CommonMarchCubeFilter.cpp \
     TPMS/Filter/CommonSamplePointFilter.cpp \
     TPMS/Filter/CompressFilter.cpp \
+    TPMS/Filter/TpmsSamplePointGroupFilter.cpp \
     TPMS/ImplicitFunction.cpp \
     TPMS/ImplicitFunctionUtil.cpp \
     TPMS/MarchBoxTable.cpp \
@@ -77,6 +78,7 @@ HEADERS += \
     TPMS/Filter/CommonMarchCubeFilter.h \
     TPMS/Filter/CommonSamplePointFilter.h \
     TPMS/Filter/CompressFilter.h \
+    TPMS/Filter/TpmsSamplePointGroupFilter.h \
     TPMS/ImplicitFunction.h \
     TPMS/ImplicitFunctionUtil.h \
     TPMS/MarchBoxTable.h \

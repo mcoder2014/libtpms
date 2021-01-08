@@ -21,6 +21,7 @@ class BoundaryImplicitFunction
 public:
     BoundaryImplicitFunction();
 
+    // boundary 隐函数执行函数
     double operator() (double x, double y, double z) override;
 
     shared_ptr<VoxelModel> getBoundary() const {

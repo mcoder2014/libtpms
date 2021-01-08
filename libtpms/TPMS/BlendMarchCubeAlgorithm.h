@@ -31,7 +31,7 @@ using ImplicitFunciton::SamplePointGroup;
 class BlendMarchCubeAlgorithm
 {
 public:
-    BlendMarchCubeAlgorithm();
+    BlendMarchCubeAlgorithm(){}
 
     // 执行处理算法
     Mesh process();

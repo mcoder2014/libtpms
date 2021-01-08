@@ -114,11 +114,6 @@ Mesh BlendMarchCubeAlgorithm::marchMesh()
  * 2. 根据 samplePoints 的值 构造 Mesh
  * @return
  */
-BlendMarchCubeAlgorithm::BlendMarchCubeAlgorithm()
-{
-
-}
-
 Mesh BlendMarchCubeAlgorithm::process()
 {
     // 先初始化采样矩阵

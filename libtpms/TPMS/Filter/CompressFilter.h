@@ -9,7 +9,7 @@ class CompressFilter
         :public BaseSampleMatrixFilter, public BaseSamplePointFilter
 {
 public:
-    CompressFilter();
+    CompressFilter() {}
 
     // Z 轴方向的压缩
     void process(vector<vector<vector<SamplePoint> > >& sampleMatrix) override;

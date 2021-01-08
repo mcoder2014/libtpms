@@ -1,12 +1,5 @@
 #include "CompressFilter.h"
 
-
-
-CompressFilter::CompressFilter()
-{
-
-}
-
 /**
  * @brief CompressFilter::process
  * 将采样矩阵压缩到体素模型边界内部
@@ -35,6 +28,17 @@ void CompressFilter::process(vector<vector<vector<SamplePoint> > >& sampleMatrix
     }
 }
 
+/**
+ * @brief CompressFilter::operator ()
+ * 应用压缩 samplePoint 操作
+ * @param sampleMatrix
+ */
+void CompressFilter::operator ()(vector<vector<vector<SamplePoint> > > &sampleMatrix)
+{
+    process(sampleMatrix);
+}
+
+
 std::shared_ptr<VoxelModel> CompressFilter::getBoundary() const
 {
     return boundary;
@@ -53,11 +57,18 @@ void CompressFilter::setBoundary(const std::shared_ptr<VoxelModel> &value)
  */
 void CompressFilter::uniformDistribute(vector<SamplePoint> &samplePoints, const vector<Eigen::Vector3d> &boundary)
 {
+    // Z 轴方向采样点总数
     uint size = samplePoints.size();
+
+    // 上下边界的位置
     double bottom = boundary[0].z();
     double top = boundary[1].z();
+
+    // 每个采样点之间的距离
     double step = (top - bottom) / (size - 1);
+    // 最下端采样点的坐标
     double zCoordinate = bottom;
+
     for(SamplePoint& samplePoint:samplePoints) {
         samplePoint.physical.z() = zCoordinate;
         zCoordinate += step;
@@ -66,6 +77,7 @@ void CompressFilter::uniformDistribute(vector<SamplePoint> &samplePoints, const 
 
 /**
  * @brief CompressFilter::setInvalid
+ * 标记采样点无效
  * @param samplePoints
  */
 void CompressFilter::setInvalid(vector<SamplePoint> &samplePoints)
@@ -73,10 +85,4 @@ void CompressFilter::setInvalid(vector<SamplePoint> &samplePoints)
     for(SamplePoint& samplePoint:samplePoints) {
         samplePoint.valid = false;
     }
-}
-
-
-void CompressFilter::operator ()(vector<vector<vector<SamplePoint> > > &sampleMatrix)
-{
-    process(sampleMatrix);
 }
