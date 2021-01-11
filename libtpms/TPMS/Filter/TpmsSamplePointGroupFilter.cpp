@@ -6,12 +6,6 @@
 
 using namespace std::placeholders;
 
-
-TpmsSamplePointGroupFilter::TpmsSamplePointGroupFilter()
-{
-
-}
-
 /**
  * @brief TpmsSamplePointGroupFilter::operator ()
  * @param sampleMatrix

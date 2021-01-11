@@ -27,7 +27,7 @@ class TpmsSamplePointGroupFilter
         :public BaseSamplePointGroupFilter
 {
 public:
-    TpmsSamplePointGroupFilter();
+    TpmsSamplePointGroupFilter() {}
 
     // Filter 执行函数
     vector<ImplicitFunciton::SamplePointGroup> operator ()(vector<vector<vector<SamplePoint> > > &sampleMatrix) override;
