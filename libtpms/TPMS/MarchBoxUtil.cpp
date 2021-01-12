@@ -36,10 +36,7 @@ void initMatrix(vector<vector<vector<SamplePoint> > > &matrix,
         Eigen::AlignedBox3d boundingBoxLogical)
 {
     // Matrix Size
-    Vector3i size;
-    size.x() = matrix.size();
-    size.y() = matrix[0].size();
-    size.z() = matrix[0][0].size();
+    Vector3i size = getSampleMatrixSize(matrix);
 
     // physical Boundary
     Vector3d physicalMin = boundingBoxPhysial.min();
@@ -165,4 +162,63 @@ int getMarchBoxCubeIndex(
     if(matrix[index.x()  ][index.y()+1][index.z()+1].implicitValue < isoLevel)
         cubeIndex |= 128;
     return cubeIndex;
+}
+
+/**
+ * @brief getSampleMatrixSize
+ * 从采样矩阵获得采样矩阵的 index 尺寸
+ * @param matrix
+ * @return
+ */
+Eigen::Vector3i getSampleMatrixSize(vector<vector<vector<SamplePoint> > > &matrix)
+{
+    Vector3i range(0, 0, 0);
+    range.x() = matrix.size();
+    range.y() = matrix[0].size();
+    range.z() = matrix[0][0].size();
+    return range;
+}
+
+/**
+ * @brief getPhysicalStep
+ * 获得采样点物理间距
+ * @param matrix
+ * @return
+ */
+Eigen::Vector3d getPhysicalStep(vector<vector<vector<SamplePoint> > > &matrix)
+{
+    /// 计算 offset 对应的起始坐标点
+    Vector3d physicalStep(.0, .0, .0);
+    physicalStep.x() = matrix[1][1][1].physical.x() - matrix[0][0][0].physical.x();
+    physicalStep.y() = matrix[1][1][1].physical.y() - matrix[0][0][0].physical.y();
+    physicalStep.z() = matrix[1][1][1].physical.z() - matrix[0][0][0].physical.z();
+    return physicalStep;
+}
+
+Eigen::Vector3d getLogicalStep(vector<vector<vector<SamplePoint> > > &matrix)
+{
+    Vector3d tpmsStep(.0, .0, .0);
+    tpmsStep.x() = matrix[1][1][1].tpms.x() - matrix[0][0][0].tpms.x();
+    tpmsStep.y() = matrix[1][1][1].tpms.y() - matrix[0][0][0].tpms.y();
+    tpmsStep.z() = matrix[1][1][1].tpms.z() - matrix[0][0][0].tpms.z();
+    return tpmsStep;
+}
+
+/**
+ * @brief calcMatrixSize
+ * 计算矩阵尺寸
+ * @param boundingBox
+ * @param interval
+ * @return
+ */
+Eigen::Vector3i calcMatrixSize(const Eigen::AlignedBox3d &boundingBox, const Eigen::Vector3d &interval)
+{
+    Vector3i matrixSize;
+    Vector3d extent = boundingBox.max() - boundingBox.min();
+
+    matrixSize.x() = static_cast<int>(round(extent.x() / interval.x()));
+    matrixSize.y() = static_cast<int>(round(extent.y() / interval.y()));
+    matrixSize.z() = static_cast<int>(round(extent.z() / interval.z()));
+
+    return matrixSize;
 }

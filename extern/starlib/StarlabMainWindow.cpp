@@ -19,7 +19,7 @@ MainWindow::MainWindow(Application* _application) :
     _application(_application)
 {   
     /// Init
-    _modePlugin = NULL;
+    _modePlugin = nullptr;
     _isModePluginSuspended = false;
     
     /// Setup central widget
@@ -51,22 +51,22 @@ MainWindow::MainWindow(Application* _application) :
         // QIcon icon;
         // icon.addPixmap(QPixmap(":images/___.png"));
         // setWindowIcon(icon);
-        setWindowTitle("Starlab v1.1");        
+        setWindowTitle(tr("LydiaLab"));
     }
        
     /// Instantiate Menus (plugins will fill them in)
     /// Do not use the silly "&" symbols for windows notation for alt navigation
     {
-        menus << (fileMenu      = menuBar()->addMenu("File"));
-        menus << (modeMenu      = menuBar()->addMenu("Mode"));
-        menus << (filterMenu    = menuBar()->addMenu("Filters"));
-        menus << (renderMenu    = menuBar()->addMenu("Render"));
+        menus << (fileMenu      = menuBar()->addMenu(tr("File")));
+        menus << (modeMenu      = menuBar()->addMenu(tr("Mode")));
+        menus << (filterMenu    = menuBar()->addMenu(tr("Filters")));
+        menus << (renderMenu    = menuBar()->addMenu(tr("Render")));
 #ifdef ENABLE_DECORATION
-        menus << (decorateMenu  = menuBar()->addMenu("Decorate"));
+        menus << (decorateMenu  = menuBar()->addMenu(tr("Decorate")));
 #endif
-        menus << (viewMenu      = menuBar()->addMenu("View"));
-        menus << (windowsMenu   = menuBar()->addMenu("Windows"));
-        menus << (helpMenu      = menuBar()->addMenu("Help"));
+        menus << (viewMenu      = menuBar()->addMenu(tr("View")));
+        menus << (windowsMenu   = menuBar()->addMenu(tr("Windows")));
+        menus << (helpMenu      = menuBar()->addMenu(tr("Help")));
        
 /// @todo this was annoying and caused bugs, temporarily disabled
 #ifdef TODO_SHOW_ACTION_TOOLTIP
@@ -110,10 +110,12 @@ MainWindow::MainWindow(Application* _application) :
         
         /// @brief Whenever there is nothing to show, hide the toolbar.
         /// @todo add a timer that disables it after a while otherwise it's kind of annoying
-        connect(_statusBar, SIGNAL(messageChanged(QString)), this, SLOT(hideToolbarOnEmptyMessage(QString)) );
+        connect(_statusBar, SIGNAL(messageChanged(QString)),
+                this, SLOT(hideToolbarOnEmptyMessage(QString)) );
         
         /// Show visual notification for changes in selection
-        connect(document(), SIGNAL(selectionChanged(Model*)), this, SLOT(selectionChanged(Model*)));
+        connect(document(), SIGNAL(selectionChanged(Model*)),
+                this, SLOT(selectionChanged(Model*)));
     }
     
     /// Intercepts the "open" events sent directly by the Operative System in this->eventFilter
@@ -123,13 +125,17 @@ MainWindow::MainWindow(Application* _application) :
        
     /// Connect document changes to view changes
     {
-        connect(document(),SIGNAL(resetViewport()), drawArea(),SLOT(resetViewport()));
-        connect(document(),SIGNAL(resetViewport()), drawArea(),SLOT(updateGL()));
+        connect(document(),SIGNAL(resetViewport()),
+                drawArea(),SLOT(resetViewport()));
+        connect(document(),SIGNAL(resetViewport()),
+                drawArea(),SLOT(updateGL()));
     }
     
     /// Installs all the GUI plugins
+    /// 加载全部的 GUI Plugin
+    /// 执行 plugin 的 load 函数(此时大多数插件已经加载完毕
     {
-        foreach(GuiPlugin* plugin, pluginManager()->guiPlugins()){
+        for(GuiPlugin* plugin : pluginManager()->guiPlugins()){
             // qDebug() << "GuiPlugin::load " << plugin->name();
             plugin->_mainWindow=this;
             plugin->load();
@@ -178,7 +184,7 @@ QSize MainWindow::sizeHint() const{
     QRect geom = QApplication::desktop()->screenGeometry();
     int scrw = geom.width();
     int scrh = geom.height();   
-	return QSize(scrw * 0.75, scrh * 0.75);
+    return QSize(scrw * 0.75, scrh * 0.75);
 }
 
 void MainWindow::triggerFilterByName(QString name){
@@ -199,14 +205,14 @@ void MainWindow::triggerFilterByName(QString name){
 }
 
 void MainWindow::setModePlugin(ModePlugin* mode){ 
-    Q_ASSERT(_modePlugin==NULL); 
+    Q_ASSERT(_modePlugin == nullptr);
     _modePlugin=mode;
     emit modePluginSet(mode);
 }
 
 /// @todo Implement this function...
 void MainWindow::triggerMenuActionByName(QString name){
-    QAction* trigger_me = NULL;
+    QAction* trigger_me = nullptr;
     foreach(QMenu* menu, menus)
         foreach(QAction* action, menu->actions())
             if(action->text()==name)

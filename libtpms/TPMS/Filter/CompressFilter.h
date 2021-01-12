@@ -1,18 +1,19 @@
 #ifndef COMPRESSFILTER_H
 #define COMPRESSFILTER_H
 
-#include "BaseSampleMatrixFilter.h"
+#include "BaseFilter.h"
 
 #include "Voxel/VoxelModel.h"
 
 class CompressFilter
-        :public BaseSampleMatrixFilter
+        :public BaseSampleMatrixFilter, public BaseSamplePointFilter
 {
 public:
-    CompressFilter();
+    CompressFilter() {}
 
     // Z 轴方向的压缩
-    virtual void process(vector<vector<vector<SamplePoint> > >& sampleMatrix) override;
+    void process(vector<vector<vector<SamplePoint> > >& sampleMatrix) override;
+    void operator ()(vector<vector<vector<SamplePoint> > > &sampleMatrix) override;
 
     std::shared_ptr<VoxelModel> getBoundary() const;
     void setBoundary(const std::shared_ptr<VoxelModel> &value);
@@ -25,7 +26,6 @@ private:
     void uniformDistribute(vector<SamplePoint>& samplePoints, const vector<Vector3d>& boundary);
 
     void setInvalid(vector<SamplePoint>& samplePoints);
-
 };
 
 #endif // COMPRESSFILTER_H

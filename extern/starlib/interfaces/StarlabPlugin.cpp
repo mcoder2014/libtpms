@@ -17,36 +17,36 @@ DrawArea* StarlabPlugin::drawArea(){
 }
 
 MainWindow* StarlabPlugin::mainWindow(){ 
-	return _mainWindow; 
+    return _mainWindow; 
 }
  
 Application* StarlabPlugin::application(){ 
-	return _application; 
+    return _application; 
 }
 
 Document* StarlabPlugin::document(){ 
-	Q_ASSERT(_application);
-	return _application->document(); 
+    Q_ASSERT(_application);
+    return _application->document(); 
 }
 
 Settings* StarlabPlugin::settings(){ 
-	Q_ASSERT(_application);
-	return _application->settings(); 
+    Q_ASSERT(_application);
+    return _application->settings(); 
 }
 
 PluginManager* StarlabPlugin::pluginManager(){ 
-	Q_ASSERT(_application);
-	return _application->pluginManager();
+    Q_ASSERT(_application);
+    return _application->pluginManager();
 }
 
 /// @internal action cannot be created in constructor. This is because 
 /// in the constructor local methods are preferred over polymorphic ones :(
 QAction *StarlabPlugin::action(){ 
-    if(_action==NULL){
-        _action = new QAction(icon(),name(),NULL);
+    if(_action == nullptr){
+        _action = new QAction(icon(), name(), nullptr);
         _action->setToolTip(description());
         _action->setShortcut(shortcut());
-        _action->setParent(this);        
+        _action->setParent(this);
     }
     return _action;
 }
@@ -56,11 +56,12 @@ void StarlabPlugin::showMessage(const char *format, ...){
     char buffer[buffer_length];
     va_list args;
     va_start (args, format);
-    vsnprintf(buffer,buffer_length,format, args);
+    vsnprintf(buffer,buffer_length, format, args);
     va_end (args);
     QString msg(buffer);
     /// Show on terminal
     qDebug() << msg;
+
     /// And on window
     if( mainWindow() )
         mainWindow()->setStatusBarMessage(msg,20.0);

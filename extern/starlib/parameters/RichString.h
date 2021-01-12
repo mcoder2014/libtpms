@@ -18,13 +18,13 @@ public:
     public:
         Widget(QWidget* p,RichString* rpar) : LineEditWidget(p,rpar) {
             this->lned->setAlignment(Qt::AlignRight);   
-            lned->setText(rp->val->getString());
+            lned->setText(richParameter->val->getString());
         }
         void collectWidgetValue(){
-            rp->val->set(Value(lned->text()));
+            richParameter->val->set(Value(lned->text()));
         }
         void resetWidgetValue(){
-            lned->setText(rp->defaultValue->getString());
+            lned->setText(richParameter->defaultValue->getString());
         }
         void setWidgetValue(const Value& nv){
             lned->setText(nv.getString());
@@ -37,7 +37,7 @@ public:
         inline QString getString() const { return pval; }
         inline bool isString() const { return true; }
         inline QString typeName() const { return QString("String"); }
-        inline void	set(const RichParameter::Value& p) { pval = p.getString(); }
+        inline void    set(const RichParameter::Value& p) { pval = p.getString(); }
         QString toString() { return getString(); }
         ~Value() {}
     private:

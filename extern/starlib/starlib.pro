@@ -1,9 +1,11 @@
 include($$PWD/../starlab.prf)
+include($$PWD/../../depends/eigen.pri)
 StarlabTemplate(sharedlib)
 
 # ---------------------------------------------
 # --               EXERNALS                  --
 # ---------------------------------------------
+#TODO: 替换 qglViewer 为 dll 链接方式
 include(qglviewer/qglviewer.pri)
 
 # ---------------------------------------------

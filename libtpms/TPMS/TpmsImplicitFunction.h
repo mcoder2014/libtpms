@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <functional>
 
+#include "ImplicitFunction.h"
+
 enum TpmsType
 {
     P = 0,

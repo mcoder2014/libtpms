@@ -10,7 +10,7 @@
 
 #include "SamplePoint.h"
 #include "TpmsImplicitFunction.h"
-#include "mesh.h"
+#include "Mesh/Mesh.h"
 
 using std::vector;
 using Eigen::Vector3d;
@@ -26,6 +26,17 @@ vector<vector<vector<T> > >  create3DMatrix(Vector3i size, T initValue)
             vector<T>(size.z(), initValue)));
 }
 
+// 计算需要的采样点尺寸
+Vector3i calcMatrixSize(const Eigen::AlignedBox3d& boundingBox, const Vector3d& interval);
+
+// 从采样矩阵获得采样矩阵的 index 尺寸
+Vector3i getSampleMatrixSize(vector<vector<vector<SamplePoint>>>& matrix);
+
+// 从采样矩阵中获得 step
+Vector3d getPhysicalStep(vector<vector<vector<SamplePoint>>>& matrix);
+Vector3d getLogicalStep(vector<vector<vector<SamplePoint>>>& matrix);
+
+
 // 初始化物理坐标三维矩阵
 void initMatrix(
         vector<vector<vector<SamplePoint>>>& matrix,
@@ -35,11 +46,14 @@ void initMatrix(
 // 计算采样矩阵每隔的间距
 Vector3d getStepSize(Eigen::AlignedBox3d boundingBox, Vector3i size);
 
+// 计算每个采样点的 Tpms 隐函数值
 void calcTpmsFunction(vector<vector<vector<SamplePoint>>>& matrix,
         TpmsImplicitFunction tpmsFunction);
 
+// March box 拟合网格时，用于独立标示每个顶点
 std::string hashKey(Vector3i index, int edgeIdx);
 
+// 根据体素 8 个顶点的 tpms 隐函数值，拟合面片情况。
 int getMarchBoxCubeIndex(const vector<vector<vector<SamplePoint> > > &matrix,
         Vector3i& index,
         double isoLevel);

@@ -25,6 +25,7 @@ public:
 
     // 判断空间一点是否在体素模型内部
     bool contains(Vector3d &point);
+    bool contains(double x, double y, double z);
 
     // 找到直线和模型相交的最两端的焦点(Z轴方向的直线)
     vector<Vector3d> getOuterBoundaryZ(const Eigen::Vector3d &point);

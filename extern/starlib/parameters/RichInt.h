@@ -15,13 +15,13 @@ public:
     public:
         Widget(QWidget* p,RichInt* rpar):LineEditWidget(p,rpar) {
             this->lned->setAlignment(Qt::AlignRight);
-            lned->setText(QString::number(rp->val->getInt()));
+            lned->setText(QString::number(richParameter->val->getInt()));
         }
         void collectWidgetValue(){
-            rp->val->set(Value(lned->text().toInt()));            
+            richParameter->val->set(Value(lned->text().toInt()));
         }
         void resetWidgetValue(){    
-            lned->setText(QString::number(rp->defaultValue->getInt()));
+            lned->setText(QString::number(richParameter->defaultValue->getInt()));
         }
         void setWidgetValue(const Value& nv){
             lned->setText(QString::number(nv.getInt()));
@@ -34,10 +34,10 @@ public:
         int pval;
     public:
         Value(const int val) : pval(val) {}
-        inline int	getInt() const { return pval; }
+        inline int    getInt() const { return pval; }
         inline bool isInt() const { return true; }
         inline QString typeName() const { return QString("Int"); }
-        inline void	set(const RichParameter::Value& p) { pval = p.getInt(); }
+        inline void    set(const RichParameter::Value& p) { pval = p.getInt(); }
         QString toString() { return QString::number(getInt()); }
     };
 };

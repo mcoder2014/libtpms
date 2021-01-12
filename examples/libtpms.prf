@@ -7,23 +7,7 @@ message("libtpms.prf PWD": $$PWD)
 message("libtpms.prf OUT_PWD": $$OUT_PWD)
 
 contains(DEFINES,USING_SURFACEMESH) {
-    unix {
-        INCLUDEPATH += \
-            $$PWD/../extern/surfacemesh \
-            $$PWD/../extern/surfacemesh/helpers \
-            $$PWD/../extern/surfacemesh/parameters \
-            $$PWD/../extern/starlib \
-            $$PWD/../extern/octree
-
-        DEPENDPATH += \
-            $$PWD/../extern/surfacemesh \
-            $$PWD/../extern/surfacemesh/helpers \
-            $$PWD/../extern/surfacemesh/parameters \
-            $$PWD/../extern/starlib
-
-        LIBS += \
-            -L$$OUT_PWD/../../bin -lsurfacemesh -lstarlib -ltpms
-    }
+    include($$PWD/../extern/lydialab.pri)
 } else {
     message('Not DEFINE USING_SURFACEMESH')
 }
@@ -45,4 +29,5 @@ unix {
         -lassimp \      # assimp
         -lopencv_core -lopencv_imgproc \ # opencv
         -lQt5Core -lQt5Gui -lQt5Core -lQt5OpenGL -lQt5Widgets \    # Qt
+        -L$$OUT_PWD/../../bin -ltpms
 }
