@@ -86,6 +86,7 @@ HEADERS += \
     TPMS/SamplePoint.h \
     TPMS/SamplePointGroup.h \
     TPMS/TpmsImplicitFunction.h \
+    Thread/ThreadPool.h \
     Voxel/VoxelModel.h \
     Voxel/VoxelOctree.h \
     Voxel/VoxelTools.h
@@ -117,6 +118,7 @@ unix {
         -lassimp \      # assimp
         -lopencv_core -lopencv_imgproc \ # opencv
         -lQt5Core -lQt5Gui -lQt5Core -lQt5OpenGL -lQt5Widgets \    # Qt
+        -lpthread   # multi thread
 }
 
 

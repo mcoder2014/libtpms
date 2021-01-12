@@ -31,10 +31,13 @@ public:
     vector<Vector3d> getOuterBoundaryZ(const Eigen::Vector3d &point);
 
     // 设置体素的尺寸，体素过小会导致效率低、占内存，提速过大会速度缓慢
-    void setVoxelSize(double value);
+    void setVoxelSize(double value) { voxelSize = value; }
 
     // 构建体素模型
     void build(Octree &octree);
+
+    // 使用多线程方式构建 VoxelModel
+    void buildMT(Octree &octree, size_t threadCount = 8);
 
     // 验证输入的index 是否合法
     bool validIndex(const Vector3i &index) const;
@@ -49,21 +52,29 @@ public:
     std::shared_ptr<Vector3d> getVoxelMinPoint(const Vector3i &index) const;
     std::shared_ptr<Vector3d> getVoxelMaxPoint(const Vector3i &index) const;
 
-    VoxelData getVoxelMatrix() const;
-    double getVoxelSize() const;
-    Vector3d getCenter() const;
-    Vector3i getVoxelMatrixSize() const;
-    Eigen::AlignedBox3d getBoundingBox() const;
-    Eigen::AlignedBox3d getOriginBoundingBox() const;
+    VoxelData getVoxelMatrix() const { return voxelMatrix; }
+    double getVoxelSize() const { return voxelSize; }
+    Vector3d getCenter() const { return center; }
+    Vector3i getVoxelMatrixSize() const { return voxelMatrixSize; }
+    Eigen::AlignedBox3d getBoundingBox() const { return boundingBox; }
+    Eigen::AlignedBox3d getOriginBoundingBox() const { return originBoundingBox; }
 
 private:
     Eigen::AlignedBox3d getBoundingBoxFromOctree(Octree &octree);
 
-    Vector3i createMatrixSize();
-    void generateVoxelModelFromOctree(VoxelData &voxelData, Octree &octree);
-    void updateVoxelFromIntersects(vector<bool> &voxels,
-                                   vector<Vector3d> &intersects);
+    // 计算体素应该的尺寸
+    Vector3i claculateMatrixSize();
 
+    // 从 octree 中构建体素模型
+    void generateVoxelModelFromOctree(VoxelData &voxelData, Octree &octree);
+
+    // 多线程版本从 Octree 中构建体素模型
+    void generateVoxelModelFromOctreeMT(VoxelData &voxelData, Octree &octree, size_t threadCount);
+
+    // 根据交点，更新体素结果
+    void updateFromIntersects(vector<bool> &voxels, vector<Vector3d> &intersects);
+
+    /// 私有数据
     // 体素矩阵
     VoxelData voxelMatrix;
 

@@ -3,6 +3,7 @@
 #include "Math/EigenUtil.h"
 #include "SurfaceMesh/OctreeUtil.h"
 #include "TPMS/MarchBoxUtil.h"
+#include "Thread/ThreadPool.h"
 
 VoxelModel::VoxelModel(double voxelSize) { this->voxelSize = voxelSize; }
 
@@ -20,13 +21,38 @@ void VoxelModel::build(Octree &octree) {
     originBoundingBox.extend(octree.originBoundingBox.vmax);
 
     // 计算体素矩阵的大小
-    voxelMatrixSize = createMatrixSize();
+    voxelMatrixSize = claculateMatrixSize();
 
     // 初始化空体素模型
     voxelMatrix = create3DMatrix<bool>(voxelMatrixSize, false);
 
     // 构建 voxelModel
     generateVoxelModelFromOctree(voxelMatrix, octree);
+}
+
+/**
+ * @brief VoxelModel::buildMT
+ * 使用多线程方式构建 voxelModel
+ * @param octree
+ * @param threadCount 线程池的数量
+ */
+void VoxelModel::buildMT(Octree &octree, size_t threadCount)
+{
+    // 从 octree 中获得立方体扩大包围盒
+    boundingBox = getBoundingBoxFromOctree(octree);
+
+    // 获得原始包围盒
+    originBoundingBox.extend(octree.originBoundingBox.vmin);
+    originBoundingBox.extend(octree.originBoundingBox.vmax);
+
+    // 计算体素矩阵的大小
+    voxelMatrixSize = claculateMatrixSize();
+
+    // 初始化空体素模型
+    voxelMatrix = create3DMatrix<bool>(voxelMatrixSize, false);
+
+    // 构建 voxelModel
+    generateVoxelModelFromOctreeMT(voxelMatrix, octree, threadCount);
 }
 
 /**
@@ -120,6 +146,12 @@ void VoxelModel::clear() {
     originBoundingBox.setEmpty();
 }
 
+/**
+ * @brief VoxelModel::getVoxelMinPoint
+ * 获得某一颗体素的最小坐标点
+ * @param index
+ * @return
+ */
 std::shared_ptr<Eigen::Vector3d> VoxelModel::getVoxelMinPoint(
         const Eigen::Vector3i &index) const {
     if (!validIndex(index)) {
@@ -134,6 +166,12 @@ std::shared_ptr<Eigen::Vector3d> VoxelModel::getVoxelMinPoint(
     return minPoint;
 }
 
+/**
+ * @brief VoxelModel::getVoxelMaxPoint
+ * 获得某一颗体素的最大点
+ * @param index
+ * @return
+ */
 std::shared_ptr<Eigen::Vector3d> VoxelModel::getVoxelMaxPoint(
         const Eigen::Vector3i &index) const {
     if (!validIndex(index)) {
@@ -148,10 +186,6 @@ std::shared_ptr<Eigen::Vector3d> VoxelModel::getVoxelMaxPoint(
     maxPoint->z() += (index.z() + 1) * voxelSize;
     return maxPoint;
 }
-
-VoxelData VoxelModel::getVoxelMatrix() const { return voxelMatrix; }
-
-Vector3d VoxelModel::getCenter() const { return center; }
 
 /**
  * @brief VoxelModel::getBoundingBoxFromOctree
@@ -198,12 +232,12 @@ std::shared_ptr<Eigen::Vector3i> VoxelModel::getMatrixIndex(
 }
 
 /**
- * @brief VoxelModel::createMatrixSize
+ * @brief VoxelModel::claculateatrixSize
  * 根据 boundingBox 和 voxelSize 计算矩阵大小
  * 为了取整，向 max 方向扩张 boundingBox
  * @return
  */
-Eigen::Vector3i VoxelModel::createMatrixSize() {
+Eigen::Vector3i VoxelModel::claculateMatrixSize() {
     Vector3d relative = boundingBox.max() - boundingBox.min();
 
     // 进一法
@@ -242,9 +276,53 @@ void VoxelModel::generateVoxelModelFromOctree(VoxelData &voxelData,
             vector<Vector3d> intersectPoints =
                     getIntersectPointsDirectionZ(octree, point);
             // 根据交点修改对应位置的体素值为 true or false
-            updateVoxelFromIntersects(voxelData[index.x()][index.y()],
+            updateFromIntersects(voxelData[index.x()][index.y()],
                     intersectPoints);
         }
+    }
+}
+
+/**
+ * @brief VoxelModel::generateVoxelModelFromOctreeMT
+ * 利用射线，从八叉树中建立体素结构 多线程版本
+ * @param voxelData
+ * @param octree
+ * @param threadCount 线程池的数量
+ */
+void VoxelModel::generateVoxelModelFromOctreeMT(VoxelData &voxelData, Octree &octree, size_t threadCount)
+{
+    Vector3d minPoint = boundingBox.min();
+    Vector3i index;
+
+    // 多线程的单个任务
+    auto task = [this, minPoint,  &octree, &voxelData](Vector3i idx){
+
+        Vector3d point(0, 0, minPoint.z());
+        point.x() = minPoint.x() + idx.x() * voxelSize;
+
+        for (idx.y() = 0; idx.y() < voxelMatrixSize.y(); idx.y()++) {
+            point.y() = minPoint.y() + idx.y() * voxelSize;
+            // 获得排序后的交点
+            vector<Vector3d> intersectPoints = getIntersectPointsDirectionZ(octree, point);
+            // 根据交点修改对应位置的体素值为 true or false
+            updateFromIntersects(voxelData[idx.x()][idx.y()], intersectPoints);
+        }
+    };
+
+    // 构建线程池
+    ThreadPool threadpool(static_cast<ushort>(threadCount));
+
+    // 线程池返回值
+    vector<future<void>> futures;
+
+    // 分配任务给线程池
+    for (index.x() = 0; index.x() < voxelMatrixSize.x(); index.x()++) {
+        futures.emplace_back(threadpool.commit(task, index));
+    }
+
+    // 任务同步
+    for(future<void>& future :futures) {
+        future.wait();
     }
 }
 
@@ -254,8 +332,9 @@ void VoxelModel::generateVoxelModelFromOctree(VoxelData &voxelData,
  * @param voxels
  * @param intersects
  */
-void VoxelModel::updateVoxelFromIntersects(
+void VoxelModel::updateFromIntersects(
         vector<bool> &voxels, vector<Eigen::Vector3d> &intersects) {
+
     double pos = boundingBox.min().z();
     int countZ = voxelMatrixSize.z();
 
@@ -290,15 +369,3 @@ void VoxelModel::updateVoxelFromIntersects(
         }
     }
 }
-
-Eigen::AlignedBox3d VoxelModel::getOriginBoundingBox() const {
-    return originBoundingBox;
-}
-
-Eigen::AlignedBox3d VoxelModel::getBoundingBox() const { return boundingBox; }
-
-Vector3i VoxelModel::getVoxelMatrixSize() const { return voxelMatrixSize; }
-
-double VoxelModel::getVoxelSize() const { return voxelSize; }
-
-void VoxelModel::setVoxelSize(double value) { voxelSize = value; }
