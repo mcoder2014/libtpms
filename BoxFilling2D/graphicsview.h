@@ -21,7 +21,8 @@ public:
 signals:
 
 public slots:
-    void updateCuttingPoints(std::vector<std::vector<OpenMesh::Vec2f>>* cutting_points_2d);
+    void updateCuttingPoints(std::vector<std::vector<OpenMesh::Vec2f>>* points2d);
+    void updatePointCloud(std::vector<OpenMesh::Vec2f>& points2d);
 
 protected:
 
@@ -30,8 +31,8 @@ protected:
 
 
 private:
-    std::vector<std::vector<QPointF>> m_cutting_points;
-    std::vector<std::vector<QGraphicsLineItem*>> m_cutting_lines;
+    std::vector<std::vector<QPointF>> cuttingPoints;
+    std::vector<std::vector<QGraphicsLineItem*>> cuttingLines;
 };
 
 #endif // GRAPHICSVIEW_H

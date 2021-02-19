@@ -25,20 +25,26 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        FootProjector.cpp \
         UI/cuttingplanesettingdialog.cpp \
+        UI/rangeprojectdialog.cpp \
         graphicsview.cpp \
         main.cpp \
         mainwindow.cpp \
         meshcutting.cpp
 
 HEADERS += \
+        FootProjector.h \
         UI/cuttingplanesettingdialog.h \
+        UI/rangeprojectdialog.h \
         graphicsview.h \
         mainwindow.h \
+        mesh.h \
         meshcutting.h
 
 FORMS += \
         UI/cuttingplanesettingdialog.ui \
+        UI/rangeprojectdialog.ui \
         mainwindow.ui
 
 unix {

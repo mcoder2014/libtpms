@@ -31,7 +31,11 @@
      <number>4</number>
     </property>
     <item>
-     <widget class="GraphicsView" name="graphicsView"/>
+     <widget class="GraphicsView" name="graphicsView">
+      <property name="dragMode">
+       <enum>QGraphicsView::ScrollHandDrag</enum>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -41,7 +45,7 @@
      <x>0</x>
      <y>0</y>
      <width>495</width>
-     <height>28</height>
+     <height>33</height>
     </rect>
    </property>
    <property name="font">
@@ -62,6 +66,7 @@
     <addaction name="separator"/>
     <addaction name="action_set_cutting_flat"/>
     <addaction name="action_cutting_mesh"/>
+    <addaction name="action_range_projector"/>
    </widget>
    <widget class="QMenu" name="menu_edit_2">
     <property name="title">
@@ -130,6 +135,11 @@
    </property>
    <property name="text">
     <string>平面与模型求交</string>
+   </property>
+  </action>
+  <action name="action_range_projector">
+   <property name="text">
+    <string>range projector</string>
    </property>
   </action>
  </widget>

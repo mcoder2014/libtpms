@@ -3,13 +3,11 @@
 
 #include <QMainWindow>
 
+#include "ui_mainwindow.h"
+
 #include "meshcutting.h"
 
-namespace Ui {
-class MainWindow;
-}
-
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, public Ui::MainWindow
 {
     Q_OBJECT
 
@@ -19,15 +17,15 @@ public:
 
 public slots:
     // give a dialog, let user choose a insole file
-    void dialog_open_insole_file();
-    bool open_insole_file(const QString& filepath);
+    void dialogOpenModelFile();
+    bool openModelFile(const QString& filepath);
 
-    void dialog_set_cutting_plane();
-    void cutting_mesh();
+    void dialogSettingCuttingPlane();
+    void cuttingMesh();
+    void dialogRangeProjector();
 
 private:
-    Ui::MainWindow *ui;
-    MeshCutting m_meshcutter;
+    MeshCutting meshcutter;
 };
 
 #endif // MAINWINDOW_H

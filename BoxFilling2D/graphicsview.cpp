@@ -12,20 +12,22 @@ GraphicsView::GraphicsView(QWidget *parent)
     this->setScene(new QGraphicsScene);
 }
 
-void GraphicsView::updateCuttingPoints(std::vector<std::vector<OpenMesh::Vec2f> > *cutting_points_2d)
+void GraphicsView::updateCuttingPoints(std::vector<std::vector<OpenMesh::Vec2f> > *points2d)
 {
     // clean old
-    this->m_cutting_points.clear();
+    this->cuttingPoints.clear();
 
     // TODO: Delete the lines from the scene
-    this->m_cutting_lines.clear();
+    this->cuttingLines.clear();
+
+    this->scene()->clear();
 
     // Add new
-    for(auto vec_points: *cutting_points_2d)
+    for(auto vec_points: *points2d)
     {
-        this->m_cutting_points.push_back(std::vector<QPointF>());
+        this->cuttingPoints.push_back(std::vector<QPointF>());
         auto& cutting_points =
-                this->m_cutting_points[this->m_cutting_points.size()-1];
+                this->cuttingPoints[this->cuttingPoints.size()-1];
 
         for(auto vec_point:vec_points)
         {
@@ -37,12 +39,12 @@ void GraphicsView::updateCuttingPoints(std::vector<std::vector<OpenMesh::Vec2f> 
     }
 
     // Draw it on the graphicsview
-    for(auto vec_qpoints: this->m_cutting_points)
+    for(auto vec_qpoints: this->cuttingPoints)
     {
-        this->m_cutting_lines.push_back(std::vector<QGraphicsLineItem*>());
+        this->cuttingLines.push_back(std::vector<QGraphicsLineItem*>());
         if(vec_qpoints.size() <2)
                 break;
-        std::vector<QGraphicsLineItem*>& lines = this->m_cutting_lines[this->m_cutting_lines.size()-1];
+        std::vector<QGraphicsLineItem*>& lines = this->cuttingLines[this->cuttingLines.size()-1];
 
         for(unsigned long i = 0; i < vec_qpoints.size()-1; i++)
         {
@@ -52,6 +54,20 @@ void GraphicsView::updateCuttingPoints(std::vector<std::vector<OpenMesh::Vec2f> 
             lines.push_back(line);
         }
     }
+
+    this->updateGeometry();
+}
+
+void GraphicsView::updatePointCloud(std::vector<OpenMesh::Vec2f> &points2d)
+{
+    this->scene()->clear();
+
+    for(OpenMesh::Vec2f point:points2d) {
+        QPointF qpoint(point[0], point[1]);
+        this->scene()->addLine(QLineF(qpoint, qpoint));
+    }
+
+    this->updateGeometry();
 }
 
 void GraphicsView::wheelEvent(QWheelEvent *event)

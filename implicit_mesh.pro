@@ -4,7 +4,7 @@ SUBDIRS += \
     libtpms \
     examples \
     BoxFilling2D \
-    Tools \
+#    Tools \
 
 CONFIG += ordered
 

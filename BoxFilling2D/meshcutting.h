@@ -5,28 +5,7 @@
 #include <string>
 #include <iostream>
 
-#include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
-#include <OpenMesh/Core/IO/MeshIO.hh>
-
-// OpenMesh Traits
-struct EigenTraits: public OpenMesh::DefaultTraits
-{
-public:
-    VertexTraits
-    {
-//        OpenMesh::Vec3f cog;    // center of gravity
-        int id;
-    };
-    FaceTraits
-    {
-        bool checked = false;
-    };
-    EdgeTraits
-    {
-    };
-};
-
-using Mesh = OpenMesh::PolyMesh_ArrayKernelT<EigenTraits>;
+#include "mesh.h"
 
 class MeshCutting
 {
@@ -44,11 +23,11 @@ public:
     Mesh *mesh(){return m_model;}
 
     void cutting();
-    std::vector<std::vector<OpenMesh::Vec3f> > *cutting_result(){
-        return &this->m_cuttingPoints;
+    std::vector<std::vector<OpenMesh::Vec3f> > *getCuttingResult(){
+        return &this->cuttingPoints;
     }
 
-    std::vector<OpenMesh::Vec3f> face_intersection_cutting_plane(Mesh::FaceHandle faceHandle);
+    std::vector<OpenMesh::Vec3f> faceIntersectionCuttingPlane(Mesh::FaceHandle faceHandle);
     std::vector<std::vector<OpenMesh::Vec2f> > *getCuttingPoints2d();
     void printCuttingResult();
 
@@ -62,10 +41,12 @@ private:
 
     // The intersection points of cutting plane and the 3D model
     // Cause there may be more than one circle, so we use 2-d vector
-    std::vector<std::vector<OpenMesh::Vec3f>> m_cuttingPoints;
+    std::vector<std::vector<OpenMesh::Vec3f>> cuttingPoints;
+
     // The cutting points project on the cutting plane
-    std::vector<std::vector<OpenMesh::Vec2f>> m_cuttingPoints_2d;
-    std::vector<float> m_cutting_function_vertex;
+    std::vector<std::vector<OpenMesh::Vec2f>> cuttingPoints2d;
+
+    std::vector<float> cuttingVertex;
 
     // According to the function of cutting plane
     float functionCuttingPlane(OpenMesh::Vec3f& point);

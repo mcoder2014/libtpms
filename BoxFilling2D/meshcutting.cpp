@@ -118,8 +118,8 @@ bool MeshCutting::loadMesh(const std::string &filepath)
 void MeshCutting::cutting()
 {
     // Clear old results
-    this->m_cuttingPoints.clear();
-    this->m_cutting_function_vertex.clear();
+    this->cuttingPoints.clear();
+    this->cuttingVertex.clear();
 
     if(m_model == nullptr)
     {
@@ -130,7 +130,7 @@ void MeshCutting::cutting()
 
     // Rename as a regional variable
     Mesh& mesh = *m_model;
-    this->m_cutting_function_vertex.resize(mesh.n_vertices());
+    this->cuttingVertex.resize(mesh.n_vertices());
 
     {
         // Calculate f(vi), cause the same point need to be calculate multi-times
@@ -139,20 +139,26 @@ void MeshCutting::cutting()
         for (v_it=mesh.vertices_begin(); v_it != v_end; ++v_it, ++i)
         {
             mesh.data(*v_it).id = i;
-            this->m_cutting_function_vertex[static_cast<unsigned long>(i)]
+            this->cuttingVertex[static_cast<unsigned long>(i)]
                     = functionCuttingPlane(mesh.point(*v_it));
         }
     }
 
     // Processing all face to get the intersection result
     Mesh::FaceIter f_it, f_end(mesh.faces_end());
+    // set checked label to false;
+    for (f_it = mesh.faces_begin(); f_it != f_end; ++f_it)
+    {
+        mesh.data(*f_it).checked = false;
+    }
+
     for (f_it = mesh.faces_begin(); f_it != f_end; ++f_it)
     {
         if(mesh.data(*f_it).checked == false)
         {
             // To prevent the repeated calculation
             // Check the face itself
-            std::vector<OpenMesh::Vec3f> intersection = face_intersection_cutting_plane(*f_it);
+            std::vector<OpenMesh::Vec3f> intersection = faceIntersectionCuttingPlane(*f_it);
 
             if(intersection.size() > 0)
             {
@@ -161,7 +167,7 @@ void MeshCutting::cutting()
 
                 // Record the result. Add it into result list <Prevent the repeated points>
                 // Add new vector of points to store the new circle of intersection points
-                this->m_cuttingPoints.push_back(std::vector<OpenMesh::Vec3f>());
+                this->cuttingPoints.push_back(std::vector<OpenMesh::Vec3f>());
                 this->adddIntersectionPoints(intersection); // add intersection points into vector
 
                 // Record the current processing face
@@ -177,7 +183,7 @@ void MeshCutting::cutting()
                         if(mesh.data(*ff_it).checked == false)
                         {
                             std::vector<OpenMesh::Vec3f> neighbour_intersection =
-                                    face_intersection_cutting_plane(*ff_it);
+                                    faceIntersectionCuttingPlane(*ff_it);
 
                             if(neighbour_intersection.size() > 0)
                             {
@@ -207,7 +213,7 @@ void MeshCutting::cutting()
 /// \return
 /// Get the intersection points from one face and cutting plane
 ///
-std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::FaceHandle faceHandle)
+std::vector<OpenMesh::Vec3f> MeshCutting::faceIntersectionCuttingPlane(Mesh::FaceHandle faceHandle)
 {
     std::vector<OpenMesh::Vec3f> results;
     Mesh &mesh = *m_model;                   // Rename the mesh model
@@ -225,7 +231,7 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
         // Not need calculate every time
         triangle.push_back(point);
         function_value.push_back(
-                    m_cutting_function_vertex[
+                    cuttingVertex[
                         static_cast<unsigned long>(mesh.data(*fv_it).id)]);
 
     }
@@ -377,35 +383,38 @@ std::vector<OpenMesh::Vec3f> MeshCutting::face_intersection_cutting_plane(Mesh::
 
 std::vector<std::vector<OpenMesh::Vec2f> > *MeshCutting::getCuttingPoints2d()
 {
-    for(auto cutting_points_3d: m_cuttingPoints)
+    // clear out date datas
+    cuttingPoints2d.clear();
+
+    for(auto cuttingPoints3d: cuttingPoints)
     {
-        this->m_cuttingPoints_2d.push_back(std::vector<OpenMesh::Vec2f>());
-        std::vector<OpenMesh::Vec2f> & cutting_points_2d = m_cuttingPoints_2d[m_cuttingPoints_2d.size()-1];
-        for(auto cutting_point_3d: cutting_points_3d)
+        this->cuttingPoints2d.push_back(std::vector<OpenMesh::Vec2f>());
+        std::vector<OpenMesh::Vec2f> & points2d = cuttingPoints2d[cuttingPoints2d.size()-1];
+        for(auto point3d: cuttingPoints3d)
         {
             // TODO: project one 3D points into 2d coordinate.
-            cutting_points_2d.push_back(OpenMesh::Vec2f(cutting_point_3d[0], cutting_point_3d[1]));
+            points2d.push_back(OpenMesh::Vec2f(point3d[0], point3d[1]));
         }
     }
 
-    return &m_cuttingPoints_2d;
+    return &cuttingPoints2d;
 }
 
 void MeshCutting::printCuttingResult()
 {
     // Output the basic info
-    std::cout << "Total circle: " << this->m_cuttingPoints.size() << std::endl;
+    std::cout << "Total circle: " << this->cuttingPoints.size() << std::endl;
 
     // Output the detail info
-    for(unsigned long i=0; i < this->m_cuttingPoints.size(); i++)
+    for(unsigned long i=0; i < this->cuttingPoints.size(); i++)
     {
         std::cout << "Circle " << i
-                  << "Points: " << this->m_cuttingPoints[i].size()
+                  << "Points: " << this->cuttingPoints[i].size()
                   << std::endl;
-        for (unsigned long j =0; j<this->m_cuttingPoints[i].size(); j++)
+        for (unsigned long j =0; j<this->cuttingPoints[i].size(); j++)
         {
             std::cout << "\tPoint " << j << "\t"
-                      << this->m_cuttingPoints[i][j]
+                      << this->cuttingPoints[i][j]
                       << std::endl;
         }
     }
@@ -438,11 +447,11 @@ void MeshCutting::adddIntersectionPoints(std::vector<OpenMesh::Vec3f> &points)
     if(points.size() == 0)
         return;
 
-    if(this->m_cuttingPoints.size() == 0)
-        this->m_cuttingPoints.push_back(std::vector<OpenMesh::Vec3f>());
+    if(this->cuttingPoints.size() == 0)
+        this->cuttingPoints.push_back(std::vector<OpenMesh::Vec3f>());
 
     std::vector<OpenMesh::Vec3f> &circle =
-            this->m_cuttingPoints.at(this->m_cuttingPoints.size()-1);
+            this->cuttingPoints.at(this->cuttingPoints.size()-1);
 
     if(circle.size() == 0) {
         for(auto point : points)

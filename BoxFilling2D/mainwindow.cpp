@@ -1,43 +1,47 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
+
 
 #include <QFileDialog>
 #include <QDebug>
 #include <QAction>
 
 #include <UI/cuttingplanesettingdialog.h>
+#include <UI/rangeprojectdialog.h>
+
+#include "FootProjector.h"
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    m_meshcutter()
+    QMainWindow(parent),meshcutter()
 {
-    ui->setupUi(this);
+    setupUi(this);
 
     // Dialog Open and input insole model file
-    connect(ui->action_open_insole_file, SIGNAL(triggered()),
-            this, SLOT(dialog_open_insole_file()));
+    connect(action_open_insole_file, SIGNAL(triggered()),
+            this, SLOT(dialogOpenModelFile()));
 
     // Help and about Qt button
-    connect(ui->action_about_Qt, SIGNAL(triggered()),
+    connect(action_about_Qt, SIGNAL(triggered()),
             QApplication::instance(), SLOT(aboutQt()));
 
     // Dialog
-    connect(ui->action_set_cutting_flat, SIGNAL(triggered()),
-            this, SLOT(dialog_set_cutting_plane()));
+    connect(action_set_cutting_flat, SIGNAL(triggered()),
+            this, SLOT(dialogSettingCuttingPlane()));
 
     // Cutting
-    connect(ui->action_cutting_mesh, SIGNAL(triggered()),
-            this, SLOT(cutting_mesh()));
+    connect(action_cutting_mesh, SIGNAL(triggered()),
+            this, SLOT(cuttingMesh()));
+
+    // projector
+    connect(action_range_projector, SIGNAL(triggered()),
+            this, SLOT(dialogRangeProjector()));
 
 }
 
 MainWindow::~MainWindow()
 {
-    delete ui;
 }
 
-void MainWindow::dialog_open_insole_file()
+void MainWindow::dialogOpenModelFile()
 {
     QFileDialog * fileDialog = new QFileDialog(this);
     fileDialog->setWindowIcon(QIcon(":/icons/open.png"));
@@ -53,7 +57,7 @@ void MainWindow::dialog_open_insole_file()
         qDebug() << "QFileDialog selected filepath: " <<path;
 
         // 调用打开文件
-        if(!this->open_insole_file(path))
+        if(!this->openModelFile(path))
         {
             // Load Mesh failed
             std::cout << "Loading Mesh failed! " << path.toStdString() << std::endl;
@@ -74,37 +78,57 @@ void MainWindow::dialog_open_insole_file()
 /// \param filepath
 /// \return
 ///
-bool MainWindow::open_insole_file(const QString &filepath)
+bool MainWindow::openModelFile(const QString &filepath)
 {
     qDebug() << "open_insole_file filepath:" << filepath;
-    return m_meshcutter.loadMesh(filepath.toStdString());
+    return meshcutter.loadMesh(filepath.toStdString());
 }
 
-void MainWindow::dialog_set_cutting_plane()
+void MainWindow::dialogSettingCuttingPlane()
 {
     // Open Dialog, getting setting
 
     CuttingPlaneSettingDialog settingDialog(this);
 
     // Test setting cutting plane function
-    m_meshcutter.setCuttingPlane(OpenMesh::Vec3f(0,0,4),
-                                 OpenMesh::Vec3f(1,0,4),
-                                 OpenMesh::Vec3f(0,1,4));
+//    m_meshcutter.setCuttingPlane(OpenMesh::Vec3f(0,0,4),
+//                                 OpenMesh::Vec3f(1,0,4),
+//                                 OpenMesh::Vec3f(0,1,4));
 
     // After Dialog executed, apply the setting
     if(settingDialog.exec())
     {
-        //
         std::cout << "Cutting plane setting dialog" << std::endl;
+        std::vector<OpenMesh::Vec3f> plane = settingDialog.getSettingFromThreePoints();
+
+        // setting the cutting plane
+        meshcutter.setCuttingPlane(plane[0],plane[1],plane[2]);
     }
 }
 
-void MainWindow::cutting_mesh()
+void MainWindow::cuttingMesh()
 {
     // Test
-    this->m_meshcutter.cutting();
-    this->m_meshcutter.printCuttingResult();
+    this->meshcutter.cutting();
+    this->meshcutter.printCuttingResult();
 
     // Draw
-    ui->graphicsView->updateCuttingPoints(this->m_meshcutter.getCuttingPoints2d());
+    graphicsView->updateCuttingPoints(this->meshcutter.getCuttingPoints2d());
+}
+
+void MainWindow::dialogRangeProjector()
+{
+    RangeProjectDialog rangeSettingDialog(this);
+    if(rangeSettingDialog.exec()) {
+        assert(meshcutter.mesh() != nullptr);
+
+        double top = rangeSettingDialog.rangeTop->value();
+        double bottom = rangeSettingDialog.rangeBottom->value();
+
+        FootProjector footProjector;
+        footProjector.setModel(meshcutter.mesh());
+        footProjector.setRange(top, bottom);
+        std::vector<OpenMesh::Vec2f> points2d = footProjector.getPoints2d();
+        graphicsView->updatePointCloud(points2d);
+    }
 }
