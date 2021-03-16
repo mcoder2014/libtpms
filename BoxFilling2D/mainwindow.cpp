@@ -1,9 +1,10 @@
 #include "mainwindow.h"
 
-
 #include <QFileDialog>
 #include <QDebug>
 #include <QAction>
+#include <QPainter>
+#include <QImage>
 
 #include <UI/cuttingplanesettingdialog.h>
 #include <UI/rangeprojectdialog.h>
@@ -34,6 +35,10 @@ MainWindow::MainWindow(QWidget *parent) :
     // projector
     connect(action_range_projector, SIGNAL(triggered()),
             this, SLOT(dialogRangeProjector()));
+
+    // save image
+    connect(action_save_canvas, SIGNAL(triggered()),
+            this, SLOT(saveGraphicsView()));
 
 }
 
@@ -131,4 +136,22 @@ void MainWindow::dialogRangeProjector()
         std::vector<OpenMesh::Vec2f> points2d = footProjector.getPoints2d();
         graphicsView->updatePointCloud(points2d);
     }
+}
+
+/**
+ * @brief MainWindow::saveGraphicsView
+ * 保存画布内容
+ */
+void MainWindow::saveGraphicsView()
+{
+    int curTime = time(nullptr);
+    QString filename = "graphicsview_" + QString::number(curTime) + ".jpg";
+    qDebug() << "filename: " << filename;
+
+    QGraphicsScene* scene = graphicsView->scene();
+    QImage image(scene->sceneRect().size().toSize(), QImage::Format_ARGB32);
+    image.fill(0xffffff);
+    QPainter painter(&image);
+    scene->render(&painter);
+    image.save(filename);
 }

@@ -44,6 +44,7 @@ void BlendMarchCubeAlgorithm::calculateImplicitValue()
     for(size_t index = 0; index < samplePointGroups.size(); index ++) {
         std::cout << __FUNCTION__ << " Group " << index+1 << " / " << samplePointGroups.size()
                   << "Group Size: " << samplePointGroups[index].size() << std::endl;
+        if(samplePointGroups[index].size() == 0) continue;
         ImplicitFunciton::calculateSamplePointGroup(samplePointGroups[index]);
     }
 

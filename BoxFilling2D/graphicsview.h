@@ -27,6 +27,8 @@ public slots:
 protected:
 
     virtual void wheelEvent(QWheelEvent *event) override;
+    // 缩放视野
+    void scaleView(qreal scaleFactor);
     qreal m_scale;
 
 

@@ -10,6 +10,13 @@ GraphicsView::GraphicsView(QWidget *parent)
     : QGraphicsView (parent), m_scale(1)
 {
     this->setScene(new QGraphicsScene);
+
+    setMouseTracking(true);
+    setDragMode(QGraphicsView::ScrollHandDrag);
+    setInteractive(false);
+
+    setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 }
 
 void GraphicsView::updateCuttingPoints(std::vector<std::vector<OpenMesh::Vec2f> > *points2d)
@@ -72,24 +79,25 @@ void GraphicsView::updatePointCloud(std::vector<OpenMesh::Vec2f> &points2d)
 
 void GraphicsView::wheelEvent(QWheelEvent *event)
 {
-    if ( QApplication::keyboardModifiers () == Qt::ControlModifier)
-    {
-        QMatrix matrix;
-
-        if(event->delta() > 0)
-        {
-            // TODO: zoom out / smaller
-            std::cout << "ctrl + wheel up" << std::endl;
-            m_scale *= 0.8;
-        }
-        else
-        {
-            // TODO: zoom in / bigger
-            std::cout << "ctrl + wheel down" << std::endl;
-            m_scale *= 1.25;
-        }
-        matrix.scale(m_scale, m_scale);
-        this->setMatrix(matrix);
+    if (event->modifiers() & Qt::ControlModifier) {
+        scaleView(pow(2., -event->angleDelta().y() / 240.0));
+        event->accept();
+    } else {
+        QGraphicsView::wheelEvent(event);
     }
-    QGraphicsView::wheelEvent(event);
+}
+
+void GraphicsView::scaleView(qreal scaleFactor)
+{
+    qreal factor = transform()
+            .scale(scaleFactor, scaleFactor)
+            .mapRect(QRectF(0, 0, 1, 1)).width();
+    if (factor < 0.07 || factor > 100)
+        return;
+
+//    scale(scaleFactor, scaleFactor);
+
+    QTransform transform;
+    transform.scale(factor, factor);
+    setTransform(transform);
 }

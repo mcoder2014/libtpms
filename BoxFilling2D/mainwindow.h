@@ -24,6 +24,8 @@ public slots:
     void cuttingMesh();
     void dialogRangeProjector();
 
+    void saveGraphicsView();
+
 private:
     MeshCutting meshcutter;
 };
